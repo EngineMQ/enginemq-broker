@@ -14,7 +14,7 @@
     ],
     "scripts": {
         "start": "node build/src/index.js",
-        "dev": "node --max-old-space-size=4096 -- node_modules/.bin/nodemon src/index.ts | pino-pretty -l -S -o '[{module}] {msg}' -t 'HH:MM:ss.l' -i 'hostname,pid,name,module'",
+        "dev": "node --max-old-space-size=4096 -- node_modules/.bin/nodemon src/index.ts | pino-pretty -S -o '[{module}] {msg}' -t 'HH:MM:ss.l' -i 'hostname,pid,name,module'",
         "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
         "clean": "tsc --build --clean && rm -rf ./build",
         "build": "npm run clean && tsc --build --force",
