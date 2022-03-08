@@ -23,9 +23,9 @@ export class TimeLogger {
         this.start = new Date().getTime();
     }
 
-    public writeLog(cb: (valuestr: string) => void) {
+    public writeLog(cb: (valuestr: string[]) => void) {
         const values: string[] = [];
         this.measures.forEach((value, key) => values.push(`${key}=${value}ms`));
-        cb(values.join(', '));
+        cb(values);
     }
 }

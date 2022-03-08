@@ -1,4 +1,5 @@
 import * as short from 'short-uuid';
+import * as prettyMilliseconds from 'pretty-ms';
 
 import logger from './logger';
 import { ClientList } from './ClientList';
@@ -8,14 +9,14 @@ import * as types from '../common/messageTypes';
 import * as utility from './utility';
 import { AckFn, BrokerSocket } from './BrokerSocket';
 
-const log = logger.child({ module: 'MessageHandler' });
+const log = logger.child({ module: 'Messages' });
 
 type MessageId = string;
 type Topic = string;
 
-const GARBAGE_EXPIRED_SEC = 15;
-const GARBAGE_EXPIRED_BOOST_SEC = 5;
-const GARBAGE_EXPIRED_LIMIT = 1000;
+const GARBAGE_SEC = 60;
+const GARBAGE_BOOST_SEC = 15;
+const GARBAGE_LIMIT = 1000;
 
 
 const nowMs = () => new Date().getTime();
@@ -37,7 +38,7 @@ export class MessageHandler {
 
         this.loadMessages();
 
-        setTimeout(() => this.removeSomeExpiredMessages(), GARBAGE_EXPIRED_SEC * 1000);
+        setTimeout(() => this.removeSomeExpiredMessages(), GARBAGE_SEC * 1000);
     }
 
 
@@ -53,19 +54,19 @@ export class MessageHandler {
             const messageId = item.options.messageId;
 
             if (!topic) {
-                log.warn(`Missing topic ${topic}`);
+                log.warn('Missing topic info');
                 return;
             }
             if (!this.messageIdRegExp.test(messageId)) {
-                log.warn(`Invalid messageId format ${messageId}`);
+                log.warn({ messageid: messageId }, 'Invalid messageId format');
                 return;
             }
             if (item.options.delayMs && item.options.delayMs < 0) {
-                log.warn(`Invalid delayMs value ${item.options.delayMs}`);
+                log.warn({ value: item.options.delayMs }, 'Invalid delayMs value');
                 return;
             }
             if (item.options.expirationMs && item.options.expirationMs < 0) {
-                log.warn(`Invalid expirationMs value ${item.options.expirationMs}`);
+                log.warn({ value: item.options.expirationMs }, 'Invalid expirationMs value');
                 return;
             }
 
@@ -93,7 +94,7 @@ export class MessageHandler {
 
     private loadMessages() {
         const loadList: MessageStorageItem[] = [];
-        log.info({ module: 'Messages' }, 'Init messages %s', 'xxx');
+        log.info('Init messages');
         this.storage.getMessages(
             loadList,
             {
@@ -101,20 +102,43 @@ export class MessageHandler {
                 percent: (_count: number, percent: number, size: number) => log.info(`${percent}% loaded (${size > 1024 * 1024 ? `${Math.round(size / 1024 / 1024)} Mb` : `${Math.round(size / 1024)} kB`})`),
             })
         if (loadList.length) {
+            const now = nowMs();
+
+            let countExpired = 0;
+            let countLoaded = 0;
             log.info('Indexing messages');
             for (const item of loadList) {
 
                 const topic = item.topic;
                 const messageId = item.options.messageId;
 
-                this.topicIndexerList.set(messageId, topic);
+                if (item.options.expirationMs && now > item.publishTime + item.options.expirationMs) {
+                    this.storage.deleteMessage(messageId);
+                    countExpired++
+                    continue;
+                }
+
                 this.topics.addMessage(topic, item, true)
+                this.topicIndexerList.set(messageId, topic);
 
                 this.messageIndexerList.set(messageId, item);
+                countLoaded++;
             }
+            if (countExpired > 0)
+                log.info({ expired: countExpired, loaded: countLoaded }, 'Delete expired messages');
+
             this.topics.reSortTopics();
             for (const topicInfo of this.topics.getTopicsInfo())
-                log.info(`Topic [${topicInfo.topic}] contains ${topicInfo.count} messages`);
+                log.info({
+                    topic: topicInfo.topic,
+                    count: topicInfo.count,
+                    age:
+                    {
+                        min: prettyMilliseconds(topicInfo.minAge, { compact: true }),
+                        max: prettyMilliseconds(topicInfo.maxAge, { compact: true }),
+                        avg: prettyMilliseconds(topicInfo.avgAge, { compact: true }),
+                    }
+                }, 'Topic message stat');
         }
     }
 
@@ -123,6 +147,7 @@ export class MessageHandler {
     }
 
     private resendMessage(messageId: string, delayMs: number) {
+        log.debug({ messageid: messageId }, 'Resend message');
         const message = this.messageIndexerList.get(messageId);
         if (message) {
             message.publishTime = nowMs();
@@ -130,11 +155,12 @@ export class MessageHandler {
             this.addMessage(message);
         }
         else
-            log.debug(`Cannot resend message ${messageId}`);
+            log.warn({ messageid: messageId }, 'Cannot resend message');
     }
 
     private deleteMessage(messageId: string) {
         const topicOfExistingItem = this.topicIndexerList.get(messageId);
+        log.debug({ messageid: messageId, topic: topicOfExistingItem }, 'Delete message');
         if (topicOfExistingItem) {
             this.storage.deleteMessage(messageId);
 
@@ -143,16 +169,18 @@ export class MessageHandler {
             this.topics.dropMessage(topicOfExistingItem, messageId);
             this.topicIndexerList.delete(messageId);
             this.messageIndexerList.delete(messageId);
-
-            // console.log(`Messages: ${this.indexerList.size}`);
         }
+        else
+            log.warn({ messageid: messageId }, 'Cannot delete message, topic not found');
     }
 
     private removeSomeExpiredMessages() {
+        log.debug('Gargabe start');
+
         const timeLogger = new utility.TimeLogger();
         const exmsgids = this.topics
             .getSomeExpiredMessages()
-            .slice(0, GARBAGE_EXPIRED_LIMIT);
+            .slice(0, GARBAGE_LIMIT);
         timeLogger.measure('collect');
 
         if (exmsgids.length) {
@@ -160,20 +188,21 @@ export class MessageHandler {
             for (const exmsgid of exmsgids)
                 this.deleteMessage(exmsgid);
             timeLogger.measure('remove');
-            timeLogger.writeLog((valuestr: string) => log.info(`[Garbage] ${exmsgids.length} expired of ${originalCount} messages removed in ${valuestr}`));
+            timeLogger.writeLog((valuestr: string[]) => log.info({ expired: exmsgids.length, total: originalCount, times: valuestr }, 'Garbage expired messages'));
         }
 
         setTimeout(() => this.removeSomeExpiredMessages(),
-            exmsgids.length == GARBAGE_EXPIRED_LIMIT ?
-                GARBAGE_EXPIRED_BOOST_SEC * 1000 :
-                GARBAGE_EXPIRED_SEC * 1000);
+            exmsgids.length == GARBAGE_LIMIT ?
+                GARBAGE_BOOST_SEC * 1000 :
+                GARBAGE_SEC * 1000);
     }
 
     private onReleaseClient(socket: BrokerSocket) {
+        log.debug({ client: socket.getClientInfo().clientId, address: socket.getClientInfo().address }, 'Release client messages');
         this.underDeliveryList.forEach((value, key) => {
             if (value == socket) {
                 this.underDeliveryList.delete(key);
-                log.debug(`Delivered message ${key} moved back to list`);
+                log.debug({ messageid: key }, 'Delivered message moved back to list');
             }
         })
     }
@@ -189,14 +218,14 @@ export class MessageHandler {
                 const clientOrigin = this.clientList.getSocketByClientId(message.sourceClientId);
                 if (clientOrigin) {
                     clientOrigin.sendDeliveryReport(deliveryAck);
-                    log.debug(`Delivery report sent to ${message.sourceClientId}@${clientOrigin.getClientInfo().addressInfo.address || ''} for ${messageId}`);
+                    log.debug({ client: message.sourceClientId, address: clientOrigin.getClientInfo().address, messageid: messageId }, 'Delivery report sent to client');
                 }
                 else
-                    log.info(`Cannot find client ${message.sourceClientId} for delivery report`);
+                    log.info({ client: message.sourceClientId }, 'Cannot find client for delivery report');
             }
         }
         else
-            log.warn(`Cannot find message ${messageId} for delivery report`);
+            log.warn({ messageid: messageId }, 'Cannot find message for delivery report');
 
         if (deliveryAck.percent == 100)
             ackIsCompleted = true;

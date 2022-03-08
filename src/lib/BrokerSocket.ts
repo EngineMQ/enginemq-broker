@@ -11,6 +11,7 @@ import { MessageStorageItem } from './storage/IStorage';
 import { BufferedSocketOptions, defaultBufferedSocketOptions } from '../common/lib/socket/BufferedSocket';
 
 const nowMs = () => new Date().getTime();
+const log = logger.child({ module: 'Socket' });
 
 const HEARTBEAT_FREQ_PERCENT = 45;
 
@@ -40,7 +41,7 @@ export class BrokerSocket extends MsgpackSocket {
             ...{
                 maxPacketSize: {
                     value: config.maxPacketSizeBytes,
-                    onExcept: (packetSize: number) => logger.warn(`Packet size ${packetSize} exceeded max value ${config.maxPacketSizeBytes}`),
+                    onExcept: (packetSize: number) => this.getLog().warn({ size: packetSize, maxsize: config.maxPacketSizeBytes }, 'Packet size exceeded max value'),
                 }
             }
         };
@@ -56,10 +57,12 @@ export class BrokerSocket extends MsgpackSocket {
 
     public getClientInfo() {
         return {
-            info: this.clientInfo,
+            clientId: this.clientInfo.clientId,
+            clientDetail: this.clientInfo,
             subscriptions: this.subscriptions,
             stat: this.getSocketStat(),
-            addressInfo: this.getSocketAddressInfo(),
+            address: this.getSocketAddressInfo().address,
+            addressDetail: this.getSocketAddressInfo(),
         };
     }
 
@@ -107,11 +110,15 @@ export class BrokerSocket extends MsgpackSocket {
 
 
     // Private
+    private getLog = () => log.child({ client: this.getClientInfo().clientId, address: this.getSocketAddressInfo().address })
+
     private sendMessage(cm: messages.BrokerMessageType, obj: object) {
-        const data: { [name: string]: object } = {};
-        data[cm as keyof object] = obj;
-        super.sendObj(data);
+        const dataMessage: { [name: string]: object } = {};
+        dataMessage[cm as keyof object] = obj;
+        super.sendObj(dataMessage);
         this.lastSndHeartbeat = nowMs();
+
+        this.getLog().debug({ type: cm, data: obj }, 'Send message');
     }
 
     private onObjData(obj: object) {
@@ -122,6 +129,7 @@ export class BrokerSocket extends MsgpackSocket {
 
         this.lastRcvHeartbeat = nowMs();
 
+        this.getLog().debug({ type: cmd, data: params }, 'Receive message');
         switch (cmd) {
             case 'hello':
                 const cmHello = validateObject<messages.ClientMessageHello>(messages.ClientMessageHello, params);
@@ -179,6 +187,7 @@ export class BrokerSocket extends MsgpackSocket {
     }
 
     private updateSubscriptions(subscriptions: string[]) {
+        this.getLog().debug({ subscriptions }, 'Update subscriptions');
         this.subscriptions = [];
         for (let sub of subscriptions)
             if (sub.match(/^[a-z0-9.*#]+$/i))

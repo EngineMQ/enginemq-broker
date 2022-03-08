@@ -8,6 +8,7 @@ type MessageId = string;
 type Topic = string;
 
 const nowMs = () => new Date().getTime();
+const log = logger.child({ module: 'Topic' });
 
 export class TopicHandler {
     private topics = new Map<Topic, MessageStorageItem[]>();
@@ -19,13 +20,17 @@ export class TopicHandler {
     public addMessage(topic: Topic, item: MessageStorageItem, bulkMode = false) {
         if (!this.topics.has(topic)) {
             this.topics.set(topic, []);
-            logger.info(`New topic [${topic}] created`);
+            log.info({ topic }, 'Topic created');
         }
         const msglist = this.topics.get(topic);
         if (msglist) {
             msglist.push(item);
-            if (!bulkMode)
+            if (!bulkMode) {
+                const timeLogger = new utility.TimeLogger();
                 timsort.sort(msglist, this.messageStorageItemSorter);
+                timeLogger.measure('sort');
+                timeLogger.writeLog((valuestr: string[]) => log.debug({ times: valuestr }, 'Sort message list'));
+            }
         }
     }
 
@@ -40,8 +45,11 @@ export class TopicHandler {
     }
 
     public reSortTopics() {
+        const timeLogger = new utility.TimeLogger();
         for (const msglist of this.topics.values())
             timsort.sort(msglist, this.messageStorageItemSorter);
+        timeLogger.measure('sort');
+        timeLogger.writeLog((valuestr: string[]) => log.debug({ times: valuestr }, 'Sort all topics'));
     }
 
     public dropMessage(topic: Topic, messageId: MessageId) {
@@ -69,10 +77,22 @@ export class TopicHandler {
     }
 
     public getTopicsInfo() {
-        const result: { topic: string, count: number }[] = [];
+        const result: { topic: string, count: number, minAge: number, maxAge: number, avgAge: number }[] = [];
         for (const [topic, msglist] of this.topics.entries())
-            if (msglist.length > 0)
-                result.push({ topic, count: msglist.length });
+            if (msglist.length > 0) {
+                const now = nowMs();
+                let minAge = Number.MAX_SAFE_INTEGER;
+                let maxAge = Number.MIN_SAFE_INTEGER;
+                let sumAge = 0;
+                for (const msg of msglist) {
+                    if (minAge > now - msg.publishTime)
+                        minAge = now - msg.publishTime;
+                    if (maxAge < now - msg.publishTime)
+                        maxAge = now - msg.publishTime;
+                    sumAge += now - msg.publishTime;
+                }
+                result.push({ topic, count: msglist.length, minAge, maxAge, avgAge: Math.round(sumAge / msglist.length) })
+            }
         return result;
     }
 
