@@ -4,7 +4,7 @@
     "name": "engine-mq-broker",
     "version": "1.0.1",
     "description": "Engine-MQ Message queue broker server",
-    "main": ".dist/src/index.js",
+    "main": "./dist/src/index.js",
     "engines": {
         "node": ">=16",
         "npm": "~8"
@@ -30,6 +30,7 @@
         "ajv": "^8.10.0",
         "dotenv": "16.0.0",
         "env-var": "7.1.1",
+        "fastify": "^3.27.4",
         "msgpackr": "^1.5.4",
         "pino": "^7.8.0",
         "pretty-ms": "^7.0.1",

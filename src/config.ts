@@ -21,3 +21,6 @@ export const heartbeatSec = get('HEARTBEAT_SEC').default(0).asInt();
 export const minWorkers = 1;
 export const maxWorkers = get('MAX_WORKERS').default(DEFAULT_MAXWORKERS).asInt();
 export const maxPacketSizeBytes = get('MAX_PACKET_SIZE_KB').default(DEFAULT_MAXPACKETSIZEKB * 1024).asInt() * 1024;
+
+export const uiPort = get('UI_PORT').default(0).asPortNumber();
+export const uiHost = get('UI_HOST').default('127.0.0.1').asString();
