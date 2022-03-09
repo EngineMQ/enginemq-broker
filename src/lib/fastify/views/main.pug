@@ -1,0 +1,18 @@
+doctype html
+html(lang='en')
+  include include/head.pug
+  body
+    include include/scripts.pug
+    center
+      br
+      br
+      h1  404
+        h2
+          i.fas.fa-exclamation-triangle.text-warning
+          |  Oops! This train is gone...
+          = serviceName
+        p
+          | We could not find the page you were looking for.
+          | Meanwhile, you may 
+          a(href='/') return to main screen.
+        img(src="/public/bg404.jpg" alt="")

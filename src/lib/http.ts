@@ -1,25 +1,21 @@
-import fastify, { FastifyInstance } from 'fastify';
+import { FastifyInstance } from 'fastify';
+import fastifyFactory from './fastify';
 
 import * as config from '../config';
 import logger from './logger';
-import * as routes from '../route';
 
-const log = logger.child({ module: 'Webserver' });
+const log = logger.child({ module: 'Http' });
 
 let server: FastifyInstance;
 
-export const createWebserver = async () => {
+export const createHttpserver = async () => {
     if (!config.uiPort) {
-        log.info('Webserver not used');
+        log.info('Http server disabled');
         return;
     }
-    log.info('Init webserver');
+    log.info('Init http server');
 
-    server = fastify({
-        logger: logger.child({ module: 'Http' }),
-    });
-
-    routes.initRoute(server);
+    server = await fastifyFactory();
 
     return new Promise((resolve, reject) => {
         server.listen(config.uiPort, config.uiHost, (err, address) => {
@@ -28,13 +24,13 @@ export const createWebserver = async () => {
                 reject(err);
             }
             else {
-                log.info({ address }, 'Webserver listening');
+                log.info({ address }, 'Http server listening');
                 resolve(server);
             }
         });
     });
 }
 
-export const closeWebserver = async () => {
+export const closeHttpserver = async () => {
     return server.close();
 };

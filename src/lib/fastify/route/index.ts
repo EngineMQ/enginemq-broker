@@ -4,7 +4,7 @@ import { FastifyInstance } from "fastify"
 //     username: string;
 //     password: string;
 // }
-
+let i = 0;
 export const initRoute = (server: FastifyInstance) => {
 
     server
@@ -19,7 +19,7 @@ export const initRoute = (server: FastifyInstance) => {
         }>
         ('/', async (request, reply) => {
             const { username, password } = request.query
-
-            await reply.send({ data: username + password });
+            return reply.view("main", { u: username + (i++).toString(), password });
+            // await reply.send({ data: username + password });
         })
 }
