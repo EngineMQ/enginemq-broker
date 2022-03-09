@@ -14,7 +14,7 @@ export const shuffleArray = <T>(array: Array<T>) => {
     return array;
 }
 
-export class TimeLogger {
+export class MeasureTime {
     private start = new Date().getTime();
     private measures = new Map<string, number>();
 
@@ -23,7 +23,7 @@ export class TimeLogger {
         this.start = new Date().getTime();
     }
 
-    public writeLog(cb: (valuestr: string[]) => void) {
+    public writeLog(cb: (values: string[]) => void) {
         const values: string[] = [];
         this.measures.forEach((value, key) => values.push(`${key}=${value}ms`));
         cb(values);

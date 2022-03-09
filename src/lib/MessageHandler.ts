@@ -177,18 +177,18 @@ export class MessageHandler {
     private removeSomeExpiredMessages() {
         log.debug('Gargabe start');
 
-        const timeLogger = new utility.TimeLogger();
+        const measureTime = new utility.MeasureTime();
         const exmsgids = this.topics
             .getSomeExpiredMessages()
             .slice(0, GARBAGE_LIMIT);
-        timeLogger.measure('collect');
+        measureTime.measure('collect');
 
         if (exmsgids.length) {
             const originalCount = this.messageIndexerList.size;
             for (const exmsgid of exmsgids)
                 this.deleteMessage(exmsgid);
-            timeLogger.measure('remove');
-            timeLogger.writeLog((valuestr: string[]) => log.info({ expired: exmsgids.length, total: originalCount, times: valuestr }, 'Garbage expired messages'));
+            measureTime.measure('remove');
+            measureTime.writeLog((valuestr: string[]) => log.info({ expired: exmsgids.length, total: originalCount, times: valuestr }, 'Garbage expired messages'));
         }
 
         setTimeout(() => this.removeSomeExpiredMessages(),

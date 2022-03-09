@@ -26,10 +26,10 @@ export class TopicHandler {
         if (msglist) {
             msglist.push(item);
             if (!bulkMode) {
-                const timeLogger = new utility.TimeLogger();
+                const measureTime = new utility.MeasureTime();
                 timsort.sort(msglist, this.messageStorageItemSorter);
-                timeLogger.measure('sort');
-                timeLogger.writeLog((valuestr: string[]) => log.debug({ times: valuestr }, 'Sort message list'));
+                measureTime.measure('sort');
+                measureTime.writeLog((valuestr: string[]) => log.debug({ times: valuestr }, 'Sort message list'));
             }
         }
     }
@@ -45,11 +45,11 @@ export class TopicHandler {
     }
 
     public reSortTopics() {
-        const timeLogger = new utility.TimeLogger();
+        const measureTime = new utility.MeasureTime();
         for (const msglist of this.topics.values())
             timsort.sort(msglist, this.messageStorageItemSorter);
-        timeLogger.measure('sort');
-        timeLogger.writeLog((valuestr: string[]) => log.debug({ times: valuestr }, 'Sort all topics'));
+        measureTime.measure('sort');
+        measureTime.writeLog((valuestr: string[]) => log.debug({ times: valuestr }, 'Sort all topics'));
     }
 
     public dropMessage(topic: Topic, messageId: MessageId) {
