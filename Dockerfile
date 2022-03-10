@@ -39,5 +39,15 @@ WORKDIR /code
 # 👇 Copy the built app from the prodbuild image
 COPY --from=prodbuild /code ./
 
+RUN mkdir /data
+VOLUME /data
+
+# Expose broker and web-ui port
+EXPOSE 16677
+EXPOSE 16688
+
+# Set production environment
+ENV NODE_ENV=production
+
 # ⚙️ Configure the default command
-CMD ["node", "build/server.js"]
+CMD ["node", "build/index.js"]
