@@ -3,6 +3,7 @@ import { FastifyInstance } from 'fastify';
 import pointOfView from "point-of-view";
 import * as pug from 'pug';
 
+import { version } from '../../../package.json';
 import * as config from '../../config';
 
 export default async (server: FastifyInstance) => {
@@ -16,7 +17,8 @@ export default async (server: FastifyInstance) => {
         propertyName: "view",
         defaultContext: {
             serviceName: config.serviceName,
-            dev: !config.isProduction,
+            devMode: !config.isProduction,
+            appVersion: version,
         },
         production: config.isProduction, //cache files
         options: {
