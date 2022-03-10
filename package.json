@@ -21,7 +21,8 @@
         "clean": "tsc --build --clean && rimraf ./build",
         "copystatic": "copyfiles src/**/*.pug src/public/**/*.* build/",
         "build": "npm run clean && tsc --build --force && npm run copystatic",
-        "docker-build": "docker build . -t engine-mq-broker:$npm_package_version"
+        "docker-build": "docker build . -t bcsabaengine/engine-mq-broker:$npm_package_version",
+        "docker-push": "docker push bcsabaengine/engine-mq-broker:$npm_package_version"
     },
     "nodemonConfig": {
         "ignore": [
