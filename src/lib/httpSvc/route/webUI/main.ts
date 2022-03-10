@@ -1,11 +1,7 @@
 import { FastifyInstance } from "fastify"
 
-// interface IQuerystring {
-//     username: string;
-//     password: string;
-// }
 let i = 0;
-export const initRoute = (server: FastifyInstance) => {
+export default(server: FastifyInstance) => {
 
     server
         .get<{
