@@ -6,9 +6,8 @@ import * as pug from 'pug';
 import * as config from '../../config';
 
 export default async (server: FastifyInstance) => {
-    server.log.debug('Init pug engine');
+    server.log.debug('Init template engine');
 
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     await server.register(pointOfView, {
         engine: { pug, },
         root: path.join(__dirname, "views"),
