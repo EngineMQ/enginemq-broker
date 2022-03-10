@@ -1,15 +1,15 @@
 import * as path from 'path';
+import findupSync = require('findup-sync');
 import { FastifyInstance } from 'fastify';
 import fastifyStatic from 'fastify-static';
 
 import * as config from '../../config';
 
-const rootParentFolder = '../../';
-const nodeModulesParentFolder = '../../../';
+const folderNodeModules = path.relative(__dirname, findupSync('node_modules', { cwd: process.cwd() }) || '');
 const staticFolders = new Map<string, string>([
-    ['/public', path.join(rootParentFolder, 'public')],
-    ['/assets/template', path.join(nodeModulesParentFolder, 'node_modules/admin-lte/dist')],
-    ['/assets/plugins', path.join(nodeModulesParentFolder, 'node_modules/admin-lte/plugins')],
+    ['/public', '../../public'],
+    ['/assets/template', path.join(folderNodeModules, 'admin-lte/dist')],
+    ['/assets/plugins', path.join(folderNodeModules, 'admin-lte/plugins')],
 ]);
 
 export default async (server: FastifyInstance) => {

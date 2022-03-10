@@ -6,7 +6,7 @@ export default async (server: FastifyInstance) => {
     server.log.debug('Init favicon');
 
     await server.register(fastifyFavicon, {
-        path: path.join(__dirname, '../public/favicon'),
+        path: path.join(__dirname, '../../public/favicon'),
         name: 'favicon.ico'
     });
 }

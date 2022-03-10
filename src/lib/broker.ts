@@ -18,7 +18,7 @@ let server: net.Server;
 export const createBroker = async () => {
     log.info('Init broker');
 
-    const storage: IStorage = new LocalStorage('../storage');
+    const storage: IStorage = new LocalStorage(config.dataFolder);
     messageHandler = new MessageHandler(clientList, storage);
     server = net.createServer((socket: net.Socket) => clientList.add(new BrokerSocket(socket, messageHandler)));
 

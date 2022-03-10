@@ -1,5 +1,5 @@
 # ⚒ Build the builder image
-FROM node:17-alpine as builder
+FROM node:17.6-alpine as builder
 
 # 🤫 Silence npm
 ENV NPM_CONFIG_LOGLEVEL=error
@@ -10,7 +10,7 @@ RUN apk add --no-cache tini
 ENTRYPOINT ["/sbin/tini", "--"]
 
 # 👇 Create working directory and assign ownership
-WORKDIR /code
+WORKDIR /app
 
 # 👇 Copy config files and source
 COPY package*.json tsconfig.json ./
@@ -26,21 +26,21 @@ FROM builder as prodbuild
 RUN npm prune --production
 
 # 🚀 Build the runner image
-FROM node:17-alpine as runner
+FROM node:17.6-alpine as runner
 
 # 👇 Add Tini again
-RUN apk add --no-cache tini
+RUN apk add --no-cache tini bash
 # Tini is now available at /sbin/tini
 ENTRYPOINT ["/sbin/tini", "--"]
 
 # 👇 Create working directory and assign ownership
-WORKDIR /code
+WORKDIR /app
 
 # 👇 Copy the built app from the prodbuild image
-COPY --from=prodbuild /code ./
+COPY --from=prodbuild /app ./
 
-RUN mkdir /data
-VOLUME /data
+RUN mkdir /brokerdata
+VOLUME /brokerdata
 
 # Expose broker and web-ui port
 EXPOSE 16677
@@ -50,4 +50,5 @@ EXPOSE 16688
 ENV NODE_ENV=production
 
 # ⚙️ Configure the default command
-CMD ["node", "build/index.js"]
+#CMD ["/bin/bash"]
+CMD ["node", "build/src/index.js"]
