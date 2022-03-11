@@ -9,15 +9,16 @@ RUN apk add --no-cache tini git
 # Tini is now available at /sbin/tini
 ENTRYPOINT ["/sbin/tini", "--"]
 
-# Init submodules
-# RUN git submodule update --init
-
 # 👇 Create working directory and assign ownership
 WORKDIR /app
 
 # 👇 Copy config files and source
 COPY package*.json tsconfig.json ./
 COPY src ./src
+
+# Init submodules
+RUN rm -rf ./src/common
+RUN git -C ./src clone https://github.com/Engine-MQ/common.git
 
 # 👇 Install deps and build source
 RUN npm config set unsafe-perm true
