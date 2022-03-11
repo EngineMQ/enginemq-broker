@@ -5,7 +5,7 @@ FROM node:17.6-alpine as builder
 ENV NPM_CONFIG_LOGLEVEL=error
 
 # 👇 Add Tini
-RUN apk add --no-cache tini
+RUN apk add --no-cache tini git
 # Tini is now available at /sbin/tini
 ENTRYPOINT ["/sbin/tini", "--"]
 
