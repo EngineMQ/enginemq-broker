@@ -10,7 +10,7 @@ RUN apk add --no-cache tini git
 ENTRYPOINT ["/sbin/tini", "--"]
 
 # Init submodules
-RUN git submodule update --init
+# RUN git submodule update --init
 
 # 👇 Create working directory and assign ownership
 WORKDIR /app
