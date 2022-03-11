@@ -9,6 +9,9 @@ RUN apk add --no-cache tini
 # Tini is now available at /sbin/tini
 ENTRYPOINT ["/sbin/tini", "--"]
 
+# Init submodules
+RUN git submodule update --init
+
 # 👇 Create working directory and assign ownership
 WORKDIR /app
 
