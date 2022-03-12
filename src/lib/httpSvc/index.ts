@@ -1,3 +1,4 @@
+import { nanoid } from 'nanoid';
 import fastify, { FastifyInstance } from 'fastify';
 import fastifyHelmet from 'fastify-helmet';
 import fastifyCompress from 'fastify-compress';
@@ -11,8 +12,8 @@ import pug from './pug'
 import favicon from './favicon'
 import * as routes from './route';
 
-
 const log = logger.child({ module: 'Http' });
+// log.level = 'warn';
 
 export default async (): Promise<FastifyInstance | null> => {
     if (!config.apiEnabled && !config.webUIEnabled) {
@@ -21,9 +22,9 @@ export default async (): Promise<FastifyInstance | null> => {
     }
 
     log.info('Init http server');
-
     const server = fastify({
         logger: log,
+        genReqId: () => nanoid(),
         bodyLimit: 2 * 1024 * 1024,
         ignoreTrailingSlash: true,
     });
