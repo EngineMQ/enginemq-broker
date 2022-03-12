@@ -1,4 +1,4 @@
-import * as short from 'short-uuid';
+import { customAlphabet } from 'nanoid';
 import * as prettyMilliseconds from 'pretty-ms';
 
 import logger from './logger';
@@ -18,7 +18,7 @@ const GARBAGE_SEC = 60;
 const GARBAGE_BOOST_SEC = 15;
 const GARBAGE_LIMIT = 1000;
 
-
+const nanoid = customAlphabet(types.MESSAGE_ID_ALPHABET, types.MESSAGE_ID_LENGTH_DEFAULT);
 const nowMs = () => new Date().getTime();
 
 export class MessageHandler {
@@ -45,12 +45,12 @@ export class MessageHandler {
 
     // Public
 
-    private messageIdRegExp = new RegExp(types.MESSAGE_ID_FORMAT);
+    private messageIdRegExp = new RegExp(types.MESSAGE_ID_MASK);
     public addMessage(item: MessageStorageItem) {
         try {
             const topic = item.topic.toLowerCase();
             if (!item.options.messageId)
-                item.options.messageId = short(short.constants.flickrBase58).generate().toLocaleLowerCase();
+                item.options.messageId = nanoid();
             const messageId = item.options.messageId;
 
             if (!topic) {
@@ -77,7 +77,7 @@ export class MessageHandler {
             this.topics.addMessage(topic, item);
             this.topicIndexerList.set(messageId, topic);
             this.messageIndexerList.set(messageId, item)
-            void this.storage.addOrUpdateMessage(messageId, item);
+            this.storage.addOrUpdateMessage(messageId, item);
         } catch (error) { log.error(error); }
     }
 
