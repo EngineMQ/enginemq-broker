@@ -14,6 +14,6 @@ export interface IStorage {
             percent: (count: number, percent: number, size: number) => void
         }
     ): void;
-    addOrUpdateMessage(messageId: string, message: MessageStorageItem): Promise<void>;
+    addOrUpdateMessage(messageId: string, message: MessageStorageItem): void;
     deleteMessage(messageId: string): void;
 }

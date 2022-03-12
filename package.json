@@ -47,11 +47,11 @@
         "fastify-static": "^4.5.0",
         "findup-sync": "^5.0.0",
         "msgpackr": "^1.5.4",
+        "nanoid": "^3.3.1",
         "pino": "^7.8.0",
         "point-of-view": "^5.1.0",
         "pretty-ms": "^7.0.1",
         "pug": "^3.0.2",
-        "short-uuid": "^4.2.0",
         "timsort": "^0.3.0"
     },
     "devDependencies": {

@@ -62,13 +62,9 @@ export class LocalStorage implements IStorage {
         } catch (error) { throw new LocalStorageError(`Cannot load messages: ${error instanceof Error ? error.message : ''}`); }
     }
 
-    public async addOrUpdateMessage(messageId: string, message: MessageStorageItem): Promise<void> {
+    public addOrUpdateMessage(messageId: string, message: MessageStorageItem): void {
         try {
             const fileData = this.packr.pack(message);
-            await new Promise(() => { });
-            // await fs.promises.writeFile(
-            //     this.getFileNameForId(messageId, true),
-            //     fileData);
             fs.writeFileSync(
                 this.getFileNameForId(messageId, true),
                 fileData);
