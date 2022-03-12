@@ -77,7 +77,7 @@ export class MessageHandler {
             this.topics.addMessage(topic, item);
             this.topicIndexerList.set(messageId, topic);
             this.messageIndexerList.set(messageId, item)
-            this.storage.addOrUpdateMessage(messageId, item);
+            void this.storage.addOrUpdateMessage(messageId, item);
         } catch (error) { log.error(error); }
     }
 
@@ -95,7 +95,7 @@ export class MessageHandler {
     private loadMessages() {
         const loadList: MessageStorageItem[] = [];
         log.info('Init messages');
-        this.storage.getMessages(
+        this.storage.getAllMessages(
             loadList,
             {
                 total: (count: number) => log.info(`${count ? count : 'No'} messages found`),
@@ -127,7 +127,7 @@ export class MessageHandler {
             if (countExpired > 0)
                 log.info({ expired: countExpired, loaded: countLoaded }, 'Delete expired messages');
 
-            this.topics.reSortTopics();
+            this.topics.reSortAllTopics();
             for (const topicInfo of this.topics.getTopicsInfo())
                 log.info({
                     topic: topicInfo.topic,

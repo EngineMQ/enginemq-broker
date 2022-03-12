@@ -25,7 +25,7 @@ export class LocalStorage implements IStorage {
 
     // Public
 
-    public getMessages(
+    public getAllMessages(
         target: MessageStorageItem[],
         cbProgress: {
             total: (count: number) => void
@@ -51,7 +51,7 @@ export class LocalStorage implements IStorage {
                     let fileObj: MessageStorageItem;
                     try {
                         fileObj = this.packr.unpack(fileData) as MessageStorageItem;
-                    } catch (error) { throw new Error(`Cannot decode file (maybe broken) ${file}`) }
+                    } catch (error) { throw new Error(`Cannot decode file (maybe damaged) ${file}` + (error instanceof Error ? error.message : '')) }
                     target.push(fileObj);
 
                     if (++index % REPORT_ITEMS == 0)
@@ -62,9 +62,13 @@ export class LocalStorage implements IStorage {
         } catch (error) { throw new LocalStorageError(`Cannot load messages: ${error instanceof Error ? error.message : ''}`); }
     }
 
-    public addOrUpdateMessage(messageId: string, message: MessageStorageItem): void {
+    public async addOrUpdateMessage(messageId: string, message: MessageStorageItem): Promise<void> {
         try {
             const fileData = this.packr.pack(message);
+            await new Promise(() => { });
+            // await fs.promises.writeFile(
+            //     this.getFileNameForId(messageId, true),
+            //     fileData);
             fs.writeFileSync(
                 this.getFileNameForId(messageId, true),
                 fileData);

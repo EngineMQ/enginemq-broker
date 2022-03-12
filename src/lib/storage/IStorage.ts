@@ -7,13 +7,13 @@ type MessageInfo = {
 export type MessageStorageItem = messages.ClientMessagePublish & MessageInfo;
 
 export interface IStorage {
-    getMessages(
+    getAllMessages(
         target: MessageStorageItem[],
         cbProgress: {
             total: (count: number) => void
             percent: (count: number, percent: number, size: number) => void
         }
     ): void;
-    addOrUpdateMessage(messageId: string, message: MessageStorageItem): void;
+    addOrUpdateMessage(messageId: string, message: MessageStorageItem): Promise<void>;
     deleteMessage(messageId: string): void;
 }
