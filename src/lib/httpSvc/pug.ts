@@ -10,7 +10,7 @@ export default async (server: FastifyInstance) => {
     server.log.debug('Init template engine');
 
     await server.register(pointOfView, {
-        engine: { pug, },
+        engine: { pug },
         root: path.join(__dirname, "webUIViews"),
         viewExt: "pug",
         includeViewExtension: true,

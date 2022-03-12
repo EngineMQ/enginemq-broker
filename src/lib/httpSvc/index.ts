@@ -12,8 +12,11 @@ import pug from './pug'
 import favicon from './favicon'
 import * as routes from './route';
 
+const HTTP_ERROR_MIN = 400;
+
 const log = logger.child({ module: 'Http' });
-// log.level = 'warn';
+const logPlugins = logger.child({ module: 'Http' });
+logPlugins.level = 'warn';
 
 export default async (): Promise<FastifyInstance | null> => {
     if (!config.apiEnabled && !config.webUIEnabled) {
@@ -23,8 +26,9 @@ export default async (): Promise<FastifyInstance | null> => {
 
     log.info('Init http server');
     const server = fastify({
-        logger: log,
         genReqId: () => nanoid(),
+        logger: log,
+        disableRequestLogging: true,
         bodyLimit: 2 * 1024 * 1024,
         ignoreTrailingSlash: true,
     });
@@ -32,13 +36,22 @@ export default async (): Promise<FastifyInstance | null> => {
     await server.register(fastifyCompress, { global: false });
     await server.register(fastifyEtag);
 
-    server.addHook('onResponse', async (_req, reply) => {
+    server.addHook("onRequest", (req, _reply, done) => {
+        req.log.debug({ method: req.method, url: req.raw.url, session: req.session, }, "Incoming request");
+        req.log = logPlugins;
+        done();
+    });
+    server.addHook('onResponse', async (req, reply) => {
         await reply.headers({
             'Surrogate-Control': 'no-store',
             'Cache-Control': 'no-store, max-age=0, must-revalidate',
             Pragma: 'no-cache',
             Expires: '0',
         });
+        if (reply.raw.statusCode >= HTTP_ERROR_MIN)
+            req.log.error({ url: req.raw.url, statusMessage: reply.raw.statusMessage, statusCode: reply.raw.statusCode, }, "Request error");
+        else
+            req.log.debug({ url: req.raw.url, statusCode: reply.raw.statusCode, }, "Request completed");
     })
 
     if (config.webUIEnabled) {
