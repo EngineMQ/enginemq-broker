@@ -9,7 +9,7 @@ const DEFAULT_LOG_LEVEL = 'warn';
 const DEFAULT_BROKER_PORT = 16677;
 const DEFAULT_HOST = '0.0.0.0';
 const DEFAULT_STORAGE = 'fs(folder=../storage)';
-const DEFAULT_MAXWORKERS = 4;
+const DEFAULT_MAXCLIENTWORKERS = 4;
 const DEFAULT_MAXPACKETSIZEKB = 1024;
 
 const DEFAULT_HTTP_PORT = 16688;
@@ -25,7 +25,7 @@ export const brokerHost = get('BROKER_HOST').default(DEFAULT_HOST).asString();
 export const storage = get('STORAGE').default(DEFAULT_STORAGE).asString();
 export const heartbeatSec = get('HEARTBEAT_SEC').default(0).asInt();
 export const minWorkers = 1;
-export const maxWorkers = get('MAX_WORKERS').default(DEFAULT_MAXWORKERS).asInt();
+export const maxClientWorkers = get('MAX_CLIENT_WORKERS').default(DEFAULT_MAXCLIENTWORKERS).asInt();
 export const maxPacketSizeBytes = get('MAX_PACKET_SIZE_KB').default(DEFAULT_MAXPACKETSIZEKB).asInt() * 1024;
 
 //--WebUI+API--

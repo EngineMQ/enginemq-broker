@@ -138,7 +138,7 @@ export class BrokerSocket extends MsgpackSocket {
                 this.clientInfo = {
                     clientId: cmHello.clientId,
                     version: cmHello.version,
-                    maxWorkers: Math.max(Math.min(cmHello.maxWorkers, config.maxWorkers), config.minWorkers),
+                    maxWorkers: Math.max(Math.min(cmHello.maxWorkers, config.maxClientWorkers), config.minWorkers),
                 };
 
                 const bmWelcome: messages.BrokerMessageWelcome = { version: version, heartbeatSec: config.heartbeatSec };
