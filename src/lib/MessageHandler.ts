@@ -72,7 +72,7 @@ export class MessageHandler {
 
             const topicOfExistingItem = this.topicIndexerList.get(messageId);
             if (topicOfExistingItem)
-                this.topics.dropMessage(topicOfExistingItem, messageId);
+                this.topics.removeMessage(topicOfExistingItem, messageId);
 
             this.topics.addMessage(topic, item);
             this.topicIndexerList.set(messageId, topic);
@@ -166,7 +166,7 @@ export class MessageHandler {
 
             this.underDeliveryList.delete(messageId);
 
-            this.topics.dropMessage(topicOfExistingItem, messageId);
+            this.topics.removeMessage(topicOfExistingItem, messageId);
             this.topicIndexerList.delete(messageId);
             this.messageIndexerList.delete(messageId);
         }

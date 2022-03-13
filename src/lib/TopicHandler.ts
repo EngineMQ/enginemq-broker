@@ -1,4 +1,5 @@
 import * as timsort from 'timsort';
+import { Metrics } from 'metrics-1-5-15'
 
 import logger from './logger';
 import * as utility from './utility';
@@ -16,6 +17,7 @@ const log = logger.child({ module: 'Topic' });
 export class TopicHandler {
     private topics = new Map<Topic, MessageStorageItem[]>();
     private topicSortInfo = new Map<Topic, { newItems: number, lastSortAt: number }>();
+    private topicMetric = new Map<Topic, [Metrics, Metrics]>();
 
 
 
@@ -25,6 +27,7 @@ export class TopicHandler {
         if (!this.topics.has(topic)) {
             this.topics.set(topic, []);
             this.topicSortInfo.set(topic, { newItems: 0, lastSortAt: nowMs() });
+            this.topicMetric.set(topic, [new Metrics(), new Metrics()]);
             log.info({ topic }, 'Topic created');
         }
         const msglist = this.topics.get(topic);
@@ -33,6 +36,7 @@ export class TopicHandler {
             if (!bulkMode) {
                 this.updateSortInfoIncNewItems(topic);
                 this.sortTopicLazy(topic);
+                this.tickMetric(topic, true);
             }
         }
     }
@@ -52,12 +56,14 @@ export class TopicHandler {
             this.sortTopic(topic);
     }
 
-    public dropMessage(topic: Topic, messageId: MessageId) {
+    public removeMessage(topic: Topic, messageId: MessageId) {
         const msglist = this.topics.get(topic);
         if (msglist) {
             const existingIndex = msglist.findIndex((item: MessageStorageItem) => item.options.messageId === messageId);
-            if (existingIndex >= 0)
+            if (existingIndex >= 0) {
                 msglist.splice(existingIndex, 1);
+                this.tickMetric(topic, false);
+            }
         }
     }
 
@@ -96,7 +102,7 @@ export class TopicHandler {
         return result;
     }
 
-    public getActiveTopicsRandomized = (): string[] => {
+    public getActiveTopicsRandomized(): string[] {
         const result: string[] = [];
         for (const [topic, msglist] of this.topics.entries())
             if (msglist.length > 0)
@@ -132,6 +138,16 @@ export class TopicHandler {
             },
             [Symbol.iterator]: function () { return this; }
         }
+    }
+
+    public getMetric(topic: Topic) {
+        const metrics = this.topicMetric.get(topic);
+        if (metrics)
+            return {
+                add: metrics[0].getSum(),
+                remove: metrics[1].getSum(),
+            }
+        return null;
     }
 
 
@@ -182,4 +198,12 @@ export class TopicHandler {
             result = a.publishTime - b.publishTime;
         return result;
     };
+
+    private tickMetric(topic: Topic, isAdd: boolean) {
+        const metrics = this.topicMetric.get(topic);
+        if (metrics) {
+            const metric = isAdd ? metrics[0] : metrics[1];
+            metric.add(1);
+        }
+    }
 }
