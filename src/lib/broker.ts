@@ -3,7 +3,7 @@ import * as net from 'net';
 import * as config from '../config';
 import logger from './logger';
 import { ClientList } from './ClientList';
-import { LocalStorage } from './storage/LocalStorage';
+import storageConfig from './storage/storageConfig';
 import { IStorage } from './storage/IStorage';
 import { MessageHandler } from './MessageHandler';
 import { BrokerSocket } from './BrokerSocket';
@@ -14,11 +14,12 @@ const clientList = new ClientList(config.heartbeatSec);
 
 let messageHandler: MessageHandler;
 let server: net.Server;
+let storage: IStorage;
 
 export const createBroker = async () => {
     log.info('Init broker');
 
-    const storage: IStorage = new LocalStorage(config.dataFolder);
+    storage = storageConfig(config.storage);
     messageHandler = new MessageHandler(clientList, storage);
     server = net.createServer((socket: net.Socket) => clientList.add(new BrokerSocket(socket, messageHandler)));
 
@@ -40,6 +41,9 @@ export const closeBroker = async () => {
     return new Promise((resolve, reject) => {
         log.info('Stop messageloop');
         messageHandler.breakLoop();
+
+        log.info('Stop storage');
+        storage.close();
 
         log.info('Disconnect clients');
         clientList.destroyAll();

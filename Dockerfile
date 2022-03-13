@@ -52,6 +52,7 @@ EXPOSE 16688
 
 # Set production environment
 ENV NODE_ENV=production
+ENV STORAGE=fs(folder=/brokerdata)
 
 # ⚙️ Configure the default command
 #CMD ["/bin/bash"]

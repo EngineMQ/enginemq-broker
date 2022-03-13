@@ -16,4 +16,5 @@ export interface IStorage {
     ): void;
     addOrUpdateMessage(messageId: string, message: MessageStorageItem): void;
     deleteMessage(messageId: string): void;
+    close(): void;
 }

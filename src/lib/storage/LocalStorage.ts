@@ -7,7 +7,7 @@ import logger from '../logger';
 
 class LocalStorageError extends Error { }
 
-const log = logger.child({ module: 'Storage', engine: 'LocalStorage' });
+const log = logger.child({ module: 'LocalStorage' });
 
 const subfolderDepth = 2;
 const subfolderLength = 1;
@@ -59,7 +59,7 @@ export class LocalStorage implements IStorage {
                 }
                 cbProgress.percent(allFiles.length, 100, size);
             }
-        } catch (error) { throw new LocalStorageError(`Cannot load messages: ${error instanceof Error ? error.message : ''}`); }
+        } catch (error) { throw new LocalStorageError(`Cannot read messages: ${error instanceof Error ? error.message : ''}`); }
     }
 
     public addOrUpdateMessage(messageId: string, message: MessageStorageItem): void {
@@ -70,7 +70,7 @@ export class LocalStorage implements IStorage {
                 fileData);
             log.debug({ messageId, size: fileData.length }, 'Store message');
 
-        } catch (error) { throw new LocalStorageError(`Cannot create message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
+        } catch (error) { throw new LocalStorageError(`Cannot store message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
     public deleteMessage(messageId: string): void {
@@ -82,6 +82,7 @@ export class LocalStorage implements IStorage {
         } catch (error) { throw new LocalStorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
+    public close(): void { }
 
 
     // Private
