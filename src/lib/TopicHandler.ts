@@ -5,8 +5,9 @@ import logger from './logger';
 import * as utility from './utility';
 import { MessageStorageItem } from './storage/IStorage';
 
-const SORT_AFTER_NEWITEMS = 4879;
+const SORT_AFTER_NEWITEMS = 2049;
 const SORT_AFTER_TIME_MS = 1049;
+const SORT_LAZY_TIME_MS = 249;
 
 type MessageId = string;
 type Topic = string;
@@ -16,7 +17,7 @@ const log = logger.child({ module: 'Topic' });
 
 export class TopicHandler {
     private topics = new Map<Topic, MessageStorageItem[]>();
-    private topicSortInfo = new Map<Topic, { newItems: number, lastSortAt: number }>();
+    private topicSortInfo = new Map<Topic, { newItems: number, lastSortAt: number, timerSorter: number }>();
     private topicMetric = new Map<Topic, [Metrics, Metrics]>();
 
 
@@ -26,7 +27,7 @@ export class TopicHandler {
     public addMessage(topic: Topic, item: MessageStorageItem, bulkMode = false) {
         if (!this.topics.has(topic)) {
             this.topics.set(topic, []);
-            this.topicSortInfo.set(topic, { newItems: 0, lastSortAt: nowMs() });
+            this.topicSortInfo.set(topic, { newItems: 0, lastSortAt: nowMs(), timerSorter: 0 });
             this.topicMetric.set(topic, [new Metrics(), new Metrics()]);
             log.info({ topic }, 'Topic created');
         }
@@ -53,7 +54,7 @@ export class TopicHandler {
 
     public reSortAllTopics() {
         for (const topic of this.topics.keys())
-            this.sortTopic(topic);
+            this.sortTopic(topic, 'resortall');
     }
 
     public removeMessage(topic: Topic, messageId: MessageId) {
@@ -160,20 +161,29 @@ export class TopicHandler {
     }
 
     private sortTopicLazy(topic: Topic) {
-        let needsort = false;
+        let needsortReason = '';
 
         const sortInfo = this.topicSortInfo.get(topic);
         if (sortInfo) {
             if (nowMs() > sortInfo.lastSortAt + SORT_AFTER_TIME_MS)
-                needsort = true;
+                needsortReason = 'time';
             if (sortInfo.newItems >= SORT_AFTER_NEWITEMS)
-                needsort = true;
+                needsortReason = 'count';
+            if (sortInfo.timerSorter)
+                clearTimeout(sortInfo.timerSorter);
         }
-        if (needsort)
-            this.sortTopic(topic);
+        if (needsortReason)
+            this.sortTopic(topic, needsortReason);
+        else if (sortInfo) {
+            const timer = setTimeout(
+                (topicToSort: Topic) => this.sortTopic(topicToSort, 'lazy'),
+                SORT_LAZY_TIME_MS,
+                topic);
+            sortInfo.timerSorter = timer as unknown as number;
+        }
     }
 
-    private sortTopic(topic: Topic) {
+    private sortTopic(topic: Topic, reason: string) {
         const msglist = this.topics.get(topic);
         if (msglist) {
             const measureTime = new utility.MeasureTime();
@@ -183,10 +193,14 @@ export class TopicHandler {
             if (sortInfo) {
                 sortInfo.lastSortAt = nowMs();
                 sortInfo.newItems = 0;
+                if (sortInfo.timerSorter) {
+                    clearTimeout(sortInfo.timerSorter);
+                    sortInfo.timerSorter = 0;
+                }
             }
 
             measureTime.measure('sort');
-            measureTime.writeLog((valuestr: string[]) => log.debug({ topic, times: valuestr }, 'Sort topic'));
+            measureTime.writeLog((valuestr: string[]) => log.info({ topic, reason, metric: valuestr }, 'Sort topic'));
         }
         else
             logger.warn({ topic }, 'Topic not found for sort');
