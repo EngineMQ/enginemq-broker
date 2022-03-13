@@ -46,11 +46,11 @@ export const closeBroker = async () => {
 
         server.close((error) => {
             if (error) {
-                log.error('Broker stop failed: ' + error.message)
+                log.error('Broker stop failed: ' + error.message);
                 reject(error);
             }
             else {
-                log.info('Broker stopped')
+                log.info('Broker stopped');
                 resolve(server);
             }
         });
