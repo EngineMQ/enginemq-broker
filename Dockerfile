@@ -52,7 +52,7 @@ EXPOSE 16688
 
 # Set production environment
 ENV NODE_ENV=production
-ENV STORAGE=fs(folder=/brokerdata)
+ENV STORAGE=sqlite3(file=/brokerdata/engine-mq-broker.sqlite3)
 
 # ⚙️ Configure the default command
 #CMD ["/bin/bash"]
