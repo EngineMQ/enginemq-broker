@@ -30,6 +30,7 @@
         ]
     },
     "dependencies": {
+        "@kaciras/deasync": "^1.0.2",
         "@mgcrea/fastify-session": "^0.15.2",
         "@sinclair/typebox": "^0.23.4",
         "@types/findup-sync": "^4.0.2",

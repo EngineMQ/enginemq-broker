@@ -1,5 +1,6 @@
 import { Packr } from 'msgpackr';
 import { createClient } from 'redis';
+import { awaitSync } from '@kaciras/deasync';
 
 import * as config from '../../config';
 import { IStorage, MessageStorageItem } from "./IStorage";
@@ -39,11 +40,11 @@ export class RedisStorage implements IStorage {
         cbReady: () => void,
     ): void {
         const REPORT_ITEMS = 10000;
-        void (async () => {
-            const allMessageCount = await this.redis.hLen(KEYNAME);
-            log.debug({ count: allMessageCount }, 'Find messages');
-            cbProgress.total(allMessageCount);
+        const allMessageCount = awaitSync(this.redis.hLen(KEYNAME));
+        log.debug({ count: allMessageCount }, 'Find messages');
+        cbProgress.total(allMessageCount);
 
+        void (async () => {
             if (allMessageCount) {
                 let index = 0;
                 let size = 0;
@@ -69,29 +70,23 @@ export class RedisStorage implements IStorage {
     }
 
     public addOrUpdateMessage(messageId: string, message: MessageStorageItem): void {
-        void (async () => {
-            try {
-                const dbData = this.packr.pack(message);
-                new TextEncoder().encode()
-                await this.redis.hSet(KEYNAME, messageId, dbData.toString('binary'));
-                log.debug({ messageId, size: dbData.length }, 'Store message');
-            } catch (error) { throw new RedisStorageError(`Cannot create message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
-        })();
+        try {
+            const dbData = this.packr.pack(message);
+            new TextEncoder().encode()
+            awaitSync(this.redis.hSet(KEYNAME, messageId, dbData.toString('binary')));
+            log.debug({ messageId, size: dbData.length }, 'Store message');
+        } catch (error) { throw new RedisStorageError(`Cannot create message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
     public deleteMessage(messageId: string): void {
-        void (async () => {
-            try {
-                await this.redis.hDel(KEYNAME, messageId);
-                log.debug({ messageId }, 'Delete message');
-            } catch (error) { throw new RedisStorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
-        })();
+        try {
+            awaitSync(this.redis.hDel(KEYNAME, messageId));
+            log.debug({ messageId }, 'Delete message');
+        } catch (error) { throw new RedisStorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
     public close(): void {
-        void (async () => {
-            await this.redis.quit();
-        })();
+        awaitSync(this.redis.quit());
     }
 
 
