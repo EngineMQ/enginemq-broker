@@ -51,7 +51,7 @@ export class LocalStorage implements IStorage {
                     let fileObj: MessageStorageItem;
                     try {
                         fileObj = this.packr.unpack(fileData) as MessageStorageItem;
-                    } catch (error) { throw new Error(`Cannot decode file (maybe damaged) ${file}` + (error instanceof Error ? error.message : '')) }
+                    } catch (error) { throw new Error(`Cannot decode file (maybe damaged) ${file}: ` + (error instanceof Error ? error.message : '')) }
                     target.push(fileObj);
 
                     if (++index % REPORT_ITEMS == 0)

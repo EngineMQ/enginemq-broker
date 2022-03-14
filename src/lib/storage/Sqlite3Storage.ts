@@ -3,7 +3,6 @@ import * as path from 'path';
 import { Packr } from 'msgpackr';
 import * as Sqlite3 from 'better-sqlite3';
 
-
 import { IStorage, MessageStorageItem } from "./IStorage";
 import logger from '../logger';
 
@@ -59,7 +58,7 @@ export class Sqlite3Storage implements IStorage {
                         let fileObj: MessageStorageItem;
                         try {
                             fileObj = this.packr.unpack(row.Data) as MessageStorageItem;
-                        } catch (error) { throw new Error(`Cannot decode file (maybe damaged) ${row.MessageId}` + (error instanceof Error ? error.message : '')) }
+                        } catch (error) { throw new Error(`Cannot decode file (maybe damaged) ${row.MessageId}: ` + (error instanceof Error ? error.message : '')) }
                         target.push(fileObj);
 
                         if (++index % REPORT_ITEMS == 0)
