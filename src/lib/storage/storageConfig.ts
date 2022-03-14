@@ -4,6 +4,7 @@ import { IStorage } from "./IStorage";
 import { LocalStorage } from "./LocalStorage";
 import { Sqlite3Storage } from "./Sqlite3Storage";
 import { RedisStorage } from "./RedisStorage";
+import { NullStorage } from "./NullStorage";
 
 let storageMaskLocal = "^ fs \\( folder = ([a-z0-9.\\-_/\\\\]*) \\) $";
 while (storageMaskLocal.includes(' '))
@@ -16,6 +17,10 @@ while (storageMaskSqlite3.includes(' '))
 let storageMaskRedis = "^ redis \\( url = (redis://[a-z0-9.\\-_]*:[0-9]{3,5}/[0-9]{1,2}) \\) $";
 while (storageMaskRedis.includes(' '))
     storageMaskRedis = storageMaskRedis.replace(' ', '\\s*');
+
+let storageMaskNull = "^ null \\( \\) $";
+while (storageMaskNull.includes(' '))
+    storageMaskNull = storageMaskNull.replace(' ', '\\s*');
 
 export default (config: string): IStorage => {
     const storageLocal = config.match(new RegExp(storageMaskLocal, "i"));
@@ -36,6 +41,11 @@ export default (config: string): IStorage => {
     if (storageRedis) {
         const url = storageRedis[1] as string;
         return new RedisStorage(url);
+    }
+
+    const storageNull = config.match(new RegExp(storageMaskNull, "i"));
+    if (storageNull) {
+        return new NullStorage();
     }
 
     throw new Error(`Cannot apply storage config '${config}'`);
