@@ -35,38 +35,37 @@ export class RedisStorage implements IStorage {
         cbProgress: {
             total: (count: number) => void
             percent: (count: number, percent: number, size: number) => void
-        }
-    ) {
+        },
+        cbReady: () => void,
+    ): void {
         const REPORT_ITEMS = 10000;
         void (async () => {
-            try {
-                const allMessageCount = await this.redis.hLen(KEYNAME);
-                log.debug({ count: allMessageCount }, 'Find messages');
-                cbProgress.total(allMessageCount);
+            const allMessageCount = await this.redis.hLen(KEYNAME);
+            log.debug({ count: allMessageCount }, 'Find messages');
+            cbProgress.total(allMessageCount);
 
-                if (allMessageCount) {
-                    let index = 0;
-                    let size = 0;
-                    for await (const { field, value } of this.redis.hScanIterator(KEYNAME, { COUNT: 256 })) {
-                        if (typeof field === 'string') {
-                            const valueBuffer = Buffer.from(value, 'binary');
-                            size += valueBuffer.length;
+            if (allMessageCount) {
+                let index = 0;
+                let size = 0;
+                for await (const { field, value } of this.redis.hScanIterator(KEYNAME, { COUNT: 256 })) {
+                    if (typeof field === 'string') {
+                        const valueBuffer = Buffer.from(value, 'binary');
+                        size += valueBuffer.length;
 
-                            let fileObj: MessageStorageItem;
-                            try {
-                                fileObj = this.packr.unpack(valueBuffer) as MessageStorageItem;
-                            } catch (error) { throw new Error(`Cannot decode file (maybe damaged) ${field}: ` + (error instanceof Error ? error.message : '')) }
-                            target.push(fileObj);
+                        let fileObj: MessageStorageItem;
+                        try {
+                            fileObj = this.packr.unpack(valueBuffer) as MessageStorageItem;
+                        } catch (error) { throw new Error(`Cannot decode file (maybe damaged) ${field}: ` + (error instanceof Error ? error.message : '')) }
+                        target.push(fileObj);
 
-                            if (++index % REPORT_ITEMS == 0)
-                                cbProgress.percent(index, Math.round(100 * index / allMessageCount), size);
-                        }
+                        if (++index % REPORT_ITEMS == 0)
+                            cbProgress.percent(index, Math.round(100 * index / allMessageCount), size);
                     }
-                    cbProgress.percent(allMessageCount, 100, size);
                 }
-            } catch (error) { throw new RedisStorageError(`Cannot load messages: ${error instanceof Error ? error.message : ''}`); }
+                cbProgress.percent(allMessageCount, 100, size);
+            }
+            cbReady();
         })();
-
     }
 
     public addOrUpdateMessage(messageId: string, message: MessageStorageItem): void {

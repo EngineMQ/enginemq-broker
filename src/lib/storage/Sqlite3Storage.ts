@@ -39,7 +39,8 @@ export class Sqlite3Storage implements IStorage {
         cbProgress: {
             total: (count: number) => void
             percent: (count: number, percent: number, size: number) => void
-        }
+        },
+        cbReady: () => void,
     ) {
         const REPORT_ITEMS = 10000;
         try {
@@ -67,6 +68,7 @@ export class Sqlite3Storage implements IStorage {
                 }
                 cbProgress.percent(allMessageCount, 100, size);
             }
+            cbReady();
         } catch (error) { throw new Sqlite3StorageError(`Cannot load messages: ${error instanceof Error ? error.message : ''}`); }
     }
 

@@ -30,7 +30,8 @@ export class LocalStorage implements IStorage {
         cbProgress: {
             total: (count: number) => void
             percent: (count: number, percent: number, size: number) => void
-        }
+        },
+        cbReady: () => void,
     ) {
         const REPORT_ITEMS = 10000;
         try {
@@ -59,6 +60,7 @@ export class LocalStorage implements IStorage {
                 }
                 cbProgress.percent(allFiles.length, 100, size);
             }
+            cbReady();
         } catch (error) { throw new LocalStorageError(`Cannot read messages: ${error instanceof Error ? error.message : ''}`); }
     }
 

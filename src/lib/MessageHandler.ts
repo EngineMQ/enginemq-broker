@@ -20,6 +20,7 @@ const GARBAGE_LIMIT = 1000;
 
 const nanoid = customAlphabet(types.MESSAGE_ID_ALPHABET, types.MESSAGE_ID_LENGTH_DEFAULT);
 const nowMs = () => new Date().getTime();
+const messageIdRegExp = new RegExp(types.MESSAGE_ID_MASK);
 
 export class MessageHandler {
     private clientList: ClientList;
@@ -35,17 +36,72 @@ export class MessageHandler {
         this.topics = new TopicHandler();
 
         this.clientList.on('remove', (socket: BrokerSocket) => this.onReleaseClient(socket))
-
-        this.loadMessages();
-
         setTimeout(() => this.removeSomeExpiredMessages(), GARBAGE_SEC * 1000);
     }
 
 
 
+
     // Public
 
-    private messageIdRegExp = new RegExp(types.MESSAGE_ID_MASK);
+    public async loadMessages(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const loadList: MessageStorageItem[] = [];
+            log.info('Init messages');
+            try {
+                this.storage.getAllMessages(
+                    loadList,
+                    {
+                        total: (count: number) => log.info(`${count ? count : 'No'} messages found`),
+                        percent: (_count: number, percent: number, size: number) => log.info(`${percent}% loaded (${size > 1024 * 1024 ? `${Math.round(size / 1024 / 1024)} Mb` : `${Math.round(size / 1024)} kB`})`),
+                    },
+                    () => {
+                        if (loadList.length) {
+                            const now = nowMs();
+
+                            let countExpired = 0;
+                            let countLoaded = 0;
+                            log.info('Indexing messages');
+                            for (const item of loadList) {
+
+                                const topic = item.topic;
+                                const messageId = item.options.messageId;
+
+                                if (item.options.expirationMs && now > item.publishTime + item.options.expirationMs) {
+                                    this.storage.deleteMessage(messageId);
+                                    countExpired++
+                                    continue;
+                                }
+
+                                this.topics.addMessage(topic, item, true)
+                                this.topicIndexerList.set(messageId, topic);
+
+                                this.messageIndexerList.set(messageId, item);
+                                countLoaded++;
+                            }
+                            if (countExpired > 0)
+                                log.info({ expired: countExpired, loaded: countLoaded }, 'Delete expired messages');
+
+                            this.topics.reSortAllTopics();
+                            for (const topicInfo of this.topics.getTopicsInfo())
+                                log.info({
+                                    topic: topicInfo.topic,
+                                    count: topicInfo.count,
+                                    age:
+                                    {
+                                        min: prettyMilliseconds(topicInfo.minAge, { compact: true }),
+                                        max: prettyMilliseconds(topicInfo.maxAge, { compact: true }),
+                                        avg: prettyMilliseconds(topicInfo.avgAge, { compact: true }),
+                                    }
+                                }, 'Topic message stat');
+                        }
+                        resolve();
+                    });
+            }
+            catch (error) { reject(error); }
+        });
+    }
+
     public addMessage(item: MessageStorageItem) {
         try {
             const topic = item.topic.toLowerCase();
@@ -57,7 +113,7 @@ export class MessageHandler {
                 log.warn('Missing topic info');
                 return;
             }
-            if (!this.messageIdRegExp.test(messageId)) {
+            if (!messageIdRegExp.test(messageId)) {
                 log.warn({ messageid: messageId }, 'Invalid messageId format');
                 return;
             }
@@ -91,56 +147,6 @@ export class MessageHandler {
 
 
     // Private
-
-    private loadMessages() {
-        const loadList: MessageStorageItem[] = [];
-        log.info('Init messages');
-        this.storage.getAllMessages(
-            loadList,
-            {
-                total: (count: number) => log.info(`${count ? count : 'No'} messages found`),
-                percent: (_count: number, percent: number, size: number) => log.info(`${percent}% loaded (${size > 1024 * 1024 ? `${Math.round(size / 1024 / 1024)} Mb` : `${Math.round(size / 1024)} kB`})`),
-            })
-        if (loadList.length) {
-            const now = nowMs();
-
-            let countExpired = 0;
-            let countLoaded = 0;
-            log.info('Indexing messages');
-            for (const item of loadList) {
-
-                const topic = item.topic;
-                const messageId = item.options.messageId;
-
-                if (item.options.expirationMs && now > item.publishTime + item.options.expirationMs) {
-                    this.storage.deleteMessage(messageId);
-                    countExpired++
-                    continue;
-                }
-
-                this.topics.addMessage(topic, item, true)
-                this.topicIndexerList.set(messageId, topic);
-
-                this.messageIndexerList.set(messageId, item);
-                countLoaded++;
-            }
-            if (countExpired > 0)
-                log.info({ expired: countExpired, loaded: countLoaded }, 'Delete expired messages');
-
-            this.topics.reSortAllTopics();
-            for (const topicInfo of this.topics.getTopicsInfo())
-                log.info({
-                    topic: topicInfo.topic,
-                    count: topicInfo.count,
-                    age:
-                    {
-                        min: prettyMilliseconds(topicInfo.minAge, { compact: true }),
-                        max: prettyMilliseconds(topicInfo.maxAge, { compact: true }),
-                        avg: prettyMilliseconds(topicInfo.avgAge, { compact: true }),
-                    }
-                }, 'Topic message stat');
-        }
-    }
 
     private getMessage(messageId: string): MessageStorageItem | null {
         return this.messageIndexerList.get(messageId) || null;

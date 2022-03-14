@@ -21,19 +21,19 @@ export const createBroker = async () => {
 
     storage = storageConfig(config.storage);
     messageHandler = new MessageHandler(clientList, storage);
-    server = net.createServer((socket: net.Socket) => clientList.add(new BrokerSocket(socket, messageHandler)));
+    return messageHandler.loadMessages()
+        .then(() => {
+            server = net.createServer((socket: net.Socket) => clientList.add(new BrokerSocket(socket, messageHandler)));
+            server
+                .on('listening', () => {
+                    const addr = server.address() as net.AddressInfo;
+                    log.info(`Broker started on ${addr.address}:${addr.port}`)
+                    messageHandler.startLoop();
+                })
+                .on('error', (error) => { throw error })
+                .listen(config.brokerPort, config.brokerHost);
+        })
 
-    return new Promise((resolve, reject) => {
-        server
-            .on('listening', () => {
-                const addr = server.address() as net.AddressInfo;
-                log.info(`Broker started on ${addr.address}:${addr.port}`)
-                resolve(server);
-                messageHandler.startLoop();
-            })
-            .on('error', (error) => reject(error))
-            .listen(config.brokerPort, config.brokerHost);
-    })
 }
 
 export const closeBroker = async () => {

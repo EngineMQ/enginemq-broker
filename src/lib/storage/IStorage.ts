@@ -12,7 +12,8 @@ export interface IStorage {
         cbProgress: {
             total: (count: number) => void
             percent: (count: number, percent: number, size: number) => void
-        }
+        },
+        cbReady: () => void,
     ): void;
     addOrUpdateMessage(messageId: string, message: MessageStorageItem): void;
     deleteMessage(messageId: string): void;

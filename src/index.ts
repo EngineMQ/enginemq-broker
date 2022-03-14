@@ -8,16 +8,16 @@ const EXITCODE_SIGTERM = 15;
 
 const log = logger.child({ module: 'Sys' });
 
-const start = async () => {
-  try {
-    if (!config.isProduction)
-      log.warn('Developer mode active');
-    await createBroker();
-    await createHttpserver();
-  } catch (err) {
-    log.error(err);
-    process.exit(1);
-  }
+const start = () => {
+  if (!config.isProduction)
+    log.warn('Developer mode active');
+
+  createBroker()
+    .then(() => void createHttpserver())
+    .catch((error) => {
+      log.error(error);
+      process.exit(1);
+    })
 };
 
 const stop = async (): Promise<void> => {
@@ -31,7 +31,7 @@ const stop = async (): Promise<void> => {
   process.exit(0);
 };
 
-void start();
+start();
 
 process.on('exit', stop);
 process.on('SIGHUP', () => process.exit(EXITCODE_BASE + 1));
