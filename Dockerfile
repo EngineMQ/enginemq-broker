@@ -8,7 +8,7 @@ COPY src ./src
 
 # Init submodules
 RUN rm -rf ./src/common
-RUN git -C ./src clone https://github.com/Engine-MQ/common.git
+RUN git -C ./src clone https://github.com/EngineMQ/common.git
 
 ENV NPM_CONFIG_LOGLEVEL=error
 RUN npm config set unsafe-perm true
@@ -43,7 +43,7 @@ EXPOSE 16688
 # Set production environment
 ENV NODE_ENV=production
 
-ENV STORAGE=sqlite3(file=/brokerdata/engine-mq-broker.sqlite3)
+ENV STORAGE=sqlite3(file=/brokerdata/enginemq-broker.sqlite3)
 ENV LOG_LEVEL=warn
 ENV BROKER_PORT=16677
 ENV HEARTBEAT_SEC=0

@@ -1,9 +1,9 @@
 {
     "author": "BCsabaEngine",
     "license": "MIT",
-    "name": "engine-mq-broker",
+    "name": "enginemq-broker",
     "version": "1.0.1",
-    "description": "Engine-MQ Message queue broker server",
+    "description": "EngineMQ Message queue broker server",
     "main": "./dist/src/index.js",
     "engines": {
         "node": ">=16",
@@ -21,8 +21,8 @@
         "clean": "tsc --build --clean && rimraf ./build",
         "copystatic": "copyfiles src/**/*.pug src/public/**/*.* build/",
         "build": "npm run clean && tsc --build --force && npm run copystatic",
-        "docker-build": "docker build . -t bcsabaengine/engine-mq-broker:$npm_package_version",
-        "docker-push": "docker push bcsabaengine/engine-mq-broker:$npm_package_version"
+        "docker-build": "docker build . -t bcsabaengine/enginemq-broker:$npm_package_version",
+        "docker-push": "docker push bcsabaengine/enginemq-broker:$npm_package_version"
     },
     "nodemonConfig": {
         "ignore": [

@@ -3,7 +3,7 @@ import { get } from 'env-var';
 
 dotenv.config();
 
-const DEFAULT_SERVICE_NAME = 'engine-mq-broker';
+const DEFAULT_SERVICE_NAME = 'enginemq-broker';
 const DEFAULT_LOG_LEVEL = 'warn';
 
 const DEFAULT_BROKER_PORT = 16677;
