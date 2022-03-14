@@ -54,6 +54,7 @@
         "point-of-view": "^5.1.0",
         "pretty-ms": "^7.0.1",
         "pug": "^3.0.2",
+        "redis": "^4.0.4",
         "timsort": "^0.3.0"
     },
     "devDependencies": {
