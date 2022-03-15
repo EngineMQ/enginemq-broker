@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify"
 
 let i = 0;
-export default(server: FastifyInstance) => {
+export default (server: FastifyInstance) => {
 
     server
         .get<{
@@ -15,7 +15,11 @@ export default(server: FastifyInstance) => {
         }>
         ('/', async (request, reply) => {
             const { username, password } = request.query
-            return reply.view("main", { u: username + (i++).toString(), password });
+            return reply.view("main", {
+                title: "Main",
+                u: username + (i++).toString(),
+                password
+            });
             // await reply.send({ data: username + password });
         })
 }

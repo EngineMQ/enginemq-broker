@@ -1,18 +1,33 @@
-doctype html
-html(lang='en')
-  include include/head.pug
-  body
-    include include/scripts.pug
-    center
-      br
-      br
-      h1  404
-        h2
-          i.fas.fa-exclamation-triangle.text-warning
-          |  Oops! This train is gone...
-          = serviceName
-        p
-          | We could not find the page you were looking for.
-          | Meanwhile, you may 
-          a(href='/') return to main screen.
-        img(src="/public/bg404.jpg" alt="")
+extends _base
+block content
+    .row
+        .col-12.col-sm-6.col-md-3
+            .info-box
+                span.info-box-icon.bg-info.elevation-1
+                    i.fas.fa-cog
+                .info-box-content
+                    span.info-box-text CPU Traffic
+                    span.info-box-number
+                        | 10
+                        small %
+        .col-12.col-sm-6.col-md-3
+            .info-box.mb-3
+                span.info-box-icon.bg-danger.elevation-1
+                    i.fas.fa-thumbs-up
+                .info-box-content
+                    span.info-box-text Likes
+                    span.info-box-number 41,410
+        .col-12.col-sm-6.col-md-3
+            .info-box.mb-3
+                span.info-box-icon.bg-success.elevation-1
+                    i.fas.fa-shopping-cart
+                .info-box-content
+                    span.info-box-text Sales
+                    span.info-box-number 760
+        .col-12.col-sm-6.col-md-3
+            .info-box.mb-3
+                span.info-box-icon.bg-warning.elevation-1
+                    i.fas.fa-users
+                .info-box-content
+                    span.info-box-text New Members
+                    span.info-box-number 2,000
