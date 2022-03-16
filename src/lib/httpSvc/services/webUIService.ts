@@ -12,6 +12,9 @@ export default {
                     info: cli.clientDetail,
                     address: cli.address,
                     stat: cli.stat,
+                    topics: Context.Topics.getTopicsInfo()
+                        .filter((topic) => bs.matchSubscription(topic.topic))
+                        .map((topic) => topic.topic),
                     subscriptions: cli.subscriptions,
                 });
             }

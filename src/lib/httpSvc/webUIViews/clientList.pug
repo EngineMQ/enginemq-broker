@@ -3,8 +3,6 @@ block content
     .row
         .col-12
             .card
-                .card-header
-                    h3.card-title Clients
 
                 .card-body.table-responsive.p-0
                     table.table.table-hover.text-nowrap
@@ -22,14 +20,22 @@ block content
                                             a(href='/client/' + client.uniqueId)
                                                 = client.clientId
                                     td
-                                        if (client.subscriptions)
-                                            each subscription in client.subscriptions
-                                                = subscription
-                                                | 
+                                        if (client.topics)
+                                            each topic in client.topics
+                                                a(href='/topic/' + topic)
+                                                    = topic
                                                 br
+                                        if (client.subscriptions)
+                                            - var subs = [];
+                                                each subscription in client.subscriptions
+                                                    - subs.push(subscription)
+                                            - subs = subs.join('\n')
+                                            small
+                                                span(title=subs)
+                                                    | masks
                                     td
                                         = client.address
                                     td
                                         = client.stat.ageHuman
                                         | 
-                                        i.fa.fa-info-circle(title=client.stat.inBytes + " bytes received in "+client.stat.inPackets+" packets and " + client.stat.outBytes + " bytes sent in "+client.stat.outPackets+" packets")
+                                        i.fa.fa-info-circle(title=client.stat.inBytesHuman + " received in " + client.stat.inPacketsHuman + " packets and " + client.stat.outBytesHuman + " sent in " + client.stat.outPacketsHuman + " packets")
