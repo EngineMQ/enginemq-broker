@@ -9,7 +9,7 @@ import logger from '../logger';
 import staticFolder from './staticFolder'
 import session from './session'
 import pug from './pug'
-import favicon from './favicon'
+//import favicon from './favicon'
 import * as routes from './route';
 
 const HTTP_ERROR_MIN = 400;
@@ -60,7 +60,7 @@ export default async (): Promise<FastifyInstance | null> => {
         await staticFolder(server);
         await session(server);
         await pug(server);
-        await favicon(server);
+        // await favicon(server);
 
         routes.webUiRoutes(server);
     }

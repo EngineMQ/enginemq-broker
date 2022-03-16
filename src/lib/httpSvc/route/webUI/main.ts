@@ -9,14 +9,11 @@ export default (server: FastifyInstance) => {
                 username: string;
                 password: string;
             },
-            Reply: {
-                data: string;
-            }
         }>
         ('/', async (request, reply) => {
             const { username, password } = request.query
             return reply.view("main", {
-                title: "Main",
+                title: "Dashboard",
                 u: username + (i++).toString(),
                 password
             });
