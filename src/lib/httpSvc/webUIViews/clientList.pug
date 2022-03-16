@@ -1,33 +1,35 @@
 extends _base
 block content
     .row
-        .col-12.col-sm-6.col-md-3
-            .info-box
-                span.info-box-icon.bg-info.elevation-1
-                    i.fas.fa-cog
-                .info-box-content
-                    span.info-box-text CPU Traffic
-                    span.info-box-number
-                        | 10
-                        small %
-        .col-12.col-sm-6.col-md-3
-            .info-box.mb-3
-                span.info-box-icon.bg-danger.elevation-1
-                    i.fas.fa-thumbs-up
-                .info-box-content
-                    span.info-box-text Likes
-                    span.info-box-number 41,410
-        .col-12.col-sm-6.col-md-3
-            .info-box.mb-3
-                span.info-box-icon.bg-success.elevation-1
-                    i.fas.fa-shopping-cart
-                .info-box-content
-                    span.info-box-text Sales
-                    span.info-box-number 760
-        .col-12.col-sm-6.col-md-3
-            .info-box.mb-3
-                span.info-box-icon.bg-warning.elevation-1
-                    i.fas.fa-users
-                .info-box-content
-                    span.info-box-text New Members
-                    span.info-box-number 2,000
+        .col-12
+            .card
+                .card-header
+                    h3.card-title Clients
+
+                .card-body.table-responsive.p-0
+                    table.table.table-hover.text-nowrap
+                        thead
+                            tr
+                                th ID
+                                th Subscriptions
+                                th Address
+                                th Connected
+                        tbody
+                            each client in clients
+                                tr
+                                    td
+                                        h5 
+                                            a(href='/client/' + client.uniqueId)
+                                                = client.clientId
+                                    td
+                                        if (client.subscriptions)
+                                            each subscription in client.subscriptions
+                                                = subscription
+                                                | 
+                                                br
+                                    td
+                                        = client.address
+                                    td
+                                        = client.stat.ageHuman
+                                        | 
+                                        i.fa.fa-info-circle(title=client.stat.inBytes + " bytes received in "+client.stat.inPackets+" packets and " + client.stat.outBytes + " bytes sent in "+client.stat.outPackets+" packets")

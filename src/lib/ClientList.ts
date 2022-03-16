@@ -2,7 +2,7 @@ import { EventEmitter } from 'stream';
 
 import logger from './logger';
 import { BrokerSocket } from './BrokerSocket';
-import { shuffleArray } from './utility';
+//import { shuffleArray } from './utility';
 
 const log = logger.child({ module: 'Clients' });
 
@@ -13,7 +13,8 @@ export declare interface ClientList {
 export class ClientList extends EventEmitter {
     private heartbeatSec = 0;
     private clients: BrokerSocket[] = [];
-    [Symbol.iterator]() { return shuffleArray(this.clients)[Symbol.iterator](); }
+    //[Symbol.iterator]() { return shuffleArray(this.clients)[Symbol.iterator](); }
+    [Symbol.iterator]() { return this.clients[Symbol.iterator](); }
 
     constructor(heartbeatSec: number) {
         super();

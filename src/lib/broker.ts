@@ -7,21 +7,30 @@ import storageConfig from './storage/storageConfig';
 import { IStorage } from './storage/IStorage';
 import { MessageHandler } from './MessageHandler';
 import { BrokerSocket } from './BrokerSocket';
+import { TopicHandler } from './TopicHandler';
 
 const log = logger.child({ module: 'Main' });
 
 const clientList = new ClientList(config.heartbeatSec);
 
 let messageHandler: MessageHandler;
+let topics: TopicHandler;
 let server: net.Server;
 let storage: IStorage;
 
-export const createBroker = async () => {
+export const createBroker = async (): Promise<{
+    server: net.Server,
+    clientList: ClientList,
+    messageHandler: MessageHandler,
+    topics: TopicHandler,
+    storage: IStorage
+}> => {
     log.info('Init broker');
 
+    topics = new TopicHandler();
     storage = storageConfig(config.storage);
-    messageHandler = new MessageHandler(clientList, storage);
-    return messageHandler.loadMessages()
+    messageHandler = new MessageHandler(clientList, storage, topics);
+    await messageHandler.loadMessages()
         .then(() => {
             server = net.createServer((socket: net.Socket) => clientList.add(new BrokerSocket(socket, messageHandler)));
             server
@@ -34,6 +43,13 @@ export const createBroker = async () => {
                 .listen(config.brokerPort, config.brokerHost);
         })
 
+    return {
+        server: server,
+        clientList: clientList,
+        messageHandler: messageHandler,
+        topics: topics,
+        storage: storage
+    };
 }
 
 export const closeBroker = async () => {

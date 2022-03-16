@@ -13,7 +13,22 @@ const start = () => {
     log.warn('Developer mode active');
 
   createBroker()
-    .then(() => void createHttpserver())
+    .then(async (
+      {
+        clientList,
+        messageHandler,
+        topics,
+        storage
+      }
+    ) => {
+      global.Context = {
+        ClientList: clientList,
+        MessageHandler: messageHandler,
+        Topics: topics,
+        Storage: storage
+      };
+      return createHttpserver()
+    })
     .catch((error) => {
       log.error(error);
       process.exit(1);

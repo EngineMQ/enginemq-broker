@@ -12,6 +12,7 @@ import { BufferedSocketOptions, defaultBufferedSocketOptions } from '../common/l
 
 const nowMs = () => new Date().getTime();
 const log = logger.child({ module: 'Socket' });
+let socketUniqueId = 1;
 
 const HEARTBEAT_FREQ_PERCENT = 45;
 
@@ -29,7 +30,7 @@ export declare interface BrokerSocket {
 export type AckFn = (deliveryAck: messages.ClientMessageDeliveryAck) => boolean;
 export class BrokerSocket extends MsgpackSocket {
     private messageHandler: MessageHandler;
-    private clientInfo = { clientId: '', version: '', maxWorkers: 1 };
+    private clientInfo = { uniqueId: 0, clientId: '', version: '', maxWorkers: 1 };
     private subscriptions: (string | RegExp)[] = [];
     private lastRcvHeartbeat = nowMs();
     private lastSndHeartbeat = 0;
@@ -136,6 +137,7 @@ export class BrokerSocket extends MsgpackSocket {
                 if (!cmHello) return;
 
                 this.clientInfo = {
+                    uniqueId: socketUniqueId++,
                     clientId: cmHello.clientId,
                     version: cmHello.version,
                     maxWorkers: Math.max(Math.min(cmHello.maxWorkers, config.maxClientWorkers), config.minWorkers),

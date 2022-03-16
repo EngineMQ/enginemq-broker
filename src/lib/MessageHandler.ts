@@ -30,10 +30,10 @@ export class MessageHandler {
     private messageIndexerList = new Map<MessageId, MessageStorageItem>();
     private underDeliveryList = new Map<MessageId, BrokerSocket>();
 
-    constructor(clientList: ClientList, storage: IStorage) {
+    constructor(clientList: ClientList, storage: IStorage, topics: TopicHandler) {
         this.clientList = clientList;
         this.storage = storage;
-        this.topics = new TopicHandler();
+        this.topics = topics;
 
         this.clientList.on('remove', (socket: BrokerSocket) => this.onReleaseClient(socket))
         setTimeout(() => this.removeSomeExpiredMessages(), GARBAGE_SEC * 1000);
