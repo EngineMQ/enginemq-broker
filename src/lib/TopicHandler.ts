@@ -1,5 +1,5 @@
 import * as timsort from 'timsort';
-import { Metrics } from 'metrics-1-5-15'
+import { CounterMetrics } from 'metrics-1-5-15'
 
 import logger from './logger';
 import * as utility from './utility';
@@ -18,7 +18,7 @@ const log = logger.child({ module: 'Topic' });
 export class TopicHandler {
     private topics = new Map<Topic, MessageStorageItem[]>();
     private topicSortInfo = new Map<Topic, { newItems: number, lastSortAt: number, timerSorter: number }>();
-    private topicMetric = new Map<Topic, [Metrics, Metrics]>();
+    private topicMetric = new Map<Topic, { add: CounterMetrics, remove: CounterMetrics }>();
 
 
 
@@ -28,7 +28,7 @@ export class TopicHandler {
         if (!this.topics.has(topic)) {
             this.topics.set(topic, []);
             this.topicSortInfo.set(topic, { newItems: 0, lastSortAt: nowMs(), timerSorter: 0 });
-            this.topicMetric.set(topic, [new Metrics(), new Metrics()]);
+            this.topicMetric.set(topic, { add: new CounterMetrics(), remove: new CounterMetrics() });
             log.info({ topic }, 'Topic created');
         }
         const msglist = this.topics.get(topic);
@@ -141,12 +141,12 @@ export class TopicHandler {
         }
     }
 
-    public getMetric(topic: Topic) {
+    public getMetricByMinutes(topic: Topic) {
         const metrics = this.topicMetric.get(topic);
         if (metrics)
             return {
-                add: metrics[0].getSum(),
-                remove: metrics[1].getSum(),
+                add: metrics.add.getCountByMinutes(),
+                remove: metrics.remove.getCountByMinutes(),
             }
         return null;
     }
@@ -216,8 +216,8 @@ export class TopicHandler {
     private tickMetric(topic: Topic, isAdd: boolean) {
         const metrics = this.topicMetric.get(topic);
         if (metrics) {
-            const metric = isAdd ? metrics[0] : metrics[1];
-            metric.add(1);
+            const metric = isAdd ? metrics.add : metrics.remove;
+            metric.incCounter();
         }
     }
 }
