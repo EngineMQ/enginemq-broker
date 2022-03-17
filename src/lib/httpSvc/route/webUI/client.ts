@@ -13,10 +13,13 @@ export default (server: FastifyInstance) => {
             });
         })
 
-        .get<{ Params: { client: string } }>('/client/:client', async (request, reply) => {
-            console.log(request.params.client);
-            return reply.view("clientList", {
-                title: request.params.client + "Clients",
+        .get<{ Params: { uniqueId: number } }>('/client/:uniqueId(^\\d+)', async (request, reply) => {
+            const uniqueId = request.params.uniqueId;
+            const client = webUIService.getClient(request.params.uniqueId);
+            return reply.view("client", {
+                title: "Clients",
+                uniqueId,
+                client,
             });
         })
 }

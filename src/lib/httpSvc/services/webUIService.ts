@@ -15,7 +15,6 @@ export default {
                     topics: Context.Topics.getTopicsInfo()
                         .filter((topic) => bs.matchSubscription(topic.topic))
                         .map((topic) => topic.topic),
-                    subscriptions: cli.subscriptions,
                 });
             }
         }
@@ -26,6 +25,21 @@ export default {
             return sortinfo;
         })
         return result;
-    }
+    },
+
+    getClient(uniqueId: number) {
+        for (let i = 0; i < Context.ClientList.length; i++) {
+            const bs = Context.ClientList.getSocket(i);
+            if (bs) {
+                const cli = bs.getClientInfo();
+                if (cli.clientDetail.uniqueId == uniqueId) {
+                    return {
+                        a: cli.address,
+                    }
+                }
+            }
+        }
+        return null;
+    },
 
 }

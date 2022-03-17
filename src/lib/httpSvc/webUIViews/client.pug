@@ -1,0 +1,19 @@
+extends _base
+block content
+    if (client)
+        | OK
+    else
+        center
+            i.fa.fa-4x.fa-eye-slash
+            br
+            br
+            h2
+                | No client found
+                small
+                    small
+                        br
+                        = uniqueId
+            a.btn.btn-default(href='/client')
+                i.fa.fa-chevron-circle-left
+                | 
+                | Back to clients

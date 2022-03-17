@@ -9,9 +9,9 @@ block content
                         thead
                             tr
                                 th ID
-                                th Subscriptions
+                                th Live subscriptions
                                 th Address
-                                th Connected
+                                th Uptime
                         tbody
                             each client in clients
                                 tr
@@ -24,18 +24,7 @@ block content
                                             each topic in client.topics
                                                 a(href='/topic/' + topic)
                                                     = topic
-                                                br
-                                        if (client.subscriptions)
-                                            - var subs = [];
-                                                each subscription in client.subscriptions
-                                                    - subs.push(subscription)
-                                            - subs = subs.join('\n')
-                                            small
-                                                span(title=subs)
-                                                    | masks
                                     td
                                         = client.address
                                     td
                                         = client.stat.ageHuman
-                                        | 
-                                        i.fa.fa-info-circle(title=client.stat.inBytesHuman + " received in " + client.stat.inPacketsHuman + " packets and " + client.stat.outBytesHuman + " sent in " + client.stat.outPacketsHuman + " packets")
