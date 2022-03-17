@@ -1,18 +1,105 @@
 extends _base
 block content
     if (client)
-        | OK
+        .row 
+            .col-md-3
+                .card.card-primary.card-outline
+                    .card-body
+                        h5.text-center
+                            i.fa.fa-inbox.text-primary.float-left
+                            | 
+                            | General
+                        ul.list-group.list-group-unbordered.list-group-compact.mb-3
+                            li.list-group-item
+                                b
+                                    | Client ID
+                                .float-right
+                                    = client.clientId
+                            li.list-group-item
+                                b
+                                    | Address
+                                .float-right
+                                    = client.addressDetail.address
+                                    | :
+                                    = client.addressDetail.port
+                            li.list-group-item
+                                b
+                                    | Version
+                                .float-right
+                                    |v
+                                    = client.info.version
+                            li.list-group-item
+                                b
+                                    | Max workers
+                                .float-right
+                                    = client.info.maxWorkers
+            .col-md-6
+                .card.card-success.card-outline
+                    .card-body
+                        h5.text-center
+                            i.fa.fa-project-diagram.text-success.float-left
+                            | 
+                            | Subscriptions
+                        ul.list-group.list-group-unbordered.list-group-compact.mb-3
+                            if (client.topics.length)
+                                li.list-group-item
+                                    b Live topics
+                                each topic in client.topics
+                                    li.list-group-item.ml-3
+                                        a(href='/topic/' + topic)
+                                            code 
+                                                = topic
+                            if (client.subscriptions.length)
+                                li.list-group-item
+                                    b Subscriptions
+                                each sub in client.subscriptions
+                                    li.list-group-item.ml-3
+                                        code
+                                            = sub
+            .col-md-3
+                .card.card-warning.card-outline
+                    .card-body
+                        h5.text-center
+                            i.fa.fa-chart-bar.text-warning.float-left
+                            | 
+                            | Statistics
+                        ul.list-group.list-group-unbordered.list-group-compact.mb-3
+                            li.list-group-item
+                                b
+                                    | Age
+                                .float-right
+                                    = client.stat.ageHuman
+                            li.list-group-item
+                                b
+                                    | Incoming data
+                                .float-right
+                                    = client.stat.inBytesHuman
+                            li.list-group-item
+                                b
+                                    | Outgoing data
+                                .float-right
+                                    = client.stat.outBytesHuman
+                            li.list-group-item
+                                b
+                                    | Incoming packets
+                                .float-right
+                                    = client.stat.inPacketsHuman
+                            li.list-group-item
+                                b
+                                    | Outgoing packets
+                                .float-right
+                                    = client.stat.outPacketsHuman
     else
         center
             i.fa.fa-4x.fa-eye-slash
             br
             br
-            h2
+            h4
                 | No client found
                 small
-                    small
-                        br
-                        = uniqueId
+                    br
+                    | #
+                    = uniqueId
             a.btn.btn-default(href='/client')
                 i.fa.fa-chevron-circle-left
                 | 

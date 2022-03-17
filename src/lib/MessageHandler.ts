@@ -83,7 +83,9 @@ export class MessageHandler {
                                 log.info({ expired: countExpired, loaded: countLoaded }, 'Delete expired messages');
 
                             this.topics.reSortAllTopics();
-                            for (const topicInfo of this.topics.getTopicsInfo())
+                            for (const topicInfo of this.topics
+                                .getTopicsInfo()
+                                .filter((topic) => topic.count))
                                 log.info({
                                     topic: topicInfo.topic,
                                     count: topicInfo.count,

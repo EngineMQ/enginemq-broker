@@ -9,6 +9,7 @@ export default (server: FastifyInstance) => {
             const clients = webUIService.getAllClients();
             return reply.view("clientList", {
                 title: "Clients",
+                breadcrumb: {},
                 clients,
             });
         })
@@ -17,7 +18,8 @@ export default (server: FastifyInstance) => {
             const uniqueId = request.params.uniqueId;
             const client = webUIService.getClient(request.params.uniqueId);
             return reply.view("client", {
-                title: "Clients",
+                title: `Client #${uniqueId}`,
+                breadcrumb: { '/client': 'Clients' },
                 uniqueId,
                 client,
             });

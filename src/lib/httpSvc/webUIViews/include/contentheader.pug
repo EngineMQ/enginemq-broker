@@ -7,12 +7,17 @@
                     = title
                 h5.m-0
                     = subtitle
+                = url
 
-            .col-sm-6
-                ol.breadcrumb.float-sm-right
-                    li.breadcrumb-item
-                        a(href='#') Dashboard
-                    li.breadcrumb-item
-                        a(href='#') Topics
-                    li.breadcrumb-item
-                        = title
+            if (breadcrumb)
+                .col-sm-6
+                    ol.breadcrumb.float-sm-right
+                        li.breadcrumb-item
+                            a(href='/') Dashboard
+                        each val, key in breadcrumb
+                            li.breadcrumb-item
+                                a(href=key)
+                                    = val
+                        li.breadcrumb-item
+                            = title
+

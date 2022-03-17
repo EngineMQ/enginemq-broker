@@ -20,7 +20,7 @@ export default async (server: FastifyInstance) => {
             devMode: !config.isProduction,
             appVersion: version,
         },
-        production: config.isProduction, //cache files
+        production: config.isProduction, //cache files?
         options: {
             pretty: !config.isProduction,
         },
