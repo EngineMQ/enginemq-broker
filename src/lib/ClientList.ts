@@ -2,7 +2,6 @@ import { EventEmitter } from 'stream';
 
 import logger from './logger';
 import { BrokerSocket } from './BrokerSocket';
-//import { shuffleArray } from './utility';
 
 const log = logger.child({ module: 'Clients' });
 
@@ -55,6 +54,12 @@ export class ClientList extends EventEmitter {
 
     public getSocketByClientId(clientId: string): BrokerSocket | undefined {
         return this.clients.find((client) => client.getClientInfo().clientId == clientId)
+    }
+
+    public destroy(uniqueId: number) {
+        const bs = this.clients.find((i) => i.getClientInfo().clientDetail.uniqueId == uniqueId);
+        if (bs)
+            bs.destroy();
     }
 
     public destroyAll = () => this.clients.forEach((client) => client.destroy())

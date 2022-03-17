@@ -51,4 +51,7 @@ export default {
         return null;
     },
 
+    kickClient(uniqueId: number) {
+        Context.ClientList.destroy(uniqueId);
+    }
 }

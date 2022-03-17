@@ -5,6 +5,11 @@ nav.main-header.navbar.navbar-expand.navbar-dark
                 i.fas.fa-bars
     ul.navbar-nav.ml-auto
         li.nav-item
+            .nav-link
+                input(type="checkbox" onchange="reloadContentWrapper();")#auto-refresh
+                | 
+                | Auto refresh
+        li.nav-item
             a.nav-link(data-widget="navbar-search" href="#" role="button")
                 i.fas.fa-search
             .navbar-search-block
@@ -42,3 +47,13 @@ nav.main-header.navbar.navbar-expand.navbar-dark
         li.nav-item
             a.nav-link(data-widget="fullscreen" href="#" role="button")
                 i.fas.fa-expand-arrows-alt
+
+script(type='text/javascript').
+    function reloadContentWrapper() {
+        const isChecked = $("#auto-refresh").is(':checked');
+        if (isChecked)
+            $("#content-wrapper").load(location.href + " #content-wrapper > *", function () {
+                if (isChecked)
+                    setTimeout(reloadContentWrapper, 1000);
+            });
+    }

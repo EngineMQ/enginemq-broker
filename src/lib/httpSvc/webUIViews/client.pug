@@ -33,6 +33,8 @@ block content
                                     | Max workers
                                 .float-right
                                     = client.info.maxWorkers
+                        a.btn.btn-danger.btn-block(onclick='kickClient(' + client.uniqueId + ')')
+                            | Kick
             .col-md-6
                 .card.card-success.card-outline
                     .card-body
@@ -104,3 +106,19 @@ block content
                 i.fa.fa-chevron-circle-left
                 | 
                 | Back to clients
+
+    script(type='text/javascript').
+        function kickClient(uniqueId)
+        {
+            $.post("/client/kick", { uniqueId: uniqueId })
+            .done(function() {
+                toastr.success('Client disconnected', 'OK');
+                setTimeout(() =>{
+                    window.location.href = '/client';
+                }, 500);
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                toastr.error(errorThrown, 'Error');
+                //console.log([jqXHR, textStatus, errorThrown]);
+            });        
+        }

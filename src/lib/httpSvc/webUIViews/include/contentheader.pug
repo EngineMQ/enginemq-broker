@@ -4,6 +4,15 @@
 
             .col-sm-6
                 h1.m-0
+                    if (breadcrumb)
+                        small
+                            if (breadcrumb.length > 0)
+                                a(href=breadcrumb[breadcrumb.length - 1].url)
+                                    i.fa.fa-chevron-circle-left
+                            else
+                                a(href="/")
+                                    i.fa.fa-chevron-circle-left
+                        | 
                     = title
                 h5.m-0
                     = subtitle
@@ -14,10 +23,10 @@
                     ol.breadcrumb.float-sm-right
                         li.breadcrumb-item
                             a(href='/') Dashboard
-                        each val, key in breadcrumb
+                        each bc in breadcrumb
                             li.breadcrumb-item
-                                a(href=key)
-                                    = val
+                                a(href=bc.url)
+                                    = bc.title
                         li.breadcrumb-item
                             = title
 

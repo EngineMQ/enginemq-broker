@@ -9,7 +9,7 @@ export default (server: FastifyInstance) => {
             const clients = webUIService.getAllClients();
             return reply.view("clientList", {
                 title: "Clients",
-                breadcrumb: {},
+                breadcrumb: [],
                 clients,
             });
         })
@@ -19,9 +19,14 @@ export default (server: FastifyInstance) => {
             const client = webUIService.getClient(request.params.uniqueId);
             return reply.view("client", {
                 title: `Client #${uniqueId}`,
-                breadcrumb: { '/client': 'Clients' },
+                breadcrumb: [{ url: '/client', title: 'Clients' }],
                 uniqueId,
                 client,
             });
+        })
+
+        .post<{ Body: { uniqueId: number } }>('/client/kick', async (request, reply) => {
+            webUIService.kickClient(request.body.uniqueId);
+            return reply.send("OK");
         })
 }

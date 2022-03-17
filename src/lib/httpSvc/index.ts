@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid';
 import fastify, { FastifyInstance } from 'fastify';
+import fastifyFormBody from 'fastify-formbody';
 import fastifyHelmet from 'fastify-helmet';
 import fastifyCompress from 'fastify-compress';
 import fastifyEtag from 'fastify-etag';
@@ -34,6 +35,7 @@ export default async (): Promise<FastifyInstance | null> => {
     await server.register(fastifyHelmet, { contentSecurityPolicy: false });
     await server.register(fastifyCompress, { global: false });
     await server.register(fastifyEtag);
+    await server.register(fastifyFormBody);
 
     server.addHook("onRequest", (req, _reply, done) => {
         req.log.debug({ method: req.method, url: req.raw.url, session: req.session, }, "Incoming request");
