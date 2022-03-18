@@ -20,7 +20,7 @@ block content
                                     | Messages
                                 .float-right
                                     = topic.count
-                        a.btn.btn-danger.btn-block(onclick='clearTopic(' + topic.topicName + ')')
+                        a.btn.btn-danger.btn-block(onclick='clearTopic("' + topic.topicName + '")')
                             | Clear messages
             .col-md-5
                 .card.card-success.card-outline
@@ -111,14 +111,14 @@ block content
                 | Back to topics
 
     script(type='text/javascript').
-        function clearTopic(uniqueId)
+        function clearTopic(topicname)
         {
-            $.post("/topic/clean", { uniqueId: uniqueId })
+            $.post("/topic/clear", { topicname: topicname })
             .done(function() {
                 toastr.success('Messages cleared', 'OK');
                 setTimeout(() =>{
-                    window.location.href = '#';
-                }, 500);
+                    reloadContentWrapper();
+                }, 250);
             })
             .fail(function(jqXHR, textStatus, errorThrown) {
                 toastr.error(errorThrown, 'Error');

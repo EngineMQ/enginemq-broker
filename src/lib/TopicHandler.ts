@@ -69,6 +69,21 @@ export class TopicHandler {
         }
     }
 
+    public getTopicMessages(topic: Topic): string[] {
+        const msglist = this.topics.get(topic);
+        if (msglist)
+            return msglist.map((item: MessageStorageItem) => item.options.messageId);
+        return [];
+    }
+
+    public removeTopicAllMessages(topic: Topic) {
+        if (this.topics.has(topic)) {
+            this.topics.set(topic, []);
+            this.topicSortInfo.set(topic, { newItems: 0, lastSortAt: nowMs(), timerSorter: 0 });
+            this.topicMetric.set(topic, { add: new CounterMetrics(), remove: new CounterMetrics() });
+        }
+    }
+
     public getSomeExpiredMessages(): MessageId[] {
         const now = nowMs();
 

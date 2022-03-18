@@ -68,7 +68,6 @@ export default {
     },
 
     clearTopic(topicname: string) {
-        topicname;
-        //Context.ClientList.destroy(uniqueId);
+        Context.MessageHandler.deleteTopicAllMessage(topicname);
     }
 }

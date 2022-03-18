@@ -146,6 +146,27 @@ export class MessageHandler {
     }
     public breakLoop() { this.loopBroken = true; }
 
+    public deleteTopicAllMessage(topic: Topic) {
+        log.debug('Delete topic all messages');
+
+        const exmsgids = this.topics.getTopicMessages(topic);
+        if (exmsgids.length) {
+            const measureTime = new utility.MeasureTime();
+            const originalCount = exmsgids.length;
+            for (const messageId of exmsgids) {
+                this.storage.deleteMessage(messageId);
+
+                this.underDeliveryList.delete(messageId);
+
+                this.topics.removeTopicAllMessages(topic);
+                this.topicIndexerList.delete(messageId);
+                this.messageIndexerList.delete(messageId);
+            }
+            measureTime.measure('delete');
+            measureTime.writeLog((valuestr: string[]) => log.info({ total: originalCount, times: valuestr }, 'Delete bulk messages'));
+        }
+    }
+
 
 
     // Private
