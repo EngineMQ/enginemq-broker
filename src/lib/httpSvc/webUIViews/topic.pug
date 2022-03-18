@@ -1,0 +1,126 @@
+extends _base
+block content
+    if (topic)
+        .row 
+            .col-md-4
+                .card.card-primary.card-outline
+                    .card-body
+                        h5.text-center
+                            i.fa.fa-inbox.text-primary.float-left
+                            | 
+                            | General
+                        ul.list-group.list-group-unbordered.list-group-compact.mb-3
+                            li.list-group-item
+                                b
+                                    | Name
+                                .float-right
+                                    = topic.topicName
+                            li.list-group-item
+                                b
+                                    | Messages
+                                .float-right
+                                    = topic.count
+                        a.btn.btn-danger.btn-block(onclick='clearTopic(' + topic.topicName + ')')
+                            | Clear messages
+            .col-md-5
+                .card.card-success.card-outline
+                    .card-body
+                        h5.text-center
+                            i.fa.fa-network-wired.text-success.float-left
+                            | 
+                            | Subscriptions
+                        ul.list-group.list-group-unbordered.list-group-compact.mb-3
+                            if (topic.subscribers)
+                                each sub in topic.subscribers
+                                    li.list-group-item.ml-3
+                                        a(href='/client/' + sub.uniqueId)
+                                            = sub.clientId
+                                            small
+                                                | 
+                                                | (#
+                                                = sub.uniqueId
+                                                | )
+            .col-md-3
+                .card.card-warning.card-outline
+                    .card-body
+                        h5.text-center
+                            i.fa.fa-chart-bar.text-warning.float-left
+                            | 
+                            | Message statistics
+                        ul.list-group.list-group-unbordered.list-group-compact.mb-3
+                            li.list-group-item
+                                b
+                                    | Age average
+                                .float-right
+                                    = topic.ageHuman.avg
+                            li.list-group-item
+                                b
+                                    | Age range
+                                .float-right
+                                    = topic.ageHuman.min
+                                    | 
+                                    | ...
+                                    | 
+                                    = topic.ageHuman.max
+
+                            li.list-group-item
+                                b
+                                    | Incoming
+                            li.list-group-item.ml-3
+                                | 1 min
+                                .float-right
+                                    = topic.metrics.add[1]
+                            li.list-group-item.ml-3
+                                | 5 min
+                                .float-right
+                                    = topic.metrics.add[5]
+                            li.list-group-item.ml-3
+                                | 15 min
+                                .float-right
+                                    = topic.metrics.add[15]
+
+                            li.list-group-item
+                                b
+                                    | Outgoing
+                            li.list-group-item.ml-3
+                                | 1 min
+                                .float-right
+                                    = topic.metrics.remove[1]
+                            li.list-group-item.ml-3
+                                | 5 min
+                                .float-right
+                                    = topic.metrics.remove[5]
+                            li.list-group-item.ml-3
+                                | 15 min
+                                .float-right
+                                    = topic.metrics.remove[15]
+    else
+        center
+            i.fa.fa-4x.fa-eye-slash
+            br
+            br
+            h4
+                | No topic found
+                small
+                    br
+                    | #
+                    = uniqueId
+            a.btn.btn-default(href='/topic')
+                i.fa.fa-chevron-circle-left
+                | 
+                | Back to topics
+
+    script(type='text/javascript').
+        function clearTopic(uniqueId)
+        {
+            $.post("/topic/clean", { uniqueId: uniqueId })
+            .done(function() {
+                toastr.success('Messages cleared', 'OK');
+                setTimeout(() =>{
+                    window.location.href = '#';
+                }, 500);
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                toastr.error(errorThrown, 'Error');
+            });        
+        }

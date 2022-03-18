@@ -29,3 +29,13 @@ export class MeasureTime {
         cb(values);
     }
 }
+
+export const prettyThousand = (value: number) => {
+    if (value > 2 * 1000 * 1000 * 1000)
+        return `${Math.round(value / 1000 / 1000 / 1000)}G`;
+    if (value > 2 * 1000 * 1000)
+        return `${Math.round(value / 1000 / 1000)}M`;
+    if (value > 2 * 1000)
+        return `${Math.round(value / 1000)}k`;
+    return value;
+}

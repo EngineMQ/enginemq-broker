@@ -1,5 +1,4 @@
 import { customAlphabet } from 'nanoid';
-import * as prettyMilliseconds from 'pretty-ms';
 
 import logger from './logger';
 import { ClientList } from './ClientList';
@@ -88,13 +87,13 @@ export class MessageHandler {
                                 .getTopicsInfo()
                                 .filter((topic) => topic.count))
                                 log.info({
-                                    topic: topicInfo.topic,
+                                    topic: topicInfo.topicName,
                                     count: topicInfo.count,
                                     age:
                                     {
-                                        min: prettyMilliseconds(topicInfo.minAge, { compact: true }),
-                                        max: prettyMilliseconds(topicInfo.maxAge, { compact: true }),
-                                        avg: prettyMilliseconds(topicInfo.avgAge, { compact: true }),
+                                        min: topicInfo.ageHuman.min,
+                                        max: topicInfo.ageHuman.max,
+                                        avg: topicInfo.ageHuman.avg,
                                     }
                                 }, 'Topic message stat');
                         }

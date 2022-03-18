@@ -1,7 +1,7 @@
 export default {
 
     getAllClients() {
-        const topicsInfo = Context.Topics.getAllTopics();
+        const topicNames = Context.Topics.getAllTopics();
         const result = [];
         for (let i = 0; i < Context.ClientList.length; i++) {
             const bs = Context.ClientList.getSocket(i);
@@ -13,7 +13,7 @@ export default {
                     info: cli.clientDetail,
                     address: cli.address,
                     stat: cli.stat,
-                    topics: topicsInfo.filter((topic) => bs.matchSubscription(topic))
+                    topics: topicNames.filter((topic) => bs.matchSubscription(topic))
                 });
             }
         }
@@ -27,7 +27,7 @@ export default {
     },
 
     getClient(uniqueId: number) {
-        const topicsInfo = Context.Topics.getAllTopics();
+        const topicNames = Context.Topics.getAllTopics();
         for (const bs of Context.ClientList) {
             const cli = bs.getClientInfo();
             if (cli.clientDetail.uniqueId == uniqueId)
@@ -37,7 +37,7 @@ export default {
                     info: cli.clientDetail,
                     addressDetail: cli.addressDetail,
                     stat: cli.stat,
-                    topics: topicsInfo.filter((topic) => bs.matchSubscription(topic)),
+                    topics: topicNames.filter((topic) => bs.matchSubscription(topic)),
                     subscriptions: Array
                         .from(cli.subscriptions)
                         .map((item) => item.toString())

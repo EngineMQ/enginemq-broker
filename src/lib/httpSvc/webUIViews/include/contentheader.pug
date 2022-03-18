@@ -14,9 +14,12 @@
                                     i.fa.fa-chevron-circle-left
                         | 
                     = title
-                h5.m-0
-                    = subtitle
-                = url
+                    if (subtitle)
+                        small
+                            | 
+                            | ·
+                            | 
+                            = subtitle
 
             if (breadcrumb)
                 .col-sm-6

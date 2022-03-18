@@ -1,4 +1,5 @@
 import * as timsort from 'timsort';
+import * as prettyMilliseconds from 'pretty-ms';
 import { CounterMetrics } from 'metrics-1-5-15'
 
 import logger from './logger';
@@ -84,21 +85,44 @@ export class TopicHandler {
     }
 
     public getTopicsInfo() {
-        const result: { topic: string, count: number, minAge: number, maxAge: number, avgAge: number }[] = [];
+        const result: {
+            topicName: string,
+            count: number,
+            age: { min: number, max: number, avg: number },
+            ageHuman: { min: string, max: string, avg: string },
+        }[] = [];
         for (const [topic, msglist] of this.topics.entries()) {
             const now = nowMs();
             let minAge = Number.MAX_SAFE_INTEGER;
             let maxAge = Number.MIN_SAFE_INTEGER;
             let sumAge = 0;
-            for (const msg of msglist) {
-                if (minAge > now - msg.publishTime)
-                    minAge = now - msg.publishTime;
-                if (maxAge < now - msg.publishTime)
-                    maxAge = now - msg.publishTime;
-                sumAge += now - msg.publishTime;
-            }
-            result.push({ topic, count: msglist.length, minAge, maxAge, avgAge: Math.round(sumAge / msglist.length) })
+            if (msglist.length)
+                for (const msg of msglist) {
+                    if (minAge > now - msg.publishTime)
+                        minAge = now - msg.publishTime;
+                    if (maxAge < now - msg.publishTime)
+                        maxAge = now - msg.publishTime;
+                    sumAge += now - msg.publishTime;
+                }
+            else
+                maxAge = minAge = 0;
+            result.push({
+                topicName: topic,
+                count: msglist.length,
+                age: {
+                    min: minAge,
+                    max: maxAge,
+                    avg: msglist.length ? Math.round(sumAge / msglist.length) : 0,
+                },
+                ageHuman:
+                {
+                    min: prettyMilliseconds(minAge, { compact: true }),
+                    max: prettyMilliseconds(maxAge, { compact: true }),
+                    avg: prettyMilliseconds(Math.round(msglist.length ? Math.round(sumAge / msglist.length) : 0), { compact: true }),
+                },
+            })
         }
+        result.sort((a, b) => a.topicName.localeCompare(b.topicName));
         return result;
     }
     public getAllTopics() {
@@ -202,7 +226,7 @@ export class TopicHandler {
             }
 
             measureTime.measure('sort');
-            measureTime.writeLog((valuestr: string[]) => log.info({ topic, reason, metric: valuestr }, 'Sort topic'));
+            measureTime.writeLog((valuestr: string[]) => log.debug({ topic, reason, metric: valuestr }, 'Sort topic'));
         }
         else
             logger.warn({ topic }, 'Topic not found for sort');
