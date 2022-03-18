@@ -97,8 +97,8 @@ export class BrokerSocket extends MsgpackSocket {
     }
 
     public delivery(message: messages.BrokerMessageDelivery, onAck: AckFn) {
-        this.sendMessage("delivery", message);
         this.waitListForAck.push({ messageId: message.options.messageId, onAck: onAck });
+        this.sendMessage("delivery", message);
     }
 
     public hasEnoughWorker() {

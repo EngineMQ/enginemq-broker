@@ -2,6 +2,7 @@ import { EventEmitter } from 'stream';
 
 import logger from './logger';
 import { BrokerSocket } from './BrokerSocket';
+import { shuffleArray } from './utility';
 
 const log = logger.child({ module: 'Clients' });
 
@@ -17,16 +18,13 @@ export class ClientList extends EventEmitter {
 
     constructor(heartbeatSec: number) {
         super();
-        this.initHeartbeat(heartbeatSec);
-    }
 
-    private initHeartbeat(sec: number) {
-        this.heartbeatSec = sec;
-        if (!sec) return;
-        setInterval(() => {
-            for (const client of this.clients)
-                client.processHeartbeat(sec)
-        }, sec * 100);
+        this.heartbeatSec = heartbeatSec;
+        if (heartbeatSec)
+            setInterval(() => {
+                for (const client of this.clients)
+                    client.processHeartbeat(heartbeatSec)
+            }, heartbeatSec * 100);
     }
 
     public add(client: BrokerSocket) {
@@ -47,6 +45,14 @@ export class ClientList extends EventEmitter {
     }
 
     public get length() { return this.clients.length }
+
+    public getItems() {
+        return this.clients;
+    }
+
+    public getRandomized(): IterableIterator<BrokerSocket> {
+        return shuffleArray(this.clients)[Symbol.iterator]();
+    }
 
     public getSocket(index: number): BrokerSocket | undefined {
         return this.clients[index] || undefined

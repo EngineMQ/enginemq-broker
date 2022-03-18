@@ -17,6 +17,7 @@ type Topic = string;
 const GARBAGE_SEC = 60;
 const GARBAGE_BOOST_SEC = 15;
 const GARBAGE_LIMIT = 1000;
+const MESSAGELOOP_BOOST_ITERATIONS = 100;
 
 const nanoid = customAlphabet(types.MESSAGE_ID_ALPHABET, types.MESSAGE_ID_LENGTH_DEFAULT);
 const nowMs = () => new Date().getTime();
@@ -74,8 +75,8 @@ export class MessageHandler {
                                 }
 
                                 this.topics.addMessage(topic, item, true)
-                                this.topicIndexerList.set(messageId, topic);
 
+                                this.topicIndexerList.set(messageId, topic);
                                 this.messageIndexerList.set(messageId, item);
                                 countLoaded++;
                             }
@@ -264,12 +265,13 @@ export class MessageHandler {
         return ackIsCompleted;
     }
 
+    private boostCount = 0;
     private messageLoop = () => {
         if (this.loopBroken) return;
         try {
             for (const topic of this.topics.getActiveTopicsRandomized()) {
                 let clientTarget: BrokerSocket | null = null;
-                for (const client of this.clientList)
+                for (const client of this.clientList.getRandomized())
                     if (client.matchSubscription(topic))
                         if (client.hasEnoughWorker()) {
                             clientTarget = client;
@@ -297,7 +299,15 @@ export class MessageHandler {
                 this.underDeliveryList.set(message.options.messageId, clientTarget);
                 clientTarget.delivery(message, this.createMessageLoopDeliveryAck);
             }
-            setTimeout(this.messageLoop, 0);
+
+            this.boostCount++;
+            if (this.boostCount > MESSAGELOOP_BOOST_ITERATIONS) {
+                setTimeout(this.messageLoop, 0);
+                this.boostCount = 0;
+            }
+            else
+                setImmediate(this.messageLoop);
+
         } catch (error) { log.error(error); }
     }
 }

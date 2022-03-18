@@ -15,6 +15,16 @@ block content
                                     | Client ID
                                 .float-right
                                     = client.clientId
+                            if (client.groupMembers.length)
+                                li.list-group-item
+                                    b
+                                        | Group members
+                                    .float-right
+                                        each gm in client.groupMembers
+                                            a(href="/client/" + gm)
+                                                | #
+                                                = gm
+                                                | 
                             li.list-group-item
                                 b
                                     | Address

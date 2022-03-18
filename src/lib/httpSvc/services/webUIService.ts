@@ -28,25 +28,26 @@ export default {
 
     getClient(uniqueId: number) {
         const topicsInfo = Context.Topics.getAllTopics();
-        for (let i = 0; i < Context.ClientList.length; i++) {
-            const bs = Context.ClientList.getSocket(i);
-            if (bs) {
-                const cli = bs.getClientInfo();
-                if (cli.clientDetail.uniqueId == uniqueId)
-                    return {
-                        uniqueId: cli.clientDetail.uniqueId,
-                        clientId: cli.clientDetail.clientId,
-                        info: cli.clientDetail,
-                        addressDetail: cli.addressDetail,
-                        stat: cli.stat,
-                        topics: topicsInfo.filter((topic) => bs.matchSubscription(topic)),
-                        subscriptions: Array
-                            .from(cli.subscriptions)
-                            .map((item) => item.toString())
-                            .sort((a: string, b: string) => a.localeCompare(b)),
-                    }
-            }
-            continue;
+        for (const bs of Context.ClientList) {
+            const cli = bs.getClientInfo();
+            if (cli.clientDetail.uniqueId == uniqueId)
+                return {
+                    uniqueId: cli.clientDetail.uniqueId,
+                    clientId: cli.clientDetail.clientId,
+                    info: cli.clientDetail,
+                    addressDetail: cli.addressDetail,
+                    stat: cli.stat,
+                    topics: topicsInfo.filter((topic) => bs.matchSubscription(topic)),
+                    subscriptions: Array
+                        .from(cli.subscriptions)
+                        .map((item) => item.toString())
+                        .sort((a: string, b: string) => a.localeCompare(b)),
+                    groupMembers: Context.ClientList.getItems()
+                        .filter((family) => family.getClientInfo().clientId === cli.clientId)
+                        .filter((family) => family.getClientInfo().clientDetail.uniqueId != uniqueId)
+                        .map((family) => family.getClientInfo().clientDetail.uniqueId)
+                        .sort()
+                }
         }
         return null;
     },
