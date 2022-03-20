@@ -4,7 +4,7 @@ import clientService from "../../services/clientService";
 export default (server: FastifyInstance) => {
     server
 
-        .get('/client', async (_request, reply) => {
+        .get('/clients', async (_request, reply) => {
             const clients = clientService.getAllClients();
             return reply.view("clientList", {
                 title: "Clients",
@@ -19,7 +19,7 @@ export default (server: FastifyInstance) => {
             return reply.view("client", {
                 title: 'Client',
                 subtitle: `#${uniqueId}`,
-                breadcrumb: [{ url: '/client', title: 'Clients' }],
+                breadcrumb: [{ url: '/clients', title: 'Clients' }],
                 uniqueId,
                 client,
             });

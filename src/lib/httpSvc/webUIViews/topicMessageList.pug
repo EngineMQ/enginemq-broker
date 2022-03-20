@@ -1,0 +1,80 @@
+extends _base
+block content
+    .row
+        .col-12.d-flex.flex-row-reverse
+            .btn-group
+                each page in pages
+                    a.btn.btn-secondary(href="?page=" + page)
+                        if (page == currentPage)
+                            .text-bold.text-110
+                                = page
+                        else 
+                            = page 
+    br
+    .row
+        .col-12
+            .card
+
+                .card-body.table-responsive.p-0
+                    table.table.table-hover.text-nowrap
+                        thead
+                            tr
+                                th Id
+                                th Message
+                                th Source
+                                th 
+                        tbody
+                            each message in messages.messages
+                                tr
+                                    td(width='1px')
+                                        = message.messageId
+                                    td(width='80%')
+                                        a.btn.btn-secondary.btn-xs(href="#" onclick="showMessage('" + topicName + "', '" + message.messageId + "')")
+                                            i.fa.fa-ellipsis-h
+                                        |
+                                        |
+                                        = message.body
+                                    td
+                                        | from
+                                        | 
+                                        = message.sourceClientId
+                                        br
+                                        | at
+                                        | 
+                                        = message.publishTimeHuman
+                                    td(width='1px')
+                                        .btn-group
+                                            button.btn.btn-secondary A 
+                                            button.btn.btn-secondary B 
+                                            button.btn.btn-secondary C
+    .row
+        .col-12.d-flex.flex-row-reverse
+            .btn-group
+                each page in pages
+                    a.btn.btn-secondary(href="?page=" + page)
+                        if (page == currentPage)
+                            .text-bold.text-110
+                                = page
+                        else 
+                            = page 
+
+    script(type='text/javascript').
+        function showMessage(topicname, messageid)
+        {
+            $.get(`/topic/${topicname}/message/${messageid}/messagebody`)
+            .done(function(data) {
+                Swal.fire({
+                    title: `${messageid} message`,
+                    html: '<code><pre>' + data + '</pre></code>',
+                    confirmButtonText: 'Close',
+
+                    width: '85%',
+                    customClass: {
+                        popup: 'message-format',
+                    },
+                })
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                toastr.error(errorThrown, 'Error');
+            });        
+        }

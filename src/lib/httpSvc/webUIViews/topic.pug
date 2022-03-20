@@ -19,9 +19,8 @@ block content
                                 b
                                     | Messages
                                 .float-right
-                                    = topic.count
-                        a.btn.btn-danger.btn-block(onclick='clearTopic("' + topic.topicName + '")')
-                            | Clear messages
+                                    a(href='/topic/' + topicName + '/messages')
+                                        = topic.count
             .col-md-5
                 .card.card-success.card-outline
                     .card-body
@@ -94,6 +93,8 @@ block content
                                 | 15 min
                                 .float-right
                                     = topic.metrics.remove[15]
+                        a.btn.btn-danger.btn-block(onclick='clearTopic("' + topic.topicName + '")')
+                            | Clear messages
     else
         center
             i.fa.fa-4x.fa-eye-slash
@@ -113,14 +114,23 @@ block content
     script(type='text/javascript').
         function clearTopic(topicname)
         {
-            $.post("/topic/clear", { topicname: topicname })
-            .done(function() {
-                toastr.success('Messages cleared', 'OK');
-                setTimeout(() =>{
-                    reloadContentWrapper();
-                }, 250);
+            Swal.fire({
+                title: 'Clear messages',
+                text: 'Do you want to clear all topic messages?',
+                confirmButtonText: 'Clear',
+                showCancelButton: true,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post("/topic/clear", { topicname: topicname })
+                    .done(function() {
+                        toastr.success('Messages cleared', 'OK');
+                        setTimeout(() =>{
+                            reloadContentWrapper();
+                        }, 250);
+                    })
+                    .fail(function(jqXHR, textStatus, errorThrown) {
+                        toastr.error(errorThrown, 'Error');
+                    });        
+                }
             })
-            .fail(function(jqXHR, textStatus, errorThrown) {
-                toastr.error(errorThrown, 'Error');
-            });        
         }

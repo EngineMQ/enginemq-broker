@@ -19,7 +19,8 @@ block content
                                             a(href='/topic/' + topic.topicName)
                                                 = topic.topicName
                                     td
-                                        = topic.count
+                                        a(href='/topic/' + topic.topicName + '/messages')
+                                            = topic.count
                                     td
                                         if (topic.subscribers)
                                             each sub in topic.subscribers

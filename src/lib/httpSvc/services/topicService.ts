@@ -69,5 +69,33 @@ export default {
 
     clearTopic(topicname: string) {
         Context.MessageHandler.deleteTopicAllMessage(topicname);
-    }
+    },
+
+    getTopicMessage(topicname: string, messageid: string) {
+        return Context.Topics.getMessage(topicname, messageid);
+    },
+
+    getTopicMessages(topicname: string, from: number, count: number) {
+        const topicinfo = Context.Topics.getTopicsInfo()
+            .find((topic) => topic.topicName == topicname);
+
+        if (topicinfo) {
+            const messages = Context.Topics.getTopicMessages(topicname, from, count);
+            return {
+                count: topicinfo.count,
+                messages: messages.map((m) => {
+                    return {
+                        messageId: m.options.messageId,
+                        priority: m.options.priority,
+                        publishTime: m.publishTime,
+                        publishTimeHuman: new Date(m.publishTime).toLocaleString(),
+                        sourceClientId: m.sourceClientId,
+                        body: JSON.stringify(m.message).substring(0, 64),
+                    }
+                }),
+            };
+        }
+        return { count: 0, messages: [] }
+    },
+
 }

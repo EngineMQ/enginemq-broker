@@ -69,10 +69,20 @@ export class TopicHandler {
         }
     }
 
-    public getTopicMessages(topic: Topic): string[] {
+    public getTopicMessageIds(topic: Topic): string[] {
         const msglist = this.topics.get(topic);
         if (msglist)
             return msglist.map((item: MessageStorageItem) => item.options.messageId);
+        return [];
+    }
+
+    public getTopicMessages(topic: Topic, from?: number, count?: number): MessageStorageItem[] {
+        const msglist = this.topics.get(topic);
+        if (msglist)
+            if (from || count)
+                return msglist.slice(from, (from || 0) + (count || 0));
+            else
+                return msglist;
         return [];
     }
 

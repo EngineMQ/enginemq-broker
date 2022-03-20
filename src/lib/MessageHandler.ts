@@ -149,7 +149,7 @@ export class MessageHandler {
     public deleteTopicAllMessage(topic: Topic) {
         log.debug('Delete topic all messages');
 
-        const exmsgids = this.topics.getTopicMessages(topic);
+        const exmsgids = this.topics.getTopicMessageIds(topic);
         if (exmsgids.length) {
             const measureTime = new utility.MeasureTime();
             const originalCount = exmsgids.length;

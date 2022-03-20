@@ -10,3 +10,13 @@ a:active {
     border-bottom: 0;
     padding: 0.15rem 0.25rem;
 }
+
+.message-format pre {
+    color: white;
+    font-size: 16px;
+    text-align: left;
+}
+
+.text-110 {
+    font-size: 110%
+}
