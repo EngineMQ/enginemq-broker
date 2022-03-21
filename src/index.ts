@@ -13,14 +13,7 @@ const start = () => {
     log.warn('Developer mode active');
 
   createBroker()
-    .then(async (
-      {
-        clientList,
-        messageHandler,
-        topics,
-        storage
-      }
-    ) => {
+    .then(async ({ clientList, messageHandler, topics, storage }) => {
       global.Context = {
         ClientList: clientList,
         MessageHandler: messageHandler,

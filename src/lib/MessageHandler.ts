@@ -112,19 +112,19 @@ export class MessageHandler {
             const messageId = item.options.messageId;
 
             if (!topic) {
-                log.warn('Missing topic info');
+                log.error('Missing topic info');
                 return;
             }
             if (!messageIdRegExp.test(messageId)) {
-                log.warn({ messageid: messageId }, 'Invalid messageId format');
+                log.error({ messageid: messageId }, 'Invalid messageId format');
                 return;
             }
             if (item.options.delayMs && item.options.delayMs < 0) {
-                log.warn({ value: item.options.delayMs }, 'Invalid delayMs value');
+                log.error({ value: item.options.delayMs }, 'Invalid delayMs value');
                 return;
             }
             if (item.options.expirationMs && item.options.expirationMs < 0) {
-                log.warn({ value: item.options.expirationMs }, 'Invalid expirationMs value');
+                log.error({ value: item.options.expirationMs }, 'Invalid expirationMs value');
                 return;
             }
 
@@ -184,7 +184,7 @@ export class MessageHandler {
             this.addMessage(message);
         }
         else
-            log.warn({ messageid: messageId }, 'Cannot resend message');
+            log.error({ messageid: messageId }, 'Cannot resend message');
     }
 
     private deleteMessage(messageId: string) {
@@ -200,7 +200,7 @@ export class MessageHandler {
             this.messageIndexerList.delete(messageId);
         }
         else
-            log.warn({ messageid: messageId }, 'Cannot delete message, topic not found');
+            log.error({ messageid: messageId }, 'Cannot delete message, topic not found');
     }
 
     private removeSomeExpiredMessages() {

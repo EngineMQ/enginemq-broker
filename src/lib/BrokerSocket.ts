@@ -42,7 +42,7 @@ export class BrokerSocket extends MsgpackSocket {
             ...{
                 maxPacketSize: {
                     value: config.maxPacketSizeBytes,
-                    onExcept: (packetSize: number) => this.getLog().warn({ size: packetSize, maxsize: config.maxPacketSizeBytes }, 'Packet size exceeded max value'),
+                    onExcept: (packetSize: number) => this.getLog().error({ size: packetSize, maxsize: config.maxPacketSizeBytes }, 'Packet size exceeded max value'),
                 }
             }
         };
