@@ -1,10 +1,17 @@
 extends _base
 block content
     .row
-        .col-12.d-flex.flex-row-reverse
+        .col-md-3
+        .col-md-6
+            .input-group.input-group
+                input.form-control#search(type='text' placeholder='Search for messages...' onkeyup='searchOnKeyup(event)')
+                span.input-group-btn
+                    button.btn.btn-primary.btn-flat(type='button' onclick='executeSearch()')
+                        | Search
+        .col-md-3.d-flex.flex-row-reverse
             .btn-group
                 each page in pages
-                    a.btn.btn-secondary(href="?page=" + page)
+                    a.btn.btn-secondary.btn-flat(href="?page=" + page)
                         if (page == currentPage)
                             .text-bold.text-110
                                 = page
@@ -77,4 +84,18 @@ block content
             .fail(function(jqXHR, textStatus, errorThrown) {
                 toastr.error(errorThrown, 'Error');
             });        
+        }
+
+        function executeSearch()
+        {
+            const search = $('#search').val().trim();
+            if (!search)
+                return;
+            window.location.href = '?search=' + encodeURIComponent(search);
+        }
+
+        function searchOnKeyup(e)
+        {
+            if (e.key === 'Enter' || e.keyCode === 13)
+                executeSearch();
         }
