@@ -1,0 +1,43 @@
+extends _base
+block content
+    .row
+        .col-12
+
+
+            .card.card-primary.card-outline.card-outline-tabs
+                .card-header.p-0.border-bottom-0
+                    ul.nav.nav-tabs#log-tab(role='tablist')
+                        each count, level in levels
+                            li.nav-item
+                                - var isActive = (firstLevel == level) ? 'active' : ''
+                                a.nav-link(id=level data-toggle='pill' href='#tab' + level role='tab' class=isActive)
+                                    = level
+                                    | 
+                                    small
+                                        | (
+                                        = count
+                                        | )
+                .card-body
+                    .tab-content#log-tabContent
+                        each lines, level in levellines
+                            - var isActive = (firstLevel == level) ? 'active' : ''
+                            .tab-pane.fade.show(id='tab' + level role='tabpanel' class=isActive)
+                                table.table.table-hover.text-nowrap
+                                    thead
+                                        tr
+                                            th Time
+                                            th Module
+                                            th Message
+                                            th Data
+                                    tbody
+                                        each line in lines
+                                            tr
+                                                td
+                                                    = line.timeHuman
+                                                td
+                                                    = line.module
+                                                td
+                                                    = line.text
+                                                td
+                                                    pre(style="color:gray")
+                                                        = line.dataStr

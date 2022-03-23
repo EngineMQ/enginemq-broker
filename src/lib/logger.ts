@@ -5,13 +5,13 @@ import { pino } from 'pino';
 
 import * as config from '../config';
 
-const MEMORYLOG_MAX_ITEMS = 100;
+export const MEMORYLOG_MAX_ITEMS = 100;
 
-type MemoryLogItem = {
+export type MemoryLogItem = {
     level: string,
     time: number,
     module: string,
-    msg: string,
+    text: string,
     data: object
 }
 
@@ -75,7 +75,7 @@ class MemoryLogStream extends Writable {
                 level: logObject.level as string,
                 time: logObject.time as number,
                 module: logObject.module as string,
-                msg: logObject.msg as string,
+                text: logObject.msg as string,
                 data: logExt as object
             });
         }
