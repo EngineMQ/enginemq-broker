@@ -18,4 +18,9 @@ export default (server: FastifyInstance) => {
             });
         })
 
+        .post('/logs/clear', async (_request, reply) => {
+            logService.removeAllLogs();
+            return reply.send("OK");
+        })
+
 }

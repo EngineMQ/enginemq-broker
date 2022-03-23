@@ -1,9 +1,12 @@
 extends _base
 block content
     .row
-        .col-12
-
-
+        .col-md-12.d-flex.flex-row-reverse
+            a.btn.btn-info(onclick='clearLogs()')
+                | Make all logs read
+    br
+    .row
+        .col-md-12
             .card.card-primary.card-outline.card-outline-tabs
                 .card-header.p-0.border-bottom-0
                     ul.nav.nav-tabs#log-tab(role='tablist')
@@ -41,3 +44,26 @@ block content
                                                 td
                                                     pre(style="color:gray")
                                                         = line.dataStr
+    script(type='text/javascript').
+        function clearLogs()
+        {
+            Swal.fire({
+                title: 'Clear logs',
+                text: 'Do you want to clear logs from memory?',
+                confirmButtonText: 'Clear',
+                showCancelButton: true,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post("/logs/clear")
+                    .done(function() {
+                        toastr.success('Logs cleared', 'OK');
+                        setTimeout(() =>{
+                            reloadContentWrapper();
+                        }, 250);
+                    })
+                    .fail(function(jqXHR, textStatus, errorThrown) {
+                        toastr.error(errorThrown, 'Error');
+                    });        
+                }
+            })
+        }

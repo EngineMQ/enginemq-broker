@@ -28,4 +28,8 @@ export default {
             lines,
         }
     },
+
+    removeAllLogs() {
+        memoryLogStore.clear();
+    }
 }

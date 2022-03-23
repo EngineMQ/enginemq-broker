@@ -33,6 +33,10 @@ class MemoryLogStore {
         }
     }
 
+    public clear() {
+        this.logs.clear();
+    }
+
     public getMessages(level: string): MemoryLogItem[] {
         const items = this.logs.get(level);
         if (items)
