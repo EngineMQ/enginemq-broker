@@ -12,8 +12,6 @@ const start = () => {
   if (!config.isProduction)
     log.warn('Developer mode active');
 
-  setInterval(() => logger.info(new Date().getTime()), 5000);
-
   createBroker()
     .then(async ({ clientList, messageHandler, topics, storage }) => {
       global.Context = {
