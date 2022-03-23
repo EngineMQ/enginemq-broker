@@ -11,7 +11,9 @@ RUN rm -rf ./src/common
 RUN git -C ./src clone https://github.com/EngineMQ/common.git
 
 ENV NPM_CONFIG_LOGLEVEL=error
-RUN npm config set unsafe-perm true && npm config set fund false && npm ci && npm run build && rm -rf src && npm prune --production
+RUN npm config set unsafe-perm true && npm config set fund false
+RUN npm ci
+RUN npm run build && rm -rf src && npm prune --production
 
 
 
@@ -28,8 +30,7 @@ RUN mkdir /brokerdata
 VOLUME /brokerdata
 
 # Expose broker and web-ui port
-EXPOSE 16677
-EXPOSE 16688
+EXPOSE 16677 16688
 
 # Set production environment
 ENV NODE_ENV=production
