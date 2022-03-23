@@ -1,4 +1,4 @@
-FROM node:17.6-alpine as builder
+FROM node:17-alpine as builder
 RUN apk add --no-cache tini git python3 build-base make
 ENTRYPOINT ["/sbin/tini", "--"]
 
@@ -11,27 +11,18 @@ RUN rm -rf ./src/common
 RUN git -C ./src clone https://github.com/EngineMQ/common.git
 
 ENV NPM_CONFIG_LOGLEVEL=error
-RUN npm config set unsafe-perm true
-RUN npm ci
-RUN npm run build
+RUN npm config set unsafe-perm true && npm config set fund false && npm ci && npm run build && rm -rf src && npm prune --production
 
 
 
 
 
-FROM builder as prodbuild
-RUN npm prune --production
-
-
-
-
-
-FROM node:17.6-alpine as runner
+FROM node:17-alpine as runner
 RUN apk add --no-cache tini bash sqlite
 ENTRYPOINT ["/sbin/tini", "--"]
 
 WORKDIR /app
-COPY --from=prodbuild /app ./
+COPY --from=builder /app ./
 
 RUN mkdir /brokerdata
 VOLUME /brokerdata
