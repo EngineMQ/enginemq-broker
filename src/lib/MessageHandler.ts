@@ -111,47 +111,43 @@ export class MessageHandler {
 
     public addMessage(item: MessageStorageItem, allowRouter = true) {
         try {
-            const topic = item.topic.toLowerCase();
             if (!item.options.messageId)
                 item.options.messageId = nanoid();
-            const messageId = item.options.messageId;
 
-            if (!topic)
+            if (!item.topic)
                 throw new MessageError('Missing topic');
-            if (!messageIdRegExp.test(messageId))
-                throw new MessageError(`Invalid messageId format: ${messageId}`);
+            if (!messageIdRegExp.test(item.options.messageId))
+                throw new MessageError(`Invalid messageId format: ${item.options.messageId}`);
             if (item.options.delayMs && item.options.delayMs < 0)
                 throw new MessageError(`Invalid delayMs value: ${item.options.delayMs}`);
             if (item.options.expirationMs && item.options.expirationMs < 0)
                 throw new MessageError(`Invalid expirationMs value: ${item.options.expirationMs}`);
 
-            const topicOfExistingItem = this.topicIndexerList.get(messageId);
+            const topicOfExistingItem = this.topicIndexerList.get(item.options.messageId);
             if (topicOfExistingItem)
-                this.topics.removeMessage(topicOfExistingItem, messageId);
+                this.topics.removeMessage(topicOfExistingItem, item.options.messageId);
 
-            const addFn = (_msgitem: MessageStorageItem, _topic: string, _messageId: string) => {
-                this.topics.addMessage(_topic, _msgitem);
-                this.topicIndexerList.set(_messageId, _topic);
-                this.messageIndexerList.set(_messageId, _msgitem)
-                this.storage.addOrUpdateMessage(_messageId, _msgitem);
+            const addMessageFn = (_msgitem: MessageStorageItem) => {
+                this.topics.addMessage(_msgitem.topic, _msgitem);
+                this.topicIndexerList.set(_msgitem.options.messageId, _msgitem.topic);
+                this.messageIndexerList.set(_msgitem.options.messageId, _msgitem)
+                this.storage.addOrUpdateMessage(_msgitem.options.messageId, _msgitem);
             };
 
-            const routerResult = this.resourceHandler.adaptRouter(item);
-            if (!allowRouter || routerResult.noOperationNeed)
-                addFn(item, topic, messageId);
+            if (!allowRouter)
+                addMessageFn(item);
             else {
+                const routerResult = this.resourceHandler.adaptRouter(item);
+
+                if (routerResult.includes(item.topic))
+                    addMessageFn(item);
+
                 let newMessageIndex = 0;
-                for (const newTopic of routerResult.newTopics) {
-                    if (newTopic == topic) {
-                        if (!routerResult.removeOriginal)
-                            addFn(item, topic, messageId);
-                    }
-                    else {
-                        newMessageIndex++;
-                        const newMessageId = `${item.options.messageId}-${newMessageIndex}`
-                        const newMessage = this.cloneMessageForRouter(item, newTopic, newMessageId);
-                        addFn(newMessage, newTopic, newMessageId);
-                    }
+                for (const newTopic of routerResult.filter((r) => r != item.topic)) {
+                    newMessageIndex++;
+                    const newMessageId = `${item.options.messageId}-${newMessageIndex}`
+                    const newMessage = this.cloneMessageForRouter(item, newTopic, newMessageId);
+                    addMessageFn(newMessage);
                 }
             }
         } catch (error) {

@@ -1,11 +1,7 @@
 import logger from './logger';
-import { IStorage, MessageStorageItem, StorageResourceType } from "./storage/IStorage";
-import { IResource } from "./resources/IResource";
+import { IStorage, MessageStorageItem } from "./storage/IStorage";
 import { Router, RouterOptions } from './resources/Router';
 import { validateObject } from '../common/lib/ajv';
-
-type ResourceType = StorageResourceType;
-const ResourceType = StorageResourceType;
 
 const log = logger.child({ module: 'Messages' });
 
@@ -16,13 +12,11 @@ export type RouterResult = {
 }
 
 export class ResourceHandler {
-    private resources: Map<ResourceType, IResource[]>;
+    private routers: Router[] = [];
     private storage: IStorage;
 
     constructor(storage: IStorage) {
-        this.resources = new Map<ResourceType, IResource[]>();
         this.storage = storage;
-
         this.init();
     }
 
@@ -31,35 +25,32 @@ export class ResourceHandler {
 
     // Public
 
-    public adaptRouter(msg: MessageStorageItem): RouterResult {
-        const routerList = (this.resources.get('router') || []) as Router[];
+    public adaptRouter(msg: MessageStorageItem): string[] {
+        const visitedTopics: string[] = [];
+        const runRouter = (topic: string): string[] => {
+            visitedTopics.push(topic);
 
-        const result: RouterResult = { newTopics: [msg.topic], removeOriginal: true, noOperationNeed: true };
-        let newTopicsLastCount = 0;
+            const result: string[] = [];
 
-        while (newTopicsLastCount < result.newTopics.length) {
-            for (const topic of result.newTopics)
-                for (const router of routerList)
-                    if (router.matchTopic(topic)) {
-                        const { copyTo, moveTo } = router.getOutputTopics();
-                        if (copyTo.length) {
-                            for (const copyToItem of copyTo)
-                                if (!result.newTopics.includes(copyToItem))
-                                    result.newTopics.push(copyToItem);
-                            result.removeOriginal = false;
-                        }
-                        if (moveTo.length) {
-                            for (const moveToItem of moveTo)
-                                if (!result.newTopics.includes(moveToItem))
-                                    result.newTopics.push(moveToItem);
-                        }
-                        result.noOperationNeed = false;
-                    }
+            const applicableRouters = this.routers.filter((router) => router.matchTopic(topic));
+            let removeTopic = applicableRouters.length > 0;
 
-            newTopicsLastCount = result.newTopics.length;
+            for (const router of applicableRouters) {
+                const output = router.getOutputTopics();
+                if (output.holdOriginal)
+                    removeTopic = false;
+                for (const subTopic of output.topics)
+                    if (visitedTopics.includes(subTopic))
+                        log.warn({ topic, subTopic }, 'Circular routing detected');
+                    else
+                        result.push(...runRouter(subTopic));
+            }
+
+            if (!removeTopic)
+                result.push(topic);
+            return result;
         }
-
-        return result;
+        return runRouter(msg.topic).sort();
     }
 
 
@@ -68,31 +59,19 @@ export class ResourceHandler {
     // Private
 
     private init() {
-        for (const rt of ResourceType) {
-            if (!this.resources.has(rt))
-                this.resources.set(rt, []);
-
-            const resList = this.resources.get(rt) || [];
-            const storageResList = this.storage.getResources(rt);
-            for (const storageResItem of storageResList) {
-                const resourceName = storageResItem[0];
-                const optionsStr = storageResItem[1];
-                try {
-                    switch (rt) {
-                        case "router":
-                            const optionsObj = validateObject<RouterOptions>(RouterOptions, JSON.parse(optionsStr), true);
-                            if (optionsObj)
-                                resList.push(new Router(optionsObj));
-                            break;
-                        case "validator":
-                            break;
-                    }
-                    log.info({ resourceName }, `Init ${rt} resource`);
+        for (const storageResource of this.storage.getResources('router')) {
+            try {
+                const optionsObj = validateObject<RouterOptions>(RouterOptions, JSON.parse(storageResource.optionjson), true);
+                if (optionsObj) {
+                    const router = new Router(optionsObj);
+                    this.routers.push(router);
+                    log.info({ resourceName: router.name }, 'Init router resource');
                 }
-                catch (error) {
-                    log.error({ resourceName, error: error instanceof Error ? error.message : '' }, `Init ${rt} resource failed`);
-                }
+            }
+            catch (error) {
+                log.error({ resourceName: storageResource.name, error: error instanceof Error ? error.message : '' }, 'Init router resource failed');
             }
         }
     }
+
 }

@@ -87,7 +87,7 @@ export class Sqlite3Storage implements IStorage {
         } catch (error) { throw new Sqlite3StorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    getResources(type: StorageResourceType): Map<string, string> { type; return new Map<string, string>() }
+    getResources(type: StorageResourceType): { name: string, optionjson: string }[] { type; return [] }
     addOrUpdateResource(type: StorageResourceType, name: string, options: string): void { type; name; options; }
     deleteResource(type: StorageResourceType, name: string): void { type; name; }
 

@@ -26,9 +26,9 @@ export class NullStorage implements IStorage {
         log.debug({ messageId }, 'Delete message (no)');
     }
 
-    getResources(type: StorageResourceType): Map<string, string> {
+    getResources(type: StorageResourceType): { name: string, optionjson: string }[] {
         type;
-        return new Map<string, string>();
+        return [];
     }
 
     addOrUpdateResource(type: StorageResourceType, name: string, options: string): void {

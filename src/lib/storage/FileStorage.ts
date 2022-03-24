@@ -93,8 +93,8 @@ export class FileStorage implements IStorage {
         } catch (error) { throw new FileStorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    public getResources(type: StorageResourceType): Map<string, string> {
-        const result = new Map<string, string>();
+    public getResources(type: StorageResourceType): { name: string, optionjson: string }[] {
+        const result = [];
 
         const allFiles = this.getAllFilesRecursively(this.folderResource(type));
         for (const file of allFiles) {
@@ -102,7 +102,10 @@ export class FileStorage implements IStorage {
             try {
                 fileData = fs.readFileSync(file);
             } catch (error) { throw new Error(`Cannot read file ${file}`) }
-            result.set(path.basename(file), fileData.toString());
+            result.push({
+                name: path.basename(file),
+                optionjson: fileData.toString()
+            });
         }
 
         return result;

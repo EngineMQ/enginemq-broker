@@ -5,8 +5,8 @@ type MessageInfo = {
     publishTime: number,
 }
 export type MessageStorageItem = messages.ClientMessagePublish & MessageInfo;
+
 export type StorageResourceType = 'validator' | 'router';
-export const StorageResourceType: StorageResourceType[] = ['validator', 'router'];
 
 export interface IStorage {
     getAllMessages(
@@ -20,7 +20,7 @@ export interface IStorage {
     addOrUpdateMessage(messageId: string, message: MessageStorageItem): void;
     deleteMessage(messageId: string): void;
 
-    getResources(type: StorageResourceType): Map<string, string>;
+    getResources(type: StorageResourceType): { name: string, optionjson: string }[];
     addOrUpdateResource(type: StorageResourceType, name: string, options: string): void;
     deleteResource(type: StorageResourceType, name: string): void;
 

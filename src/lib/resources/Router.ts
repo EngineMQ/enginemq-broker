@@ -19,11 +19,15 @@ export const RouterOptions = Type.Object({
 });
 
 export class Router implements IResource {
+    private usage = 0;
     private options: RouterOptions;
     // private inputTopicExpr: string | RegExp;
 
     get name(): string {
         return this.options.name;
+    }
+    public getUsage(): number {
+        return this.usage;
     }
 
     constructor(options: RouterOptions) {
@@ -47,22 +51,22 @@ export class Router implements IResource {
     }
 
     public getOutputTopics(): {
-        copyTo: string[],
-        moveTo: string[]
+        topics: string[],
+        holdOriginal: boolean
     } {
+        this.usage++;
+
+        const result: string[] = [];
+        for (const targets of [this.options.copyTo, this.options.moveTo])
+            if (targets)
+                if (Array.isArray(targets))
+                    result.push(...targets)
+                else
+                    result.push(targets);
+
         return {
-            copyTo:
-                this.options.copyTo ?
-                    Array.isArray(this.options.copyTo) ?
-                        this.options.copyTo :
-                        [this.options.copyTo] :
-                    [],
-            moveTo:
-                this.options.moveTo ?
-                    Array.isArray(this.options.moveTo) ?
-                        this.options.moveTo :
-                        [this.options.moveTo] :
-                    [],
+            topics: result,
+            holdOriginal: this.options.copyTo ? true : false,
         };
     }
 }
