@@ -5,6 +5,7 @@ type MessageInfo = {
     publishTime: number,
 }
 export type MessageStorageItem = messages.ClientMessagePublish & MessageInfo;
+export type ResourceType = 'validator' | 'route';
 
 export interface IStorage {
     getAllMessages(
@@ -17,5 +18,10 @@ export interface IStorage {
     ): void;
     addOrUpdateMessage(messageId: string, message: MessageStorageItem): void;
     deleteMessage(messageId: string): void;
+
+    getResources(type: ResourceType): Map<string, string>;
+    addOrUpdateResource(type: ResourceType, name: string, options: string): void;
+    deleteResource(type: ResourceType, name: string): void;
+
     close(): void;
 }

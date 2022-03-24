@@ -1,14 +1,14 @@
 import * as path from 'path';
 
 import { IStorage } from "./IStorage";
-import { LocalStorage } from "./LocalStorage";
+import { FileStorage } from "./FileStorage";
 import { Sqlite3Storage } from "./Sqlite3Storage";
 import { RedisStorage } from "./RedisStorage";
 import { NullStorage } from "./NullStorage";
 
-let storageMaskLocal = "^ fs \\( folder = ([a-z0-9.\\-_/\\\\]*) \\) $";
-while (storageMaskLocal.includes(' '))
-    storageMaskLocal = storageMaskLocal.replace(' ', '\\s*');
+let storageMaskFile = "^ fs \\( folder = ([a-z0-9.\\-_/\\\\]*) \\) $";
+while (storageMaskFile.includes(' '))
+    storageMaskFile = storageMaskFile.replace(' ', '\\s*');
 
 let storageMaskSqlite3 = "^ sqlite3 \\( file = ([a-z0-9.\\-_/\\\\]*) \\) $";
 while (storageMaskSqlite3.includes(' '))
@@ -23,10 +23,10 @@ while (storageMaskNull.includes(' '))
     storageMaskNull = storageMaskNull.replace(' ', '\\s*');
 
 export default (config: string): IStorage => {
-    const storageLocal = config.match(new RegExp(storageMaskLocal, "i"));
-    if (storageLocal) {
-        const folder = storageLocal[1] as string;
-        return new LocalStorage(folder);
+    const storageFile = config.match(new RegExp(storageMaskFile, "i"));
+    if (storageFile) {
+        const folder = storageFile[1] as string;
+        return new FileStorage(folder);
     }
 
     const storageSqlite3 = config.match(new RegExp(storageMaskSqlite3, "i"));
