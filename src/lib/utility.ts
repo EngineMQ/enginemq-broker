@@ -39,3 +39,25 @@ export const prettyThousand = (value: number) => {
         return `${Math.round(value / 1000)}k`;
     return value;
 }
+
+export const topicStrToRegexpOrString = (topicstr: string): string | RegExp => {
+    if (topicstr.match(/^[a-z0-9.*#]+$/i))
+        if (topicstr.indexOf('#') >= 0 || topicstr.indexOf('*') >= 0) {
+            while (topicstr.indexOf('^') >= 0) topicstr = topicstr.replace('^', '')
+
+            while (topicstr.indexOf('$') >= 0) topicstr = topicstr.replace('$', '')
+
+            while (topicstr.indexOf('+') >= 0) topicstr = topicstr.replace('+', '')
+
+            while (topicstr.indexOf('.') >= 0) topicstr = topicstr.replace('.', '\\_')
+            while (topicstr.indexOf('_') >= 0) topicstr = topicstr.replace('_', '.')
+
+            while (topicstr.indexOf('#') >= 0) topicstr = topicstr.replace('#', '[^.]+')
+
+            while (topicstr.indexOf('*') >= 0) topicstr = topicstr.replace('*', '._')
+            while (topicstr.indexOf('_') >= 0) topicstr = topicstr.replace('_', '*')
+
+            return new RegExp('^' + topicstr + '$', 'i');
+        }
+    return topicstr;
+}

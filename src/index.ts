@@ -13,12 +13,13 @@ const start = () => {
     log.warn('Developer mode active');
 
   createBroker()
-    .then(async ({ clientList, messageHandler, topics, storage }) => {
+    .then(async ({ clientList, messageHandler, topics, storage, resourceHandler }) => {
       global.Context = {
         ClientList: clientList,
         MessageHandler: messageHandler,
         Topics: topics,
-        Storage: storage
+        Storage: storage,
+        ResourceHandler: resourceHandler,
       };
       return createHttpserver()
     })

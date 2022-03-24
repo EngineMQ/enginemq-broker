@@ -1,4 +1,4 @@
-import { IStorage, MessageStorageItem, ResourceType } from "./IStorage";
+import { IStorage, MessageStorageItem, StorageResourceType } from "./IStorage";
 import logger from '../logger';
 
 const log = logger.child({ module: 'NullStorage' });
@@ -26,16 +26,16 @@ export class NullStorage implements IStorage {
         log.debug({ messageId }, 'Delete message (no)');
     }
 
-    getResources(type: ResourceType): Map<string, string> {
+    getResources(type: StorageResourceType): Map<string, string> {
         type;
         return new Map<string, string>();
     }
 
-    addOrUpdateResource(type: ResourceType, name: string, options: string): void {
+    addOrUpdateResource(type: StorageResourceType, name: string, options: string): void {
         log.debug({ type, name, size: options.length }, 'Store resource (no)');
     }
 
-    deleteResource(type: ResourceType, name: string): void {
+    deleteResource(type: StorageResourceType, name: string): void {
         log.debug({ type, name }, 'Delete resource (no)');
     }
 

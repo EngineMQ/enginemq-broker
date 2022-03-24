@@ -9,6 +9,7 @@ import { MsgpackSocket } from '../common/lib/socket/MsgpackSocket';
 import { MessageHandler } from './MessageHandler';
 import { MessageStorageItem } from './storage/IStorage';
 import { BufferedSocketOptions, defaultBufferedSocketOptions } from '../common/lib/socket/BufferedSocket';
+import { topicStrToRegexpOrString } from './utility';
 
 const nowMs = () => new Date().getTime();
 const log = logger.child({ module: 'Socket' });
@@ -168,10 +169,16 @@ export class BrokerSocket extends MsgpackSocket {
                     sourceClientId: this.clientInfo.clientId,
                     publishTime: nowMs(),
                 };
-                this.messageHandler.addMessage(mhItem)
+                try {
+                    this.messageHandler.addMessage(mhItem)
 
-                const bmPublishAck: messages.BrokerMessagePublishAck = { messageId: cmPublish.options.messageId };
-                this.sendMessage("publishAck", bmPublishAck);
+                    const bmPublishAck: messages.BrokerMessagePublishAck = { messageId: cmPublish.options.messageId };
+                    this.sendMessage("publishAck", bmPublishAck);
+                }
+                catch (error) {
+                    const bmPublishAck: messages.BrokerMessagePublishAck = { messageId: cmPublish.options.messageId, errorMessage: error instanceof Error ? error.message : 'Unknown error' };
+                    this.sendMessage("publishAck", bmPublishAck);
+                }
                 break;
             case 'deliveryAck':
                 const cmDeliveryAck = validateObject<messages.ClientMessageDeliveryAck>(messages.ClientMessageDeliveryAck, params);
@@ -191,27 +198,8 @@ export class BrokerSocket extends MsgpackSocket {
     private updateSubscriptions(subscriptions: string[]) {
         this.getLog().debug({ subscriptions }, 'Update subscriptions');
         this.subscriptions = [];
-        for (let sub of subscriptions)
-            if (sub.match(/^[a-z0-9.*#]+$/i))
-                if (sub.indexOf('#') >= 0 || sub.indexOf('*') >= 0) {
-                    while (sub.indexOf('^') >= 0) sub = sub.replace('^', '')
-
-                    while (sub.indexOf('$') >= 0) sub = sub.replace('$', '')
-
-                    while (sub.indexOf('+') >= 0) sub = sub.replace('+', '')
-
-                    while (sub.indexOf('.') >= 0) sub = sub.replace('.', '\\_')
-                    while (sub.indexOf('_') >= 0) sub = sub.replace('_', '.')
-
-                    while (sub.indexOf('#') >= 0) sub = sub.replace('#', '[^.]+')
-
-                    while (sub.indexOf('*') >= 0) sub = sub.replace('*', '._')
-                    while (sub.indexOf('_') >= 0) sub = sub.replace('_', '*')
-
-                    this.subscriptions.push(new RegExp('^' + sub + '$', 'i'));
-                }
-                else
-                    this.subscriptions.push(sub);
+        for (const sub of subscriptions)
+            this.subscriptions.push(topicStrToRegexpOrString(sub));
         this.emit('subscriptions', this.subscriptions);
     }
 }

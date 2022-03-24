@@ -8,6 +8,7 @@ import { IStorage } from './storage/IStorage';
 import { MessageHandler } from './MessageHandler';
 import { BrokerSocket } from './BrokerSocket';
 import { TopicHandler } from './TopicHandler';
+import { ResourceHandler } from './ResourceHandler';
 
 const log = logger.child({ module: 'Main' });
 
@@ -17,6 +18,7 @@ let messageHandler: MessageHandler;
 let topics: TopicHandler;
 let server: net.Server;
 let storage: IStorage;
+let resourceHandler: ResourceHandler;
 
 export const createBroker = async (): Promise<{
     server: net.Server,
@@ -24,12 +26,14 @@ export const createBroker = async (): Promise<{
     messageHandler: MessageHandler,
     topics: TopicHandler,
     storage: IStorage
+    resourceHandler: ResourceHandler,
 }> => {
     log.info('Init broker');
 
     topics = new TopicHandler();
     storage = storageConfig(config.storage);
-    messageHandler = new MessageHandler(clientList, storage, topics);
+    resourceHandler = new ResourceHandler(storage);
+    messageHandler = new MessageHandler(clientList, storage, topics, resourceHandler);
     await messageHandler.loadMessages()
         .then(() => {
             server = net.createServer((socket: net.Socket) => clientList.add(new BrokerSocket(socket, messageHandler)));
@@ -48,7 +52,8 @@ export const createBroker = async (): Promise<{
         clientList: clientList,
         messageHandler: messageHandler,
         topics: topics,
-        storage: storage
+        storage: storage,
+        resourceHandler: resourceHandler,
     };
 }
 

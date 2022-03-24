@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Packr } from 'msgpackr';
 
-import { IStorage, MessageStorageItem, ResourceType } from "./IStorage";
+import { IStorage, MessageStorageItem, StorageResourceType } from "./IStorage";
 import logger from '../logger';
 
 class FileStorageError extends Error { }
@@ -17,7 +17,7 @@ export class FileStorage implements IStorage {
     private packr = new Packr();
     private folderRoot;
     private get folderMessage() { return path.join(this.folderRoot, subfolderMessage) }
-    private folderResource(type?: ResourceType): string {
+    private folderResource(type?: StorageResourceType): string {
         const resPath = path.join(this.folderRoot, subfolderResource);
         if (type)
             return path.join(resPath, type)
@@ -93,7 +93,7 @@ export class FileStorage implements IStorage {
         } catch (error) { throw new FileStorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    getResources(type: ResourceType): Map<string, string> {
+    public getResources(type: StorageResourceType): Map<string, string> {
         const result = new Map<string, string>();
 
         const allFiles = this.getAllFilesRecursively(this.folderResource(type));
@@ -108,7 +108,7 @@ export class FileStorage implements IStorage {
         return result;
     }
 
-    addOrUpdateResource(type: ResourceType, name: string, options: string): void {
+    public addOrUpdateResource(type: StorageResourceType, name: string, options: string): void {
         try {
             const fileData = options;
             fs.writeFileSync(
@@ -119,7 +119,7 @@ export class FileStorage implements IStorage {
         } catch (error) { throw new FileStorageError(`Cannot store ${type} resource '${name}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    deleteResource(type: ResourceType, name: string): void {
+    public deleteResource(type: StorageResourceType, name: string): void {
         try {
             const filename = this.getFileNameForResource(type, name, false);
             if (fs.existsSync(filename))
@@ -166,14 +166,14 @@ export class FileStorage implements IStorage {
         return result;
     }
 
-    private getFileNameForResource(type: ResourceType, name: string, createFolder: boolean) {
+    private getFileNameForResource(type: StorageResourceType, name: string, createFolder: boolean) {
         return path.join(
             this.getFolderForResource(type, createFolder),
             name
         );
     }
 
-    private getFolderForResource(type: ResourceType, createFolder: boolean) {
+    private getFolderForResource(type: StorageResourceType, createFolder: boolean) {
         const result = this.folderResource(type);
 
         if (createFolder)
@@ -184,13 +184,15 @@ export class FileStorage implements IStorage {
     }
 
     private getAllFilesRecursively(folder: string, filelist: string[] = []): string[] {
-        const files = fs.readdirSync(folder);
-        for (const file of files) {
-            const filePath = path.join(folder, file);
-            if (fs.statSync(filePath).isDirectory())
-                filelist = this.getAllFilesRecursively(filePath, filelist);
-            else
-                filelist.push(filePath);
+        if (fs.existsSync(folder)) {
+            const files = fs.readdirSync(folder);
+            for (const file of files) {
+                const filePath = path.join(folder, file);
+                if (fs.statSync(filePath).isDirectory())
+                    filelist = this.getAllFilesRecursively(filePath, filelist);
+                else
+                    filelist.push(filePath);
+            }
         }
         return filelist;
     }

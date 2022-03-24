@@ -7,8 +7,11 @@ import { TopicHandler } from './TopicHandler';
 import * as types from '../common/messageTypes';
 import * as utility from './utility';
 import { AckFn, BrokerSocket } from './BrokerSocket';
+import { ResourceHandler } from './ResourceHandler';
 
 const log = logger.child({ module: 'Messages' });
+
+class MessageError extends Error { }
 
 type MessageId = string;
 type Topic = string;
@@ -26,14 +29,16 @@ export class MessageHandler {
     private clientList: ClientList;
     private storage: IStorage;
     private topics: TopicHandler;
+    private resourceHandler: ResourceHandler;
     private topicIndexerList = new Map<MessageId, Topic>();
     private messageIndexerList = new Map<MessageId, MessageStorageItem>();
     private underDeliveryList = new Map<MessageId, BrokerSocket>();
 
-    constructor(clientList: ClientList, storage: IStorage, topics: TopicHandler) {
+    constructor(clientList: ClientList, storage: IStorage, topics: TopicHandler, resourceHandler: ResourceHandler) {
         this.clientList = clientList;
         this.storage = storage;
         this.topics = topics;
+        this.resourceHandler = resourceHandler;
 
         this.clientList.on('remove', (socket: BrokerSocket) => this.onReleaseClient(socket))
         setTimeout(() => this.removeSomeExpiredMessages(), GARBAGE_SEC * 1000);
@@ -104,39 +109,55 @@ export class MessageHandler {
         });
     }
 
-    public addMessage(item: MessageStorageItem) {
+    public addMessage(item: MessageStorageItem, allowRouter = true) {
         try {
             const topic = item.topic.toLowerCase();
             if (!item.options.messageId)
                 item.options.messageId = nanoid();
             const messageId = item.options.messageId;
 
-            if (!topic) {
-                log.error('Missing topic info');
-                return;
-            }
-            if (!messageIdRegExp.test(messageId)) {
-                log.error({ messageid: messageId }, 'Invalid messageId format');
-                return;
-            }
-            if (item.options.delayMs && item.options.delayMs < 0) {
-                log.error({ value: item.options.delayMs }, 'Invalid delayMs value');
-                return;
-            }
-            if (item.options.expirationMs && item.options.expirationMs < 0) {
-                log.error({ value: item.options.expirationMs }, 'Invalid expirationMs value');
-                return;
-            }
+            if (!topic)
+                throw new MessageError('Missing topic');
+            if (!messageIdRegExp.test(messageId))
+                throw new MessageError(`Invalid messageId format: ${messageId}`);
+            if (item.options.delayMs && item.options.delayMs < 0)
+                throw new MessageError(`Invalid delayMs value: ${item.options.delayMs}`);
+            if (item.options.expirationMs && item.options.expirationMs < 0)
+                throw new MessageError(`Invalid expirationMs value: ${item.options.expirationMs}`);
 
             const topicOfExistingItem = this.topicIndexerList.get(messageId);
             if (topicOfExistingItem)
                 this.topics.removeMessage(topicOfExistingItem, messageId);
 
-            this.topics.addMessage(topic, item);
-            this.topicIndexerList.set(messageId, topic);
-            this.messageIndexerList.set(messageId, item)
-            this.storage.addOrUpdateMessage(messageId, item);
-        } catch (error) { log.error(error); }
+            const addFn = (_msgitem: MessageStorageItem, _topic: string, _messageId: string) => {
+                this.topics.addMessage(_topic, _msgitem);
+                this.topicIndexerList.set(_messageId, _topic);
+                this.messageIndexerList.set(_messageId, _msgitem)
+                this.storage.addOrUpdateMessage(_messageId, _msgitem);
+            };
+
+            const routerResult = this.resourceHandler.adaptRouter(item);
+            if (!allowRouter || routerResult.noOperationNeed)
+                addFn(item, topic, messageId);
+            else {
+                let newMessageIndex = 0;
+                for (const newTopic of routerResult.newTopics) {
+                    if (newTopic == topic) {
+                        if (!routerResult.removeOriginal)
+                            addFn(item, topic, messageId);
+                    }
+                    else {
+                        newMessageIndex++;
+                        const newMessageId = `${item.options.messageId}-${newMessageIndex}`
+                        const newMessage = this.cloneMessageForRouter(item, newTopic, newMessageId);
+                        addFn(newMessage, newTopic, newMessageId);
+                    }
+                }
+            }
+        } catch (error) {
+            log.error(error);
+            throw error;
+        }
     }
 
     private loopBroken = false;
@@ -177,14 +198,19 @@ export class MessageHandler {
 
     private resendMessage(messageId: string, delayMs: number) {
         log.debug({ messageid: messageId }, 'Resend message');
-        const message = this.messageIndexerList.get(messageId);
-        if (message) {
-            message.publishTime = nowMs();
-            message.options.delayMs = delayMs;
-            this.addMessage(message);
+        try {
+            const message = this.messageIndexerList.get(messageId);
+            if (message) {
+                message.publishTime = nowMs();
+                message.options.delayMs = delayMs;
+                this.addMessage(message, false);
+            }
+            else
+                throw new MessageError(`Message not found: ${messageId}`);
         }
-        else
+        catch (error) {
             log.error({ messageid: messageId }, 'Cannot resend message');
+        }
     }
 
     private deleteMessage(messageId: string) {
@@ -201,6 +227,18 @@ export class MessageHandler {
         }
         else
             log.error({ messageid: messageId }, 'Cannot delete message, topic not found');
+    }
+
+    private cloneMessageForRouter(msg: MessageStorageItem, newTopic: string, newMessageId: string): MessageStorageItem {
+        const result = {
+            topic: newTopic,
+            message: Object.assign({}, msg.message),
+            options: Object.assign({}, msg.options),
+            publishTime: msg.publishTime,
+            sourceClientId: msg.sourceClientId,
+        }
+        result.options.messageId = newMessageId;
+        return result;
     }
 
     private removeSomeExpiredMessages() {

@@ -1,5 +1,6 @@
 import { ClientList } from "../lib/ClientList";
 import { MessageHandler } from "../lib/MessageHandler";
+import { ResourceHandler } from "../lib/ResourceHandler";
 import { IStorage } from "../lib/storage/IStorage";
 import { TopicHandler } from "../lib/TopicHandler";
 
@@ -8,6 +9,7 @@ type Context = {
     MessageHandler: MessageHandler,
     Topics: TopicHandler,
     Storage: IStorage,
+    ResourceHandler: ResourceHandler,
 }
 
 declare global {
