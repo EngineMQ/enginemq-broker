@@ -233,6 +233,8 @@ export class MessageHandler {
             publishTime: msg.publishTime,
             sourceClientId: msg.sourceClientId,
         }
+        // const result = structuredClone(msg);
+        // result.topic = newTopic;
         result.options.messageId = newMessageId;
         return result;
     }
