@@ -2,6 +2,9 @@ import { IResource } from "./IResource";
 // import { topicStrToRegexpOrString } from "../utility";
 import { Static, Type } from "@sinclair/typebox";
 
+const NAME_LENGTH_MAX = 32;
+const NAME_MASK = `^[a-z0-9-]{1,${NAME_LENGTH_MAX}}$`;
+
 export type RouterOptions = Static<typeof RouterOptions>;
 export const RouterOptions = Type.Object({
     name: Type.String(),
@@ -19,21 +22,27 @@ export const RouterOptions = Type.Object({
 });
 
 export class Router implements IResource {
-    private usage = 0;
     private options: RouterOptions;
     // private inputTopicExpr: string | RegExp;
 
     get name(): string {
         return this.options.name;
     }
-    public getUsage(): number {
-        return this.usage;
+    get topic(): string {
+        return this.options.topic;
     }
 
     constructor(options: RouterOptions) {
         this.options = options;
-        if (!this.options.copyTo && !this.options.moveTo)
+        if (!this.name.match(new RegExp(NAME_MASK)))
+            throw new Error(`Validation error: invalid name '${this.name}'`);
+        if (!(this.options.copyTo && this.options.copyTo.length || this.options.moveTo && this.options.moveTo.length))
             throw new Error('Validation error: copyTo or moveTo is mandatory');
+
+        for (const targets of [this.options.copyTo, this.options.moveTo])
+            if (targets)
+                if (Array.isArray(targets))
+                    targets.sort();
         // this.inputTopicExpr = topicStrToRegexpOrString(options.inputTopic);
     }
 
@@ -54,8 +63,6 @@ export class Router implements IResource {
         topics: string[],
         holdOriginal: boolean
     } {
-        this.usage++;
-
         const result: string[] = [];
         for (const targets of [this.options.copyTo, this.options.moveTo])
             if (targets)

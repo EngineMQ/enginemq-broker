@@ -53,6 +53,10 @@ export class ResourceHandler {
         return runRouter(msg.topic).sort();
     }
 
+    public getRouters() {
+        return this.routers;
+    }
+
 
 
 

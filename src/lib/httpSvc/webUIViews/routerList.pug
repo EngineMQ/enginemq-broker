@@ -1,0 +1,44 @@
+extends _base
+block content
+    .row
+        .col-md-12.d-flex.flex-row-reverse
+            a.btn.btn-default(onclick='clearLogs()')
+                i.fa.fa-map
+                | 
+                | Show in map
+            a.btn.btn-info(onclick='clearLogs()')
+                i.fa.fa-plus
+                | 
+                | New router
+    br
+    .row
+        .col-md-12
+            .card
+
+                .card-body.table-responsive.p-0
+                    table.table.table-hover.text-nowrap
+                        thead
+                            tr
+                                th Name
+                                th Routes
+                        tbody
+                            each router in routers
+                                tr
+                                    td
+                                        h5 
+                                            a(href='/resources/router/' + router.name)
+                                                = router.name
+                                    td
+                                        if (router.hold)
+                                            span.badge.badge-success Copy
+                                        else
+                                            span.badge.badge-warning Move
+                                        br
+                                        each route in router.routes
+                                            = route.from
+                                            | 
+                                            small
+                                                i.fa.fa-arrow-right
+                                            | 
+                                            = route.to
+                                            br
