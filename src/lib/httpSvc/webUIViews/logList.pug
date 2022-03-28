@@ -58,8 +58,8 @@ block content
                     .done(function() {
                         toastr.success('Logs cleared', 'OK');
                         setTimeout(() =>{
-                            reloadContentWrapper();
-                        }, 250);
+                            location.reload();
+                        }, 750);
                     })
                     .fail(function(jqXHR, textStatus, errorThrown) {
                         toastr.error(errorThrown, 'Error');

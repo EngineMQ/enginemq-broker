@@ -31,5 +31,9 @@ export default {
 
     removeAllLogs() {
         memoryLogStore.clear();
-    }
+    },
+
+    getUiNotification() {
+        return memoryLogStore.getUiNotification();
+    },
 }

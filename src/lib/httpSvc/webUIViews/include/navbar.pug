@@ -21,29 +21,22 @@ nav.main-header.navbar.navbar-expand.navbar-dark
                                 i.fas.fa-search
                             button.btn.btn-navbar(type="button" data-widget="navbar-search")
                                 i.fas.fa-times
-        li.nav-item.dropdown
+        li.nav-item.dropdown#uiNotifications
+            - var uiNotifications = getUiNotifications()
             a.nav-link(data-toggle="dropdown" href="#")
                 i.far.fa-bell
-                span.badge.badge-warning.navbar-badge 15
+                if (uiNotifications.length)
+                    span.badge.navbar-badge(class='badge-' + uiNotifications[0].iconClass)
+                        = uiNotifications.length
             .dropdown-menu.dropdown-menu-lg.dropdown-menu-right
-                span.dropdown-item.dropdown-header 15 Notifications
-                .dropdown-divider
-                a.dropdown-item(href="#")
-                    i.fas.fa-envelope.mr-2
-                    | 4 new messages
-                    span.float-right.text-muted.text-sm 3 mins
-                .dropdown-divider
-                a.dropdown-item(href="#")
-                    i.fas.fa-users.mr-2
-                    | 8 friend requests
-                    span.float-right.text-muted.text-sm 12 hours
-                .dropdown-divider
-                a.dropdown-item(href="#")
-                    i.fas.fa-file.mr-2
-                    | 3 new reports
-                    span.float-right.text-muted.text-sm 2 days
-                .dropdown-divider
-                a.dropdown-item.dropdown-footer(href="#") See All Notifications
+                each uiNotification in uiNotifications
+                    a.dropdown-item(href="/logs")
+                        if (uiNotification.icon)
+                            i.fa.fa-fw(class=uiNotification.icon class='text-' + uiNotification.iconClass)
+                        | 
+                        = uiNotification.itemCount
+                        | 
+                        = uiNotification.level
         li.nav-item
             a.nav-link(data-widget="fullscreen" href="#" role="button")
                 i.fas.fa-expand-arrows-alt
@@ -53,7 +46,14 @@ script(type='text/javascript').
         const isChecked = $("#auto-refresh").is(':checked');
         if (isChecked || !automode)
             $("#content-wrapper").load(location.href + " #content-wrapper > *", function () {
-                if (automode && isChecked)
-                    setTimeout(reloadContentWrapper, 1000, true);
+                if ($("#uiNotifications").hasClass('show')) {
+                    if (automode && isChecked)
+                        setTimeout(reloadContentWrapper, 1000, true);
+                }
+                else
+                    $("#uiNotifications").load(location.href + " #uiNotifications > *", function () {
+                        if (automode && isChecked)
+                            setTimeout(reloadContentWrapper, 1000, true);
+                    });
             });
     }

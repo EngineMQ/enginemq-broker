@@ -15,8 +15,29 @@ export type MemoryLogItem = {
     data: object
 }
 
+export type MemoryLogUiNotificationItem = {
+    level: string,
+    icon: string,
+    iconClass: string,
+    itemCount: number,
+}
+
+const uiNotificationLevels = [
+    { level: 'error', icon: 'fa-times', iconClass: 'danger' },
+    { level: 'warn', icon: 'fa-exclamation-triangle', iconClass: 'warning' },
+];
+
+const levelSorter = (levelA: string, levelB: string) => {
+    const levelSort = ['error', 'warn', 'info'];
+
+    const indexA = Math.min(levelSort.indexOf(levelA), Number.MAX_SAFE_INTEGER);
+    const indexB = Math.min(levelSort.indexOf(levelB), Number.MAX_SAFE_INTEGER);
+    return indexA - indexB;
+}
+
 class MemoryLogStore {
     private logs = new Map<string, MemoryLogItem[]>();
+    private hasUiNotification = false;
 
     public add(item: MemoryLogItem) {
         const level = item.level;
@@ -30,11 +51,28 @@ class MemoryLogStore {
                 if (items.length > MEMORYLOG_MAX_ITEMS)
                     items.splice(0, items.length - MEMORYLOG_MAX_ITEMS);
             }
+
+            if (uiNotificationLevels.find((i) => i.level == level))
+                this.hasUiNotification = true;
         }
+    }
+
+    public getUiNotification(): MemoryLogUiNotificationItem[] {
+        if (!this.hasUiNotification)
+            return [];
+
+        const result: MemoryLogUiNotificationItem[] = [];
+        for (const nl of uiNotificationLevels) {
+            const items = this.logs.get(nl.level);
+            if (items)
+                result.push({ level: nl.level, icon: nl.icon, iconClass: nl.iconClass, itemCount: items.length });
+        }
+        return result;
     }
 
     public clear() {
         this.logs.clear();
+        this.hasUiNotification = false;
     }
 
     public getMessages(level: string): MemoryLogItem[] {
@@ -46,7 +84,11 @@ class MemoryLogStore {
 
     public getLevels(): Record<string, number> {
         const result: Record<string, number> = {};
-        for (const key of this.logs.keys())
+
+        const keys = Array.from(this.logs.keys());
+        keys.sort(levelSorter);
+
+        for (const key of keys)
             result[key] = this.getMessages(key).length;
         return result;
     }

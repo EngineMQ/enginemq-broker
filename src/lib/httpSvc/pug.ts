@@ -5,6 +5,7 @@ import * as pug from 'pug';
 
 import { version } from '../../../package.json';
 import * as config from '../../config';
+import logService from './services/logService';
 
 export default async (server: FastifyInstance) => {
     server.log.debug('Init template engine');
@@ -19,10 +20,12 @@ export default async (server: FastifyInstance) => {
             serviceName: config.serviceName,
             devMode: !config.isProduction,
             appVersion: version,
+            getUiNotifications: () => logService.getUiNotification(),
         },
         production: config.isProduction, //cache files?
         options: {
             pretty: !config.isProduction,
         },
     });
+    console.log(logService.getUiNotification());
 }
