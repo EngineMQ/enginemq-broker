@@ -20,3 +20,9 @@ a:active {
 .text-110 {
     font-size: 110%
 }
+
+.edgeLabel {
+    font-size: 90%;
+    background-color: inherit !important;
+    margin: 4px 4px;
+}

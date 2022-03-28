@@ -32,8 +32,4 @@ export default {
             .getRouters()
             .find((r) => r.name == name);
     }
-
-    // removeAllLogs() {
-    //     memoryLogStore.clear();
-    // }
 }

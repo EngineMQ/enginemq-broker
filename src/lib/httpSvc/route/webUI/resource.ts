@@ -36,8 +36,8 @@ export default (server: FastifyInstance) => {
 
             const mermaid: string[] = [];
             mermaid.push('graph LR');
-            for (const router of routers) 
-                for (const route of router.routes) 
+            for (const router of routers)
+                for (const route of router.routes)
                     mermaid.push(`${route.from}([${route.from}]) ${router.hold ? '-.->' : '-->'} |${router.name}| ${route.to}([${route.to}])`);
 
             return reply.view("routerMap", {
