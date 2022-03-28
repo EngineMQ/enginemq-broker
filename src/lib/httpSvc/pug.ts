@@ -21,11 +21,11 @@ export default async (server: FastifyInstance) => {
             devMode: !config.isProduction,
             appVersion: version,
             getUiNotifications: () => logService.getUiNotification(),
+            newline: '\n',
         },
         production: config.isProduction, //cache files?
         options: {
             pretty: !config.isProduction,
         },
     });
-    console.log(logService.getUiNotification());
 }

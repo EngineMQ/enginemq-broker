@@ -5,12 +5,6 @@ import { validateObject } from '../common/lib/ajv';
 
 const log = logger.child({ module: 'Messages' });
 
-export type RouterResult = {
-    newTopics: string[],
-    removeOriginal: boolean,
-    noOperationNeed: boolean;
-}
-
 export class ResourceHandler {
     private routers: Router[] = [];
     private storage: IStorage;

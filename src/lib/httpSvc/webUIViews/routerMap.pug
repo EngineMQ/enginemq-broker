@@ -1,0 +1,9 @@
+extends _base
+block content
+
+    .mermaid
+        != mermaid
+
+    script(src="/assets/mermaid/mermaid.min.js?v=" + appVersion)
+    script(type='text/javascript').
+        mermaid.initialize({ startOnLoad: true });

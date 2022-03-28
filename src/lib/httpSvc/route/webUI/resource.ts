@@ -31,6 +31,22 @@ export default (server: FastifyInstance) => {
             return reply.code(HTTP_NOT_FOUND).send(`Cannot find router ${routerName}`);
         })
 
+        .get('/resources/routers/map', async (_request, reply) => {
+            const routers = resourceService.getAllRouters();
+
+            const mermaid: string[] = [];
+            mermaid.push('graph LR');
+            for (const router of routers) 
+                for (const route of router.routes) 
+                    mermaid.push(`${route.from}([${route.from}]) ${router.hold ? '-.->' : '-->'} |${router.name}| ${route.to}([${route.to}])`);
+
+            return reply.view("routerMap", {
+                title: "Routers map",
+                breadcrumb: [{ url: '/resources/routers', title: 'Routers' }],
+                mermaid: mermaid.join('\n'),
+            });
+        })
+
         .get('/resources/newrouter', async (_request, reply) => {
             const routerName = `router-${nanoid(NEWROUTER_NAMEID_LENGTH)}`;
             return reply.view("router", {

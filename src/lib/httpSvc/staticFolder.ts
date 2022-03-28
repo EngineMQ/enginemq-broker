@@ -10,6 +10,7 @@ const staticFolders = new Map<string, string>([
     ['/public', '../../public'],
     ['/assets/template', path.join(folderNodeModules, 'admin-lte/dist')],
     ['/assets/plugins', path.join(folderNodeModules, 'admin-lte/plugins')],
+    ['/assets/mermaid', path.join(folderNodeModules, 'mermaid/dist')],
 ]);
 
 export default async (server: FastifyInstance) => {
