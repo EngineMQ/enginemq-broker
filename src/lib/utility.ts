@@ -1,3 +1,6 @@
+import * as v8 from 'v8';
+import * as vm from 'vm';
+
 export const shuffleArray = <T>(array: Array<T>) => {
     let currentIndex = array.length;
 
@@ -60,4 +63,16 @@ export const topicStrToRegexpOrString = (topicstr: string): string | RegExp => {
             return new RegExp('^' + topicstr + '$', 'i');
         }
     return topicstr;
+}
+
+v8.setFlagsFromString('--expose_gc');
+export const gc = vm.runInNewContext('gc');
+
+export const heapUsage = () => {
+    const heapStat = v8.getHeapStatistics();
+    return {
+        size: heapStat.total_heap_size,
+        used: heapStat.used_heap_size,
+        limit: heapStat.heap_size_limit,
+    }
 }

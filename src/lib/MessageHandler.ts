@@ -102,6 +102,7 @@ export class MessageHandler {
                                     }
                                 }, 'Topic message stat');
                         }
+                        utility.gc();
                         resolve();
                     });
             }
