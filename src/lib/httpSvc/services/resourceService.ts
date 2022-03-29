@@ -1,3 +1,5 @@
+import { RouterOptions } from "../../resources/Router";
+
 export type RouterDisplay = {
     name: string,
     routes: { from: string, to: string }[],
@@ -31,5 +33,17 @@ export default {
         return Context.ResourceHandler
             .getRouters()
             .find((r) => r.name == name);
-    }
+    },
+
+    insertOrUpdateRouter(name: string, options: RouterOptions) {
+        if (name)
+            Context.ResourceHandler.updateRouter(name, options);
+        else
+            Context.ResourceHandler.addRouter(options);
+    },
+
+    deleteRouter(name: string) {
+        Context.ResourceHandler.deleteRouter(name);
+    },
+
 }

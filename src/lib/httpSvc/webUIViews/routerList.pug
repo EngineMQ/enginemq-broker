@@ -1,15 +1,17 @@
 extends _base
 block content
     .row
-        .col-md-12.d-flex.flex-row-reverse
-            a.btn.btn-default(href='/resources/routers/map')
-                i.fa.fa-map
-                | 
-                | Show in map
-            a.btn.btn-info(onclick='clearLogs()')
+        .col-md-6
+            a.btn.btn-info(href='/resources/routers/new')
                 i.fa.fa-plus
                 | 
                 | New router
+        .col-md-6
+            .float-right
+                a.btn.btn-default(href='/resources/routers/map')
+                    i.fa.fa-map
+                    | 
+                    | Show in map
     br
     .row
         .col-md-12

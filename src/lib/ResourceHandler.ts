@@ -51,6 +51,17 @@ export class ResourceHandler {
         return this.routers;
     }
 
+    public addRouter(options: RouterOptions) {
+
+    }
+
+    public updateRouter(name: string, options: RouterOptions) {
+
+    }
+
+    public deleteRouter(name: string) {
+
+    }
 
 
 

@@ -31,6 +31,9 @@ export class Router implements IResource {
     get topic(): string {
         return this.options.topic;
     }
+    public getOptions(): RouterOptions {
+        return this.options;
+    }
 
     constructor(options: RouterOptions) {
         this.options = options;

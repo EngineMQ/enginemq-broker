@@ -1,9 +1,10 @@
-import { nanoid } from 'nanoid';
+import { customAlphabet } from 'nanoid';
 import { FastifyInstance } from "fastify";
 import resourceService from "../../services/resourceService";
 
 const HTTP_NOT_FOUND = 404;
 const NEWROUTER_NAMEID_LENGTH = 8;
+const nanoid = customAlphabet('1234567890abcdef', NEWROUTER_NAMEID_LENGTH);
 
 export default (server: FastifyInstance) => {
     server
@@ -26,7 +27,7 @@ export default (server: FastifyInstance) => {
                     subtitle: routerName,
                     breadcrumb: [{ url: '/resources/routers', title: 'Routers' }],
                     routerName,
-                    router,
+                    router: router.getOptions(),
                 });
             return reply.code(HTTP_NOT_FOUND).send(`Cannot find router ${routerName}`);
         })
@@ -47,12 +48,17 @@ export default (server: FastifyInstance) => {
             });
         })
 
-        .get('/resources/newrouter', async (_request, reply) => {
-            const routerName = `router-${nanoid(NEWROUTER_NAMEID_LENGTH)}`;
+        .get('/resources/routers/new', async (_request, reply) => {
+            // const routerName = `router-${nanoid(NEWROUTER_NAMEID_LENGTH)}`;
             return reply.view("router", {
                 title: 'New router',
                 breadcrumb: [{ url: '/resources/routers', title: 'Routers' }],
-                routerName,
+                routerName: '',
+                router: {
+                    name: `router-${nanoid()}`,
+                    topic: '',
+                    copyTo: [], moveTo: []
+                }
             });
         })
 

@@ -1,1 +1,60 @@
-| XXX
+extends _base
+block content
+    form#router
+        input(type='hidden' name='routerName' value=routerName)
+        .row
+            .col-md-6 
+                .form-group
+                    label(for='exampleInputEmail1') Router name
+                    input.form-control#exampleInputEmail1(type='text' name='name' value=router.name placeholder='Unique name of router')
+                .form-group
+                    label(for='exampleInputEmail1') Source topic
+                    input.form-control#exampleInputEmail1(type='text' name='topic' value=router.topic placeholder='Topic you are listening to')
+        .row
+            .col-md-6 
+                .form-group
+                    label Copy to topics
+                    textarea.form-control(rows='5' name='copyTo' placeholder='One or more topics to which to copy messages (one per line)')
+                        each copyTo of router.copyTo
+                            = copyTo
+                            = newline
+            .col-md-6 
+                .form-group
+                    label Move to topics
+                    textarea.form-control(rows='5' name='moveTo' placeholder='One or more topics to which to move messages (one per line)')
+        .row
+            .col-md-12
+                a.btn.btn-success(href='#' onclick='updateRouter()')
+                    | Save
+
+    script(type='text/javascript').
+        $(function() {
+            setTimeout(() => { $('#exampleInputEmail1').focus() }, 100);
+        });
+
+        function updateRouter()
+        {
+            const formData = $('#router').serialize();
+            alert(formData);
+            return;
+
+            Swal.fire({
+                title: 'Clear logs',
+                text: 'Do you want to clear logs from memory?',
+                confirmButtonText: 'Clear',
+                showCancelButton: true,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post("/logs/clear")
+                    .done(function() {
+                        toastr.success('Logs cleared', 'OK');
+                        setTimeout(() =>{
+                            location.reload();
+                        }, 750);
+                    })
+                    .fail(function(jqXHR, textStatus, errorThrown) {
+                        toastr.error(errorThrown, 'Error');
+                    });        
+                }
+            })
+        }
