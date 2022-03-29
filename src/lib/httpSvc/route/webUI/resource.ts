@@ -18,11 +18,11 @@ export default (server: FastifyInstance) => {
             });
         })
 
-        .get<{ Params: { routername: string } }>('/resources/router/:routername(^[a-z0-9-]+$)', async (request, reply) => {
-            const routerName = request.params.routername;
+        .get<{ Params: { routerName: string } }>('/resources/router/:routerName(^[a-z0-9-]+$)', async (request, reply) => {
+            const { routerName } = request.params;
             const router = resourceService.getRouter(routerName);
             if (router)
-                return reply.view("router", {
+                return reply.view("routerEdit", {
                     title: 'Router',
                     subtitle: routerName,
                     breadcrumb: [{ url: '/resources/routers', title: 'Routers' }],
@@ -49,8 +49,7 @@ export default (server: FastifyInstance) => {
         })
 
         .get('/resources/routers/new', async (_request, reply) => {
-            // const routerName = `router-${nanoid(NEWROUTER_NAMEID_LENGTH)}`;
-            return reply.view("router", {
+            return reply.view("routerEdit", {
                 title: 'New router',
                 breadcrumb: [{ url: '/resources/routers', title: 'Routers' }],
                 routerName: '',
@@ -62,9 +61,29 @@ export default (server: FastifyInstance) => {
             });
         })
 
-    // .post<{ Body: { topicname: string } }>('/topic/clear', async (request, reply) => {
-    //     topicService.clearTopic(request.body.topicname);
-    //     return reply.send("OK");
-    // })
+        .post<{
+            Body: {
+                routerName: string,
+                name: string,
+                topic: string,
+                copyTo: string,
+                moveTo: string
+            }
+        }>('/resources/routers/update', async (request, reply) => {
+            const { routerName, name, topic, copyTo, moveTo } = request.body;
+            resourceService.insertOrUpdateRouter(routerName, {
+                name,
+                topic,
+                copyTo: copyTo.split('\r\n').filter((i) => i),
+                moveTo: moveTo.split('\r\n').filter((i) => i)
+            });
+            return reply.send("OK");
+        })
+
+        .post<{ Body: { routerName: string } }>('/resources/routers/delete', async (request, reply) => {
+            const { routerName } = request.body;
+            resourceService.deleteRouter(routerName);
+            return reply.send("OK");
+        })
 
 }

@@ -52,15 +52,22 @@ export class ResourceHandler {
     }
 
     public addRouter(options: RouterOptions) {
-
+        const router = new Router(options);
+        this.routers.push(router);
+        this.storage.addOrUpdateResource('router', options.name, JSON.stringify(router.getOptions()));
     }
 
     public updateRouter(name: string, options: RouterOptions) {
-
+        const router = this.routers.find((r) => r.name == name);
+        if (!router)
+            throw new Error(`Router ${name} not found`);
+        router.setOptions(options);
+        this.storage.addOrUpdateResource('router', options.name, JSON.stringify(router.getOptions()));
     }
 
     public deleteRouter(name: string) {
-
+        this.routers = this.routers.filter((r) => r.name != name);
+        this.storage.deleteResource('router', name);
     }
 
 

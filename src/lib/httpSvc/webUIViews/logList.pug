@@ -58,7 +58,7 @@ block content
                     .done(function() {
                         toastr.success('Logs cleared', 'OK');
                         setTimeout(() =>{
-                            location.reload();
+                            window.location.reload();
                         }, 750);
                     })
                     .fail(function(jqXHR, textStatus, errorThrown) {

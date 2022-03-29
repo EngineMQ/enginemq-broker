@@ -31,22 +31,29 @@ export class Router implements IResource {
     get topic(): string {
         return this.options.topic;
     }
+
+    constructor(options: RouterOptions) {
+        this.options = this.setOptions(options);
+    }
+
     public getOptions(): RouterOptions {
         return this.options;
     }
 
-    constructor(options: RouterOptions) {
-        this.options = options;
-        if (!this.name.match(new RegExp(NAME_MASK)))
-            throw new Error(`Validation error: invalid name '${this.name}'`);
-        if (!(this.options.copyTo && this.options.copyTo.length || this.options.moveTo && this.options.moveTo.length))
+    public setOptions(options: RouterOptions) {
+        if (!options.name.match(new RegExp(NAME_MASK)))
+            throw new Error(`Validation error: invalid name '${options.name}'`);
+        if (!(options.copyTo && options.copyTo.length || options.moveTo && options.moveTo.length))
             throw new Error('Validation error: copyTo or moveTo is mandatory');
+
+        this.options = options;
 
         for (const targets of [this.options.copyTo, this.options.moveTo])
             if (targets)
                 if (Array.isArray(targets))
                     targets.sort();
         // this.inputTopicExpr = topicStrToRegexpOrString(options.inputTopic);
+        return options;
     }
 
     public matchTopic(topic: string): boolean {
@@ -76,7 +83,7 @@ export class Router implements IResource {
 
         return {
             topics: result,
-            holdOriginal: this.options.copyTo ? true : false,
+            holdOriginal: this.options.copyTo && this.options.copyTo.length ? true : false,
         };
     }
 }

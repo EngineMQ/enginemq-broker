@@ -22,6 +22,9 @@ block content
                 .form-group
                     label Move to topics
                     textarea.form-control(rows='5' name='moveTo' placeholder='One or more topics to which to move messages (one per line)')
+                        each moveTo of router.moveTo
+                            = moveTo
+                            = newline
         .row
             .col-md-12
                 a.btn.btn-success(href='#' onclick='updateRouter()')
@@ -35,26 +38,12 @@ block content
         function updateRouter()
         {
             const formData = $('#router').serialize();
-            alert(formData);
-            return;
-
-            Swal.fire({
-                title: 'Clear logs',
-                text: 'Do you want to clear logs from memory?',
-                confirmButtonText: 'Clear',
-                showCancelButton: true,
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.post("/logs/clear")
-                    .done(function() {
-                        toastr.success('Logs cleared', 'OK');
-                        setTimeout(() =>{
-                            location.reload();
-                        }, 750);
-                    })
-                    .fail(function(jqXHR, textStatus, errorThrown) {
-                        toastr.error(errorThrown, 'Error');
-                    });        
-                }
+            $.post("/resources/routers/update", formData)
+            .done(function() {
+                window.location.href = '/resources/routers';
             })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                const error = JSON.parse(jqXHR.responseText);
+                toastr.error(error.message, errorThrown);
+            });        
         }
