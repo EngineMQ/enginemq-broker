@@ -63,12 +63,19 @@ export class Router implements IResource {
         for (const targets of [options.copyTo, options.moveTo])
             if (targets)
                 if (Array.isArray(targets)) {
-                    for (const target of targets)
+                    for (const target of targets) {
                         if (!target.match(TOPIC_MASK))
                             throw new Error(`Validation error: invalid topic format ${target}`);
+                        if (target.length > TOPIC_LENGTH_MAX)
+                            throw new Error(`Validation error: topic too long ${target}`);
+                    }
                 }
-                else if (!targets.match(TOPIC_MASK))
-                    throw new Error(`Validation error: invalid topic format ${targets}`);
+                else {
+                    if (!targets.match(TOPIC_MASK))
+                        throw new Error(`Validation error: invalid topic format ${targets}`);
+                    if (targets.length > TOPIC_LENGTH_MAX)
+                        throw new Error(`Validation error: topic too long ${targets}`);
+                }
 
         this.options = options;
 

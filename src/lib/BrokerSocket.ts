@@ -200,7 +200,8 @@ export class BrokerSocket extends MsgpackSocket {
         this.subscriptions = [];
         for (const sub of subscriptions)
             if (sub.match(messages.TOPIC_WILDCARD_MASK))
-                this.subscriptions.push(topicStrToRegExpOrString(sub));
+                if (sub.length <= messages.TOPIC_LENGTH_MAX)
+                    this.subscriptions.push(topicStrToRegExpOrString(sub));
         this.emit('subscriptions', this.subscriptions);
     }
 }
