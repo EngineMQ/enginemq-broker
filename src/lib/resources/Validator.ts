@@ -1,5 +1,5 @@
-import { IResource } from "./IResource";
-import { topicStrToRegExpOrString } from "../utility";
+import { IResource } from './IResource';
+import { topicStrToRegExpOrString } from '../utility';
 
 type ErrorResult = string;
 

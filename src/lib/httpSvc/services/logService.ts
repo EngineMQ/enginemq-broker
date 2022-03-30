@@ -1,4 +1,4 @@
-import { memoryLogStore } from "../../logger";
+import { memoryLogStore } from '../../logger';
 
 export type MemoryLogItemDisplay = {
     timeHuman: string,

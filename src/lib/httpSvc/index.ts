@@ -38,8 +38,8 @@ export default async (): Promise<FastifyInstance | null> => {
     await server.register(fastifyEtag);
     await server.register(fastifyFormBody);
 
-    server.addHook("onRequest", (req, _reply, done) => {
-        req.log.debug({ method: req.method, url: req.raw.url, session: req.session, }, "Incoming request");
+    server.addHook('onRequest', (req, _reply, done) => {
+        req.log.debug({ method: req.method, url: req.raw.url, session: req.session, }, 'Incoming request');
         req.log = logPlugins;
         done();
     });
@@ -51,9 +51,9 @@ export default async (): Promise<FastifyInstance | null> => {
             Expires: '0',
         });
         if (reply.raw.statusCode >= HTTP_ERROR_MIN)
-            req.log.error({ url: req.raw.url, statusMessage: reply.raw.statusMessage, statusCode: reply.raw.statusCode, }, "Request error");
+            req.log.error({ url: req.raw.url, statusMessage: reply.raw.statusMessage, statusCode: reply.raw.statusCode, }, 'Request error');
         else
-            req.log.debug({ url: req.raw.url, statusCode: reply.raw.statusCode, }, "Request completed");
+            req.log.debug({ url: req.raw.url, statusCode: reply.raw.statusCode, }, 'Request completed');
     })
 
     if (config.webUIEnabled) {

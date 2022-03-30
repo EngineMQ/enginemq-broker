@@ -1,4 +1,4 @@
-import { FastifyInstance } from "fastify"
+import { FastifyInstance } from 'fastify'
 
 import api from './api';
 import webUI from './webUI';

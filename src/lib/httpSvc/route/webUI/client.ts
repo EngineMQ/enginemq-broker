@@ -1,13 +1,13 @@
-import { FastifyInstance } from "fastify";
-import clientService from "../../services/clientService";
+import { FastifyInstance } from 'fastify';
+import clientService from '../../services/clientService';
 
 export default (server: FastifyInstance) => {
     server
 
         .get('/clients', async (_request, reply) => {
             const clients = clientService.getAllClients();
-            return reply.view("clientList", {
-                title: "Clients",
+            return reply.view('clientList', {
+                title: 'Clients',
                 breadcrumb: [],
                 clients,
             });
@@ -16,7 +16,7 @@ export default (server: FastifyInstance) => {
         .get<{ Params: { uniqueId: number } }>('/client/:uniqueId(^\\d+$)', async (request, reply) => {
             const uniqueId = request.params.uniqueId;
             const client = clientService.getClient(uniqueId);
-            return reply.view("client", {
+            return reply.view('client', {
                 title: 'Client',
                 subtitle: `#${uniqueId}`,
                 breadcrumb: [{ url: '/clients', title: 'Clients' }],
@@ -27,6 +27,6 @@ export default (server: FastifyInstance) => {
 
         .post<{ Body: { uniqueId: number } }>('/client/kick', async (request, reply) => {
             clientService.kickClient(request.body.uniqueId);
-            return reply.send("OK");
+            return reply.send('OK');
         })
 }

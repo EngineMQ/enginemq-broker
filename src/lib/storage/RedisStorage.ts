@@ -3,7 +3,7 @@ import { createClient } from 'redis';
 import { awaitSync } from '@kaciras/deasync';
 
 import * as config from '../../config';
-import { IStorage, MessageStorageItem, StorageResourceType } from "./IStorage";
+import { IStorage, MessageStorageItem, StorageResourceType } from './IStorage';
 import logger from '../logger';
 import { RedisClientType } from '@node-redis/client';
 

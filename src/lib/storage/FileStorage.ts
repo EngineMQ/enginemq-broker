@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Packr } from 'msgpackr';
 
-import { IStorage, MessageStorageItem, StorageResourceType } from "./IStorage";
+import { IStorage, MessageStorageItem, StorageResourceType } from './IStorage';
 import logger from '../logger';
 
 class FileStorageError extends Error { }

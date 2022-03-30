@@ -1,4 +1,4 @@
-import { IStorage, MessageStorageItem, StorageResourceType } from "./IStorage";
+import { IStorage, MessageStorageItem, StorageResourceType } from './IStorage';
 import logger from '../logger';
 
 const log = logger.child({ module: 'NullStorage' });

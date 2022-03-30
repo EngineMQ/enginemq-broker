@@ -1,4 +1,4 @@
-import * as messages from "../../common/messageTypes";
+import * as messages from '../../common/messageTypes';
 
 type MessageInfo = {
     sourceClientId: string,

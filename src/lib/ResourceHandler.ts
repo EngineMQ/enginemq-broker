@@ -1,5 +1,5 @@
 import logger from './logger';
-import { IStorage, MessageStorageItem } from "./storage/IStorage";
+import { IStorage, MessageStorageItem } from './storage/IStorage';
 import { Router, RouterOptions } from './resources/Router';
 import { validateObject } from '../common/lib/ajv';
 import { customAlphabet } from 'nanoid';

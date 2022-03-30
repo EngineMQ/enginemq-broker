@@ -1,7 +1,7 @@
-import { FastifyInstance } from "fastify";
-import resourceService from "../../services/resourceService";
+import { FastifyInstance } from 'fastify';
+import resourceService from '../../services/resourceService';
 import { reduceArrayIfOneItem } from '../../../utility';
-import { resourceIdRegExp } from "../../../ResourceHandler";
+import { resourceIdRegExp } from '../../../ResourceHandler';
 
 const HTTP_NOT_FOUND = 404;
 
@@ -12,8 +12,8 @@ export default (server: FastifyInstance) => {
 
         .get('/resources/routers', async (_request, reply) => {
             const routers = resourceService.getAllRouters();
-            return reply.view("routerList", {
-                title: "Routers",
+            return reply.view('routerList', {
+                title: 'Routers',
                 breadcrumb: [],
                 routers,
             });
@@ -23,7 +23,7 @@ export default (server: FastifyInstance) => {
             const { resourceId } = request.params;
             const router = resourceService.getRouter(resourceId);
             if (router)
-                return reply.view("routerEdit", {
+                return reply.view('routerEdit', {
                     title: 'Router',
                     subtitle: router.description,
                     breadcrumb: BREADCRUMB_TO_LIST,
@@ -53,15 +53,15 @@ export default (server: FastifyInstance) => {
                 for (const route of router.routes)
                     mermaid.push(`${route.from}([${route.from}]) ${router.hold ? '-.->' : '-->'} |${router.description}| ${route.to}([${route.to}])`);
 
-            return reply.view("routerMap", {
-                title: "Routers map",
+            return reply.view('routerMap', {
+                title: 'Routers map',
                 breadcrumb: BREADCRUMB_TO_LIST,
                 mermaid: mermaid.join('\n'),
             });
         })
 
         .get('/resources/routers/new', async (_request, reply) => {
-            return reply.view("routerEdit", {
+            return reply.view('routerEdit', {
                 title: 'New router',
                 breadcrumb: BREADCRUMB_TO_LIST,
                 resourceId: '',
@@ -80,7 +80,7 @@ export default (server: FastifyInstance) => {
             if (router) {
                 const options = { ...router.getOptions() };
                 options.description = 'Copy of ' + options.description;
-                return reply.view("routerEdit", {
+                return reply.view('routerEdit', {
                     title: 'Router',
                     subtitle: router.description,
                     breadcrumb: BREADCRUMB_TO_LIST,
@@ -107,13 +107,13 @@ export default (server: FastifyInstance) => {
                 copyTo: reduceArrayIfOneItem(copyTo.split('\r\n').filter((i) => i)),
                 moveTo: reduceArrayIfOneItem(moveTo.split('\r\n').filter((i) => i)),
             });
-            return reply.send("OK");
+            return reply.send('OK');
         })
 
         .post<{ Body: { resourceId: string } }>('/resources/routers/delete', async (request, reply) => {
             const { resourceId } = request.body;
             resourceService.deleteRouter(resourceId);
-            return reply.send("OK");
+            return reply.send('OK');
         })
 
 }

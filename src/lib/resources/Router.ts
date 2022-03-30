@@ -1,8 +1,8 @@
-import { Static, Type } from "@sinclair/typebox";
+import { Static, Type } from '@sinclair/typebox';
 import * as yaml from 'js-yaml';
-import { TOPIC_LENGTH_MAX, TOPIC_MASK } from "../../common/messageTypes";
-import { trimStringFields } from "../utility";
-import { IResource } from "./IResource";
+import { TOPIC_LENGTH_MAX, TOPIC_MASK } from '../../common/messageTypes';
+import { trimStringFields } from '../utility';
+import { IResource } from './IResource';
 // import { topicStrToRegexpOrString } from "../utility";
 
 const DESCRIPTION_LENGTH_MAX = 50;
@@ -46,16 +46,16 @@ export class Router implements IResource {
         trimStringFields(options);
 
         if (!options.description)
-            throw new Error(`Validation error: description mandatory`);
+            throw new Error('Validation error: description mandatory');
         if (options.description.length > DESCRIPTION_LENGTH_MAX)
             throw new Error(`Validation error: description too long'${options.description}'`);
 
         if (!options.topic)
-            throw new Error(`Validation error: topic mandatory`);
+            throw new Error('Validation error: topic mandatory');
         if (!options.topic.match(TOPIC_MASK))
-            throw new Error(`Validation error: invalid topic format`);
+            throw new Error('Validation error: invalid topic format');
         if (options.topic.length > TOPIC_LENGTH_MAX)
-            throw new Error(`Validation error: topic too long`);
+            throw new Error('Validation error: topic too long');
 
         if (!(options.copyTo && options.copyTo.length || options.moveTo && options.moveTo.length))
             throw new Error('Validation error: copyTo or moveTo is mandatory');

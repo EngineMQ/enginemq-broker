@@ -3,7 +3,7 @@ import * as path from 'path';
 import { Packr } from 'msgpackr';
 import * as Sqlite3 from 'better-sqlite3';
 
-import { IStorage, MessageStorageItem, StorageResourceType } from "./IStorage";
+import { IStorage, MessageStorageItem, StorageResourceType } from './IStorage';
 import logger from '../logger';
 
 class Sqlite3StorageError extends Error { }

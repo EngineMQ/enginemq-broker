@@ -99,7 +99,7 @@ export class BrokerSocket extends MsgpackSocket {
 
     public delivery(message: messages.BrokerMessageDelivery, onAck: AckFn) {
         this.waitListForAck.push({ messageId: message.options.messageId, onAck: onAck });
-        this.sendMessage("delivery", message);
+        this.sendMessage('delivery', message);
     }
 
     public hasEnoughWorker() {
@@ -107,7 +107,7 @@ export class BrokerSocket extends MsgpackSocket {
     }
 
     public sendDeliveryReport(report: messages.BrokerMessageDeliveryReport) {
-        this.sendMessage("deliveryreport", report);
+        this.sendMessage('deliveryreport', report);
     }
 
 
@@ -145,7 +145,7 @@ export class BrokerSocket extends MsgpackSocket {
                 };
 
                 const bmWelcome: messages.BrokerMessageWelcome = { version: version, heartbeatSec: config.heartbeatSec };
-                this.sendMessage("welcome", bmWelcome);
+                this.sendMessage('welcome', bmWelcome);
                 break;
             case 'heartbeat':
                 if (validateObject<messages.ClientMessageHeartbeat>(messages.ClientMessageHeartbeat, params))
@@ -173,11 +173,11 @@ export class BrokerSocket extends MsgpackSocket {
                     this.messageHandler.addMessage(mhItem)
 
                     const bmPublishAck: messages.BrokerMessagePublishAck = { messageId: cmPublish.options.messageId };
-                    this.sendMessage("publishAck", bmPublishAck);
+                    this.sendMessage('publishAck', bmPublishAck);
                 }
                 catch (error) {
                     const bmPublishAck: messages.BrokerMessagePublishAck = { messageId: cmPublish.options.messageId, errorMessage: error instanceof Error ? error.message : 'Unknown error' };
-                    this.sendMessage("publishAck", bmPublishAck);
+                    this.sendMessage('publishAck', bmPublishAck);
                 }
                 break;
             case 'deliveryAck':

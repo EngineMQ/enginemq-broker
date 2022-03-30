@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { Writable } from "stream"
+import { Writable } from 'stream'
 import { pino } from 'pino';
 
 import * as config from '../config';
