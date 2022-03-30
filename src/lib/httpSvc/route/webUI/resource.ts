@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import resourceService from "../../services/resourceService";
 import { reduceArrayIfOneItem } from '../../../utility';
-import { resourceIdRegexp } from "../../../ResourceHandler";
+import { resourceIdRegExp } from "../../../ResourceHandler";
 
 const HTTP_NOT_FOUND = 404;
 
@@ -19,7 +19,7 @@ export default (server: FastifyInstance) => {
             });
         })
 
-        .get<{ Params: { resourceId: string } }>(`/resources/router/:resourceId(${resourceIdRegexp})`, async (request, reply) => {
+        .get<{ Params: { resourceId: string } }>(`/resources/router/:resourceId(${resourceIdRegExp})`, async (request, reply) => {
             const { resourceId } = request.params;
             const router = resourceService.getRouter(resourceId);
             if (router)
@@ -33,7 +33,7 @@ export default (server: FastifyInstance) => {
             return reply.code(HTTP_NOT_FOUND).send(`Cannot find router ${resourceId}`);
         })
 
-        .get<{ Params: { resourceId: string } }>(`/resources/router/:resourceId(${resourceIdRegexp})/yaml`, async (request, reply) => {
+        .get<{ Params: { resourceId: string } }>(`/resources/router/:resourceId(${resourceIdRegExp})/yaml`, async (request, reply) => {
             const { resourceId } = request.params;
             const router = resourceService.getRouter(resourceId);
             if (router)
@@ -74,7 +74,7 @@ export default (server: FastifyInstance) => {
             });
         })
 
-        .get<{ Params: { resourceId: string } }>(`/resources/routers/copy/:resourceId(${resourceIdRegexp})`, async (request, reply) => {
+        .get<{ Params: { resourceId: string } }>(`/resources/routers/copy/:resourceId(${resourceIdRegExp})`, async (request, reply) => {
             const { resourceId } = request.params;
             const router = resourceService.getRouter(resourceId);
             if (router) {

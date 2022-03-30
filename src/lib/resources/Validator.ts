@@ -1,5 +1,5 @@
 import { IResource } from "./IResource";
-import { topicStrToRegexpOrString } from "../utility";
+import { topicStrToRegExpOrString } from "../utility";
 
 type ErrorResult = string;
 
@@ -17,7 +17,7 @@ export class Validator implements IResource {
 
     constructor(options: ValidatorOptions) {
         this._name = options.name;
-        this.topic = topicStrToRegexpOrString(options.topic);
+        this.topic = topicStrToRegExpOrString(options.topic);
     }
 
     public matchTopic(topic: string): boolean {

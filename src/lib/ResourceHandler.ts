@@ -9,7 +9,7 @@ const log = logger.child({ module: 'Messages' });
 const RESOURCE_ID_LENGTH = 20;
 const genResourceId = () => customAlphabet('0123456789abcdef', RESOURCE_ID_LENGTH)();
 
-export const resourceIdRegexp = `^[0-9a-f]{${RESOURCE_ID_LENGTH}}$`;
+export const resourceIdRegExp = `^[0-9a-f]{${RESOURCE_ID_LENGTH}}$`;
 
 export class ResourceHandler {
     private routers = new Map<string, Router>();

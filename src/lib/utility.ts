@@ -71,7 +71,7 @@ export const trimStringFields = (obj: IndexedObject) => {
     return obj;
 }
 
-export const topicStrToRegexpOrString = (topicstr: string): string | RegExp => {
+export const topicStrToRegExpOrString = (topicstr: string): string | RegExp => {
     if (topicstr.match(/^[a-z0-9.*#]+$/i))
         if (topicstr.indexOf('#') >= 0 || topicstr.indexOf('*') >= 0) {
             while (topicstr.indexOf('^') >= 0) topicstr = topicstr.replace('^', '')

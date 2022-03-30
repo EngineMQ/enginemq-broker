@@ -9,7 +9,7 @@ import { MsgpackSocket } from '../common/lib/socket/MsgpackSocket';
 import { MessageHandler } from './MessageHandler';
 import { MessageStorageItem } from './storage/IStorage';
 import { BufferedSocketOptions, defaultBufferedSocketOptions } from '../common/lib/socket/BufferedSocket';
-import { topicStrToRegexpOrString } from './utility';
+import { topicStrToRegExpOrString } from './utility';
 
 const nowMs = () => new Date().getTime();
 const log = logger.child({ module: 'Socket' });
@@ -199,7 +199,8 @@ export class BrokerSocket extends MsgpackSocket {
         this.getLog().debug({ subscriptions }, 'Update subscriptions');
         this.subscriptions = [];
         for (const sub of subscriptions)
-            this.subscriptions.push(topicStrToRegexpOrString(sub));
+            if (sub.match(messages.TOPIC_WILDCARD_MASK))
+                this.subscriptions.push(topicStrToRegExpOrString(sub));
         this.emit('subscriptions', this.subscriptions);
     }
 }
