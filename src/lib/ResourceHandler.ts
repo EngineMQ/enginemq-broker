@@ -2,11 +2,15 @@ import logger from './logger';
 import { IStorage, MessageStorageItem } from "./storage/IStorage";
 import { Router, RouterOptions } from './resources/Router';
 import { validateObject } from '../common/lib/ajv';
+import { customAlphabet } from 'nanoid';
 
 const log = logger.child({ module: 'Messages' });
 
+const RESOURCE_ID_LENGTH = 20;
+const nanoid = customAlphabet('0123456789abcdef', RESOURCE_ID_LENGTH);
+
 export class ResourceHandler {
-    private routers: Router[] = [];
+    private routers = new Map<string, Router>();
     private storage: IStorage;
 
     constructor(storage: IStorage) {
@@ -26,7 +30,7 @@ export class ResourceHandler {
 
             const result: string[] = [];
 
-            const applicableRouters = this.routers.filter((router) => router.matchTopic(topic));
+            const applicableRouters = Array.from(this.routers.values()).filter((router) => router.matchTopic(topic));
             let removeTopic = applicableRouters.length > 0;
 
             for (const router of applicableRouters) {
@@ -51,23 +55,25 @@ export class ResourceHandler {
         return this.routers;
     }
 
-    public addRouter(options: RouterOptions) {
+    public addRouter(options: RouterOptions): string {
+        const resourceId = nanoid();
         const router = new Router(options);
-        this.routers.push(router);
-        this.storage.addOrUpdateResource('router', options.name, JSON.stringify(router.getOptions()));
+        this.routers.set(resourceId, router);
+        this.storage.addOrUpdateResource('router', resourceId, JSON.stringify(router.getOptions()));
+        return resourceId;
     }
 
-    public updateRouter(name: string, options: RouterOptions) {
-        const router = this.routers.find((r) => r.name == name);
+    public updateRouter(resourceId: string, options: RouterOptions) {
+        const router = this.routers.get(resourceId);
         if (!router)
-            throw new Error(`Router ${name} not found`);
+            throw new Error(`Router ${resourceId} not found`);
         router.setOptions(options);
-        this.storage.addOrUpdateResource('router', options.name, JSON.stringify(router.getOptions()));
+        this.storage.addOrUpdateResource('router', resourceId, JSON.stringify(router.getOptions()));
     }
 
-    public deleteRouter(name: string) {
-        this.routers = this.routers.filter((r) => r.name != name);
-        this.storage.deleteResource('router', name);
+    public deleteRouter(resourceId: string) {
+        this.routers.delete(resourceId);
+        this.storage.deleteResource('router', resourceId);
     }
 
 
@@ -80,12 +86,12 @@ export class ResourceHandler {
                 const optionsObj = validateObject<RouterOptions>(RouterOptions, JSON.parse(storageResource.optionjson), true);
                 if (optionsObj) {
                     const router = new Router(optionsObj);
-                    this.routers.push(router);
+                    this.routers.set(storageResource.resourceId, router);
                     log.info({ resourceName: router.name }, 'Init router resource');
                 }
             }
             catch (error) {
-                log.error({ resourceName: storageResource.name, error: error instanceof Error ? error.message : '' }, 'Init router resource failed');
+                log.error({ resourceName: storageResource.resourceId, error: error instanceof Error ? error.message : '' }, 'Init router resource failed');
             }
         }
     }

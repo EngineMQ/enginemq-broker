@@ -1,6 +1,7 @@
 import { RouterOptions } from "../../resources/Router";
 
 export type RouterDisplay = {
+    resourceId: string,
     name: string,
     routes: { from: string, to: string }[],
     hold: boolean,
@@ -11,9 +12,7 @@ export default {
 
     getAllRouters(): RouterDisplay[] {
         const result = [];
-        for (const router of Context.ResourceHandler
-            .getRouters()
-            .sort((a, b) => a.name.localeCompare(b.name))) {
+        for (const [resourceId, router] of Context.ResourceHandler.getRouters().entries()) {
 
             const routes = [];
             const output = router.getOutputTopics();
@@ -21,6 +20,7 @@ export default {
                 routes.push({ from: router.topic, to: outputTopic });
 
             result.push({
+                resourceId,
                 name: router.name,
                 routes: routes,
                 hold: output.holdOriginal,
@@ -29,21 +29,21 @@ export default {
         return result;
     },
 
-    getRouter(name: string) {
+    getRouter(resourceId: string) {
         return Context.ResourceHandler
             .getRouters()
-            .find((r) => r.name == name);
+            .get(resourceId);
     },
 
-    insertOrUpdateRouter(name: string, options: RouterOptions) {
-        if (name)
-            Context.ResourceHandler.updateRouter(name, options);
+    insertOrUpdateRouter(resourceId: string, options: RouterOptions) {
+        if (resourceId)
+            Context.ResourceHandler.updateRouter(resourceId, options);
         else
             Context.ResourceHandler.addRouter(options);
     },
 
-    deleteRouter(name: string) {
-        Context.ResourceHandler.deleteRouter(name);
+    deleteRouter(resourceId: string) {
+        Context.ResourceHandler.deleteRouter(resourceId);
     },
 
 }

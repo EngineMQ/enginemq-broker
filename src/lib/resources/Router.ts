@@ -1,6 +1,7 @@
+import { Static, Type } from "@sinclair/typebox";
+import * as yaml from 'js-yaml';
 import { IResource } from "./IResource";
 // import { topicStrToRegexpOrString } from "../utility";
-import { Static, Type } from "@sinclair/typebox";
 
 const NAME_LENGTH_MAX = 32;
 const NAME_MASK = `^[a-z0-9-]{1,${NAME_LENGTH_MAX}}$`;
@@ -43,6 +44,8 @@ export class Router implements IResource {
     public setOptions(options: RouterOptions) {
         if (!options.name.match(new RegExp(NAME_MASK)))
             throw new Error(`Validation error: invalid name '${options.name}'`);
+        if (!options.topic)
+            throw new Error(`Validation error: topic mandatory`);
         if (!(options.copyTo && options.copyTo.length || options.moveTo && options.moveTo.length))
             throw new Error('Validation error: copyTo or moveTo is mandatory');
 
@@ -54,6 +57,14 @@ export class Router implements IResource {
                     targets.sort();
         // this.inputTopicExpr = topicStrToRegexpOrString(options.inputTopic);
         return options;
+    }
+
+    public getYaml() {
+        return yaml.dump(this.options);
+    }
+
+    public setupFromYaml() {
+
     }
 
     public matchTopic(topic: string): boolean {

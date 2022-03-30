@@ -23,12 +23,13 @@ block content
                             tr
                                 th Name
                                 th Routes
+                                th
                         tbody
                             each router in routers
                                 tr
                                     td
                                         h5 
-                                            a(href='/resources/router/' + router.name)
+                                            a(href='/resources/router/' + router.resourceId)
                                                 = router.name
                                     td
                                         if (router.hold)
@@ -44,3 +45,41 @@ block content
                                             | 
                                             = route.to
                                             br
+                                    td(width='1px')
+                                        .btn-group(role='group' aria-label='Basic example')
+                                            a.btn.btn-secondary.btn-xs(href='/resources/routers/copy/' + router.resourceId)
+                                                i.fa.fa-copy
+                                                | 
+                                                | Copy
+                                            a.btn.btn-secondary.btn-xs(href='/resources/router/' + router.resourceId + '/yaml')
+                                                i.fa.fa-download
+                                                | 
+                                                | Yaml export
+                                            button.btn.btn-danger.btn-xs(href='#' onclick='deleteRouter("' + router.resourceId + '", "' + router.name + '")')
+                                                i.fa.fa-times
+                                                | 
+                                                | Delete
+
+
+
+    script(type='text/javascript').
+        function deleteRouter(resourceId, name)
+        {
+            Swal.fire({
+                title: 'Delete router',
+                text: `Do you want to delete '${name}' router?`,
+                confirmButtonText: 'Delete',
+                showCancelButton: true,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post("/resources/routers/delete", { resourceId })
+                    .done(function() {
+                        toastr.success('Router deleted', 'OK');
+                        reloadContentWrapper();
+                    })
+                    .fail(function(jqXHR, textStatus, errorThrown) {
+                        toastr.error(errorThrown, 'Error');
+                    });        
+                }
+            })
+        }

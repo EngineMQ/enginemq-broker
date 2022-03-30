@@ -93,7 +93,7 @@ export class FileStorage implements IStorage {
         } catch (error) { throw new FileStorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    public getResources(type: StorageResourceType): { name: string, optionjson: string }[] {
+    public getResources(type: StorageResourceType): { resourceId: string, optionjson: string }[] {
         const result = [];
 
         const allFiles = this.getAllFilesRecursively(this.folderResource(type));
@@ -103,7 +103,7 @@ export class FileStorage implements IStorage {
                 fileData = fs.readFileSync(file);
             } catch (error) { throw new Error(`Cannot read file ${file}`) }
             result.push({
-                name: path.basename(file),
+                resourceId: path.basename(file),
                 optionjson: fileData.toString()
             });
         }
@@ -111,24 +111,24 @@ export class FileStorage implements IStorage {
         return result;
     }
 
-    public addOrUpdateResource(type: StorageResourceType, name: string, options: string): void {
+    public addOrUpdateResource(type: StorageResourceType, resourceId: string, optionjson: string): void {
         try {
-            const fileData = options;
+            const fileData = optionjson;
             fs.writeFileSync(
-                this.getFileNameForResource(type, name, true),
+                this.getFileNameForResource(type, resourceId, true),
                 fileData);
-            log.debug({ name, size: fileData.length }, 'Store resource');
+            log.debug({ name: resourceId, size: fileData.length }, 'Store resource');
 
-        } catch (error) { throw new FileStorageError(`Cannot store ${type} resource '${name}': ${error instanceof Error ? error.message : ''}`); }
+        } catch (error) { throw new FileStorageError(`Cannot store ${type} resource '${resourceId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    public deleteResource(type: StorageResourceType, name: string): void {
+    public deleteResource(type: StorageResourceType, resourceId: string): void {
         try {
-            const filename = this.getFileNameForResource(type, name, false);
+            const filename = this.getFileNameForResource(type, resourceId, false);
             if (fs.existsSync(filename))
                 fs.unlinkSync(filename);
-            log.debug({ name }, `Delete ${type} resource`);
-        } catch (error) { throw new FileStorageError(`Cannot delete ${type} resource '${name}': ${error instanceof Error ? error.message : ''}`); }
+            log.debug({ name: resourceId }, `Delete ${type} resource`);
+        } catch (error) { throw new FileStorageError(`Cannot delete ${type} resource '${resourceId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
     public close(): void { }

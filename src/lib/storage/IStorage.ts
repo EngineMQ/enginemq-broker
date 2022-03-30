@@ -20,9 +20,9 @@ export interface IStorage {
     addOrUpdateMessage(messageId: string, message: MessageStorageItem): void;
     deleteMessage(messageId: string): void;
 
-    getResources(type: StorageResourceType): { name: string, optionjson: string }[];
-    addOrUpdateResource(type: StorageResourceType, name: string, options: string): void;
-    deleteResource(type: StorageResourceType, name: string): void;
+    getResources(type: StorageResourceType): { resourceId: string, optionjson: string }[];
+    addOrUpdateResource(type: StorageResourceType, resourceId: string, optionjson: string): void;
+    deleteResource(type: StorageResourceType, resourceId: string): void;
 
     close(): void;
 }

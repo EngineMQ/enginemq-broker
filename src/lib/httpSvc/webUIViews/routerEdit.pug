@@ -1,30 +1,39 @@
 extends _base
 block content
     form#router
-        input(type='hidden' name='routerName' value=routerName)
+        input(type='hidden' name='resourceId' value=resourceId)
         .row
             .col-md-6 
                 .form-group
-                    label(for='exampleInputEmail1') Router name
-                    input.form-control#exampleInputEmail1(type='text' name='name' value=router.name placeholder='Unique name of router')
+                    label(for='name') Router name
+                    input.form-control#name(type='text' name='name' value=router.name placeholder='Name of router')
                 .form-group
-                    label(for='exampleInputEmail1') Source topic
-                    input.form-control#exampleInputEmail1(type='text' name='topic' value=router.topic placeholder='Topic you are listening to')
+                    label(for='topic') Source topic
+                    input.form-control#topic(type='text' name='topic' value=router.topic placeholder='Topic you are listening to')
         .row
             .col-md-6 
                 .form-group
                     label Copy to topics
                     textarea.form-control(rows='5' name='copyTo' placeholder='One or more topics to which to copy messages (one per line)')
-                        each copyTo of router.copyTo
-                            = copyTo
-                            = newline
+                        if (router.copyTo)
+                            if (Array.isArray(router.copyTo))
+                                each copyTo of router.copyTo
+                                    = copyTo
+                                    = newline
+                            else
+                                = router.copyTo
+
             .col-md-6 
                 .form-group
                     label Move to topics
                     textarea.form-control(rows='5' name='moveTo' placeholder='One or more topics to which to move messages (one per line)')
-                        each moveTo of router.moveTo
-                            = moveTo
-                            = newline
+                        if (router.moveTo)
+                            if (Array.isArray(router.moveTo))
+                                each moveTo of router.moveTo
+                                    = moveTo
+                                    = newline
+                            else
+                                = router.moveTo
         .row
             .col-md-12
                 a.btn.btn-success(href='#' onclick='updateRouter()')
@@ -32,7 +41,7 @@ block content
 
     script(type='text/javascript').
         $(function() {
-            setTimeout(() => { $('#exampleInputEmail1').focus() }, 100);
+            setTimeout(() => { $('#name').focus() }, 100);
         });
 
         function updateRouter()

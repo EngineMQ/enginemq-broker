@@ -1,10 +1,13 @@
 import { customAlphabet } from 'nanoid';
 import { FastifyInstance } from "fastify";
 import resourceService from "../../services/resourceService";
+import { reduceArrayIfOneItem } from '../../../utility';
 
 const HTTP_NOT_FOUND = 404;
 const NEWROUTER_NAMEID_LENGTH = 8;
-const nanoid = customAlphabet('1234567890abcdef', NEWROUTER_NAMEID_LENGTH);
+const nanoidTempName = customAlphabet('1234567890abcdef', NEWROUTER_NAMEID_LENGTH);
+
+const breadcrumbAtEditor = [{ url: '/resources/routers', title: 'Routers' }];
 
 export default (server: FastifyInstance) => {
     server
@@ -18,18 +21,29 @@ export default (server: FastifyInstance) => {
             });
         })
 
-        .get<{ Params: { routerName: string } }>('/resources/router/:routerName(^[a-z0-9-]+$)', async (request, reply) => {
-            const { routerName } = request.params;
-            const router = resourceService.getRouter(routerName);
+        .get<{ Params: { resourceId: string } }>('/resources/router/:resourceId(^[0-9a-f]{1,20}$)', async (request, reply) => {
+            const { resourceId } = request.params;
+            const router = resourceService.getRouter(resourceId);
             if (router)
                 return reply.view("routerEdit", {
                     title: 'Router',
-                    subtitle: routerName,
-                    breadcrumb: [{ url: '/resources/routers', title: 'Routers' }],
-                    routerName,
+                    subtitle: router.name,
+                    breadcrumb: breadcrumbAtEditor,
+                    resourceId,
                     router: router.getOptions(),
                 });
-            return reply.code(HTTP_NOT_FOUND).send(`Cannot find router ${routerName}`);
+            return reply.code(HTTP_NOT_FOUND).send(`Cannot find router ${resourceId}`);
+        })
+
+        .get<{ Params: { resourceId: string } }>('/resources/router/:resourceId(^[0-9a-f]{1,20}$)/yaml', async (request, reply) => {
+            const { resourceId } = request.params;
+            const router = resourceService.getRouter(resourceId);
+            if (router)
+                return reply
+                    .type('text/yaml')
+                    .header('Content-Disposition', `attachment; filename=${resourceId}.yaml`)
+                    .send(router.getYaml());
+            return reply.code(HTTP_NOT_FOUND).send(`Cannot find router ${resourceId}`);
         })
 
         .get('/resources/routers/map', async (_request, reply) => {
@@ -43,7 +57,7 @@ export default (server: FastifyInstance) => {
 
             return reply.view("routerMap", {
                 title: "Routers map",
-                breadcrumb: [{ url: '/resources/routers', title: 'Routers' }],
+                breadcrumb: breadcrumbAtEditor,
                 mermaid: mermaid.join('\n'),
             });
         })
@@ -51,38 +65,52 @@ export default (server: FastifyInstance) => {
         .get('/resources/routers/new', async (_request, reply) => {
             return reply.view("routerEdit", {
                 title: 'New router',
-                breadcrumb: [{ url: '/resources/routers', title: 'Routers' }],
-                routerName: '',
+                breadcrumb: breadcrumbAtEditor,
+                resourceId: '',
                 router: {
-                    name: `router-${nanoid()}`,
+                    name: `router-${nanoidTempName()}`,
                     topic: '',
                     copyTo: [], moveTo: []
                 }
             });
         })
 
+        .get<{ Params: { resourceId: string } }>('/resources/routers/copy/:resourceId(^[0-9a-f]{1,20}$)', async (request, reply) => {
+            const { resourceId } = request.params;
+            const router = resourceService.getRouter(resourceId);
+            if (router)
+                return reply.view("routerEdit", {
+                    title: 'Router',
+                    subtitle: router.name,
+                    breadcrumb: breadcrumbAtEditor,
+                    resourceId: '',
+                    router: router.getOptions(),
+                });
+            return reply.code(HTTP_NOT_FOUND).send(`Cannot find router ${resourceId}`);
+        })
+
         .post<{
             Body: {
-                routerName: string,
+                resourceId: string,
                 name: string,
                 topic: string,
                 copyTo: string,
                 moveTo: string
             }
         }>('/resources/routers/update', async (request, reply) => {
-            const { routerName, name, topic, copyTo, moveTo } = request.body;
-            resourceService.insertOrUpdateRouter(routerName, {
+            const { resourceId, name, topic, copyTo, moveTo } = request.body;
+            resourceService.insertOrUpdateRouter(resourceId, {
                 name,
                 topic,
-                copyTo: copyTo.split('\r\n').filter((i) => i),
-                moveTo: moveTo.split('\r\n').filter((i) => i)
+                copyTo: reduceArrayIfOneItem(copyTo.split('\r\n').filter((i) => i)),
+                moveTo: reduceArrayIfOneItem(moveTo.split('\r\n').filter((i) => i)),
             });
             return reply.send("OK");
         })
 
-        .post<{ Body: { routerName: string } }>('/resources/routers/delete', async (request, reply) => {
-            const { routerName } = request.body;
-            resourceService.deleteRouter(routerName);
+        .post<{ Body: { resourceId: string } }>('/resources/routers/delete', async (request, reply) => {
+            const { resourceId } = request.body;
+            resourceService.deleteRouter(resourceId);
             return reply.send("OK");
         })
 

@@ -1,6 +1,22 @@
 import * as v8 from 'v8';
 import * as vm from 'vm';
 
+export class MeasureTime {
+    private start = new Date().getTime();
+    private measures = new Map<string, number>();
+
+    public measure(name: string) {
+        this.measures.set(name, new Date().getTime() - this.start);
+        this.start = new Date().getTime();
+    }
+
+    public writeLog(cb: (values: string[]) => void) {
+        const values: string[] = [];
+        this.measures.forEach((value, key) => values.push(`${key}=${value}ms`));
+        cb(values);
+    }
+}
+
 export const shuffleArray = <T>(array: Array<T>) => {
     let currentIndex = array.length;
 
@@ -17,20 +33,11 @@ export const shuffleArray = <T>(array: Array<T>) => {
     return array;
 }
 
-export class MeasureTime {
-    private start = new Date().getTime();
-    private measures = new Map<string, number>();
-
-    public measure(name: string) {
-        this.measures.set(name, new Date().getTime() - this.start);
-        this.start = new Date().getTime();
-    }
-
-    public writeLog(cb: (values: string[]) => void) {
-        const values: string[] = [];
-        this.measures.forEach((value, key) => values.push(`${key}=${value}ms`));
-        cb(values);
-    }
+export const reduceArrayIfOneItem = <T>(array: Array<T>): Array<T> | T => {
+    if (array.length == 1)
+        if (array[0])
+            return array[0];
+    return array;
 }
 
 export const prettyThousand = (value: number) => {

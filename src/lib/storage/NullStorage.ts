@@ -26,17 +26,17 @@ export class NullStorage implements IStorage {
         log.debug({ messageId }, 'Delete message (no)');
     }
 
-    getResources(type: StorageResourceType): { name: string, optionjson: string }[] {
+    getResources(type: StorageResourceType): { resourceId: string, optionjson: string }[] {
         type;
         return [];
     }
 
-    addOrUpdateResource(type: StorageResourceType, name: string, options: string): void {
-        log.debug({ type, name, size: options.length }, 'Store resource (no)');
+    addOrUpdateResource(type: StorageResourceType, resourceId: string, optionjson: string): void {
+        log.debug({ type, resourceId, size: optionjson.length }, 'Store resource (no)');
     }
 
-    deleteResource(type: StorageResourceType, name: string): void {
-        log.debug({ type, name }, 'Delete resource (no)');
+    deleteResource(type: StorageResourceType, resourceId: string): void {
+        log.debug({ type, resourceId }, 'Delete resource (no)');
     }
 
     public close(): void { }
