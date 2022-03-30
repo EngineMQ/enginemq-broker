@@ -21,7 +21,7 @@ block content
                     table.table.table-hover.text-nowrap
                         thead
                             tr
-                                th Name
+                                th Description
                                 th Routes
                                 th
                         tbody
@@ -30,7 +30,7 @@ block content
                                     td
                                         h5 
                                             a(href='/resources/router/' + router.resourceId)
-                                                = router.name
+                                                = router.description
                                     td
                                         if (router.hold)
                                             span.badge.badge-success Copy
@@ -55,7 +55,7 @@ block content
                                                 i.fa.fa-download
                                                 | 
                                                 | Yaml export
-                                            button.btn.btn-danger.btn-xs(href='#' onclick='deleteRouter("' + router.resourceId + '", "' + router.name + '")')
+                                            button.btn.btn-danger.btn-xs(href='#' onclick='deleteRouter("' + router.resourceId + '", "' + router.description + '")')
                                                 i.fa.fa-times
                                                 | 
                                                 | Delete
@@ -63,11 +63,11 @@ block content
 
 
     script(type='text/javascript').
-        function deleteRouter(resourceId, name)
+        function deleteRouter(resourceId, description)
         {
             Swal.fire({
                 title: 'Delete router',
-                text: `Do you want to delete '${name}' router?`,
+                text: `Do you want to delete '${description}' router?`,
                 confirmButtonText: 'Delete',
                 showCancelButton: true,
             }).then((result) => {

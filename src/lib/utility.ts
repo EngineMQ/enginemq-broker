@@ -49,6 +49,27 @@ export const prettyThousand = (value: number) => {
         return `${Math.round(value / 1000)}k`;
     return value;
 }
+type IndexedObject = { [key: string]: any; };
+export const trimStringFields = (obj: IndexedObject) => {
+    for (const fieldName of Object.keys(obj)) {
+        const field = obj[fieldName];
+        if (typeof field === 'string')
+            obj[fieldName] = field.trim();
+        else if (typeof field === 'object')
+            if (Array.isArray(field)) {
+                const newArray: any[] = [];
+                for (const arrayItem of field)
+                    if (typeof arrayItem === 'string')
+                        newArray.push(arrayItem.trim());
+                    else if (typeof arrayItem === 'object' && !Array.isArray(arrayItem))
+                        newArray.push(trimStringFields(arrayItem as IndexedObject));
+                obj[fieldName] = newArray;
+            }
+            else
+                obj[fieldName] = trimStringFields(field as IndexedObject);
+    }
+    return obj;
+}
 
 export const topicStrToRegexpOrString = (topicstr: string): string | RegExp => {
     if (topicstr.match(/^[a-z0-9.*#]+$/i))

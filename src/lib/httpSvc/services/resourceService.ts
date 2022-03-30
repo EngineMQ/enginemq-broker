@@ -2,11 +2,11 @@ import { RouterOptions } from "../../resources/Router";
 
 export type RouterDisplay = {
     resourceId: string,
-    name: string,
+    description: string,
     routes: { from: string, to: string }[],
     hold: boolean,
 }
-
+const RouterDisplaySorter = (a: RouterDisplay, b: RouterDisplay) => a.description.localeCompare(b.description);
 
 export default {
 
@@ -21,11 +21,12 @@ export default {
 
             result.push({
                 resourceId,
-                name: router.name,
+                description: router.description,
                 routes: routes,
                 hold: output.holdOriginal,
             });
         }
+        result.sort(RouterDisplaySorter);
         return result;
     },
 

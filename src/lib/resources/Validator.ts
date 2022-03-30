@@ -11,7 +11,7 @@ export class Validator implements IResource {
     private _name: string;
     private topic: string | RegExp;
 
-    get name(): string {
+    get description(): string {
         return this._name;
     }
 
@@ -34,7 +34,7 @@ export class Validator implements IResource {
     }
 
     public validate(msg: object): ErrorResult | null {
-        msg.toString() + this.name;
+        msg.toString() + this.description;
         return null;
     }
 }

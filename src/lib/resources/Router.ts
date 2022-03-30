@@ -1,14 +1,14 @@
 import { Static, Type } from "@sinclair/typebox";
 import * as yaml from 'js-yaml';
+import { trimStringFields } from "../utility";
 import { IResource } from "./IResource";
 // import { topicStrToRegexpOrString } from "../utility";
 
-const NAME_LENGTH_MAX = 32;
-const NAME_MASK = `^[a-z0-9-]{1,${NAME_LENGTH_MAX}}$`;
+const DESCRIPTION_LENGTH_MAX = 32;
 
 export type RouterOptions = Static<typeof RouterOptions>;
 export const RouterOptions = Type.Object({
-    name: Type.String(),
+    description: Type.String(),
     topic: Type.String(),
     moveTo: Type.Optional(
         Type.Union([
@@ -26,8 +26,8 @@ export class Router implements IResource {
     private options: RouterOptions;
     // private inputTopicExpr: string | RegExp;
 
-    get name(): string {
-        return this.options.name;
+    get description(): string {
+        return this.options.description;
     }
     get topic(): string {
         return this.options.topic;
@@ -42,8 +42,9 @@ export class Router implements IResource {
     }
 
     public setOptions(options: RouterOptions) {
-        if (!options.name.match(new RegExp(NAME_MASK)))
-            throw new Error(`Validation error: invalid name '${options.name}'`);
+        trimStringFields(options);
+        if (!options.description || options.description.length > DESCRIPTION_LENGTH_MAX)
+            throw new Error(`Validation error: invalid description '${options.description}'`);
         if (!options.topic)
             throw new Error(`Validation error: topic mandatory`);
         if (!(options.copyTo && options.copyTo.length || options.moveTo && options.moveTo.length))
@@ -59,8 +60,16 @@ export class Router implements IResource {
         return options;
     }
 
-    public getYaml() {
-        return yaml.dump(this.options);
+    public getYaml(resourceId: string): string {
+        const yamlObj = {
+            kind: 'router',
+            api: 'v1',
+            meta: {
+                id: resourceId,
+            },
+            spec: this.options
+        }
+        return yaml.dump(yamlObj);
     }
 
     public setupFromYaml() {

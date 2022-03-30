@@ -5,8 +5,8 @@ block content
         .row
             .col-md-6 
                 .form-group
-                    label(for='name') Router name
-                    input.form-control#name(type='text' name='name' value=router.name placeholder='Name of router')
+                    label(for='description') Router description
+                    input.form-control#description(type='text' name='description' value=router.description placeholder='Description of router')
                 .form-group
                     label(for='topic') Source topic
                     input.form-control#topic(type='text' name='topic' value=router.topic placeholder='Topic you are listening to')
@@ -41,7 +41,7 @@ block content
 
     script(type='text/javascript').
         $(function() {
-            setTimeout(() => { $('#name').focus() }, 100);
+            setTimeout(() => { $('#description').focus() }, 100);
         });
 
         function updateRouter()

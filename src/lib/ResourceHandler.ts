@@ -7,7 +7,9 @@ import { customAlphabet } from 'nanoid';
 const log = logger.child({ module: 'Messages' });
 
 const RESOURCE_ID_LENGTH = 20;
-const nanoid = customAlphabet('0123456789abcdef', RESOURCE_ID_LENGTH);
+const genResourceId = () => customAlphabet('0123456789abcdef', RESOURCE_ID_LENGTH)();
+
+export const resourceIdRegexp = `^[0-9a-f]{${RESOURCE_ID_LENGTH}}$`;
 
 export class ResourceHandler {
     private routers = new Map<string, Router>();
@@ -56,10 +58,12 @@ export class ResourceHandler {
     }
 
     public addRouter(options: RouterOptions): string {
-        const resourceId = nanoid();
+        const resourceId = genResourceId();
+
         const router = new Router(options);
         this.routers.set(resourceId, router);
-        this.storage.addOrUpdateResource('router', resourceId, JSON.stringify(router.getOptions()));
+        this.storage.addOrUpdateResource('router', resourceId, JSON.stringify(router.getOptions(), null, 2));
+
         return resourceId;
     }
 
@@ -67,8 +71,9 @@ export class ResourceHandler {
         const router = this.routers.get(resourceId);
         if (!router)
             throw new Error(`Router ${resourceId} not found`);
+
         router.setOptions(options);
-        this.storage.addOrUpdateResource('router', resourceId, JSON.stringify(router.getOptions()));
+        this.storage.addOrUpdateResource('router', resourceId, JSON.stringify(router.getOptions(), null, 2));
     }
 
     public deleteRouter(resourceId: string) {
@@ -87,7 +92,7 @@ export class ResourceHandler {
                 if (optionsObj) {
                     const router = new Router(optionsObj);
                     this.routers.set(storageResource.resourceId, router);
-                    log.info({ resourceName: router.name }, 'Init router resource');
+                    log.info({ resourceName: router.description }, 'Init router resource');
                 }
             }
             catch (error) {

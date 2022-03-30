@@ -1,5 +1,5 @@
 export interface IResource {
-    get name(): string;
+    get description(): string;
 
     //     getOptions(): object;
 
