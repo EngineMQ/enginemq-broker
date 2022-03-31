@@ -1,4 +1,4 @@
-import { RouterOptions } from '../../resources/Router';
+import { RouterOptions } from '../../resources/router/types';
 
 export type RouterDisplay = {
     resourceId: string,

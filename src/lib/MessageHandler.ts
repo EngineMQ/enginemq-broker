@@ -77,7 +77,6 @@ export class MessageHandler {
                                     countExpired++
                                     continue;
                                 }
-
                                 this.topics.addMessage(topic, item, true)
 
                                 this.topicIndexerList.set(messageId, topic);

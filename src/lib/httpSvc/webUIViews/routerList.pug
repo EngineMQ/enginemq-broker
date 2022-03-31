@@ -2,10 +2,16 @@ extends _base
 block content
     .row
         .col-md-6
-            a.btn.btn-info(href='/resources/routers/new')
-                i.fa.fa-plus
-                | 
-                | New router
+            .btn-group(role='group')
+                a.btn.btn-info(href='/resources/routers/new')
+                    i.fa.fa-plus
+                    | 
+                    | New router
+                a.btn.btn-default.fileup-btn(href='#')
+                    i.fa.fa-upload
+                    | 
+                    | Import Yaml
+                    input#upload-yaml(type='file')
         .col-md-6
             .float-right
                 a.btn.btn-default(href='/resources/routers/map')
@@ -46,7 +52,7 @@ block content
                                             = route.to
                                             br
                                     td(width='1px')
-                                        .btn-group(role='group' aria-label='Basic example')
+                                        .btn-group(role='group')
                                             a.btn.btn-secondary.btn-xs(href='/resources/routers/copy/' + router.resourceId)
                                                 i.fa.fa-copy
                                                 | 
@@ -83,3 +89,20 @@ block content
                 }
             })
         }
+        $(function() {
+            $.fileup({
+                url: '/file/upload',
+                inputID: 'upload-yaml',
+                queueID: 'notused',
+                autostart: true,
+                fieldName: 'resourceYaml',
+                sizeLimit: 1 * 1000 * 1000,
+                filesLimit: 1,
+                onSuccess: function(response, file_number, file) {
+                    toastr.success('Upload success: ' + file.name, 'OK');
+                },
+                onError: function(event, file, file_number) {
+                    toastr.error('Upload error: ' + event, 'Error');
+                },
+            });
+        });        

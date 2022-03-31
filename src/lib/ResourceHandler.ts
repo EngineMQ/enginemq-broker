@@ -1,8 +1,9 @@
 import logger from './logger';
 import { IStorage, MessageStorageItem } from './storage/IStorage';
-import { Router, RouterOptions } from './resources/Router';
+import { Router } from './resources/router/Router';
 import { validateObject } from '../common/lib/ajv';
 import { customAlphabet } from 'nanoid';
+import { RouterOptions } from './resources/router/types';
 
 const log = logger.child({ module: 'Messages' });
 

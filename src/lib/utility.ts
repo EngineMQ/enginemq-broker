@@ -40,12 +40,12 @@ export const reduceArrayIfOneItem = <T>(array: Array<T>): Array<T> | T => {
     return array;
 }
 
-export const prettyThousand = (value: number) => {
-    if (value > 2 * 1000 * 1000 * 1000)
+export const prettyThousand = (value: number, maxlevel = Number.MAX_VALUE) => {
+    if (value > 2 * 1000 * 1000 * 1000 && maxlevel > 2)
         return `${Math.round(value / 1000 / 1000 / 1000)}G`;
-    if (value > 2 * 1000 * 1000)
+    if (value > 2 * 1000 * 1000 && maxlevel > 1)
         return `${Math.round(value / 1000 / 1000)}M`;
-    if (value > 2 * 1000)
+    if (value > 2 * 1000 && maxlevel > 0)
         return `${Math.round(value / 1000)}k`;
     return value;
 }
