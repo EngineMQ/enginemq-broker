@@ -91,7 +91,7 @@ block content
         }
         $(function() {
             $.fileup({
-                url: '/file/upload',
+                url: '/resources/routers/upload/yaml',
                 inputID: 'upload-yaml',
                 queueID: 'notused',
                 autostart: true,
@@ -99,10 +99,14 @@ block content
                 sizeLimit: 1 * 1000 * 1000,
                 filesLimit: 1,
                 onSuccess: function(response, file_number, file) {
-                    toastr.success('Upload success: ' + file.name, 'OK');
+                    toastr.success('Upload success', 'OK');
+                    setTimeout(() =>{
+                        window.location.reload();
+                    }, 750);
                 },
-                onError: function(event, file, file_number) {
-                    toastr.error('Upload error: ' + event, 'Error');
+                onError: function(event, file, file_number, responseText) {
+                    const response = JSON.parse(responseText);
+                    toastr.error(response.message, 'Error');
                 },
             });
         });        

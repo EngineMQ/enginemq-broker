@@ -47,4 +47,8 @@ export default {
         Context.ResourceHandler.deleteRouter(resourceId);
     },
 
+    createFromYaml(yaml: Buffer) {
+        Context.ResourceHandler.adaptRouterFromYaml(yaml);
+    },
+
 }

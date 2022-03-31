@@ -4,6 +4,7 @@ import { Router } from './resources/router/Router';
 import { validateObject } from '../common/lib/ajv';
 import { customAlphabet } from 'nanoid';
 import { RouterOptions } from './resources/router/types';
+import { tryParseYaml } from './resources/router/yaml';
 
 const log = logger.child({ module: 'Messages' });
 
@@ -58,8 +59,9 @@ export class ResourceHandler {
         return this.routers;
     }
 
-    public addRouter(options: RouterOptions): string {
-        const resourceId = genResourceId();
+    public addRouter(options: RouterOptions, resourceId?: string): string {
+        if (!resourceId)
+            resourceId = genResourceId();
 
         const router = new Router(options);
         this.routers.set(resourceId, router);
@@ -71,7 +73,7 @@ export class ResourceHandler {
     public updateRouter(resourceId: string, options: RouterOptions) {
         const router = this.routers.get(resourceId);
         if (!router)
-            throw new Error(`Router ${resourceId} not found`);
+            throw new Error(`Router '${resourceId}' not found`);
 
         router.setOptions(options);
         this.storage.addOrUpdateResource('router', resourceId, JSON.stringify(router.getOptions(), null, 2));
@@ -80,6 +82,18 @@ export class ResourceHandler {
     public deleteRouter(resourceId: string) {
         this.routers.delete(resourceId);
         this.storage.deleteResource('router', resourceId);
+    }
+
+    public adaptRouterFromYaml(yaml: Buffer) {
+        const routerData = tryParseYaml(yaml);
+
+        if (!routerData.resourceId.match(resourceIdRegExp))
+            throw new Error(`Invalid resourceId format '${routerData.resourceId}'`);
+
+        if (this.routers.get(routerData.resourceId))
+            this.updateRouter(routerData.resourceId, routerData.options);
+        else
+            this.addRouter(routerData.options, routerData.resourceId);
     }
 
 

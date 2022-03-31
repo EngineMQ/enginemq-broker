@@ -110,6 +110,13 @@ export default (server: FastifyInstance) => {
             return reply.send('OK');
         })
 
+        .post('/resources/routers/upload/yaml', async (request, reply) => {
+            const file = await request.file();
+            const buffer = await file.toBuffer();
+            resourceService.createFromYaml(buffer);
+            return reply.send('OK');
+        })
+
         .post<{ Body: { resourceId: string } }>('/resources/routers/delete', async (request, reply) => {
             const { resourceId } = request.body;
             resourceService.deleteRouter(resourceId);
