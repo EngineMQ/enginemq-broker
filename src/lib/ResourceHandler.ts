@@ -41,11 +41,11 @@ export class ResourceHandler {
                 const output = router.getOutputTopics();
                 if (output.holdOriginal)
                     removeTopic = false;
-                for (const subTopic of output.topics)
+                for (const subTopic of output.topics) {
                     if (visitedTopics.includes(subTopic))
-                        log.warn({ topic, subTopic }, 'Circular routing detected');
-                    else
-                        result.push(...runRouter(subTopic));
+                        throw new Error(`Circular routing detected: from ${topic} to ${subTopic}`);
+                    result.push(...runRouter(subTopic));
+                }
             }
 
             if (!removeTopic)
@@ -86,6 +86,8 @@ export class ResourceHandler {
 
     public adaptRouterFromYaml(yaml: Buffer) {
         const routerData = tryParseYaml(yaml);
+        if (!routerData)
+            throw new Error('Invalid YAML format (check kind and api)');
 
         if (!routerData.resourceId.match(resourceIdRegExp))
             throw new Error(`Invalid resourceId format '${routerData.resourceId}'`);
