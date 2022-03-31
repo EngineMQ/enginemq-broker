@@ -29,7 +29,6 @@ block content
                                 th Id
                                 th Message
                                 th Source
-                                th 
                         tbody
                             each message in messages.messages
                                 tr
@@ -42,18 +41,9 @@ block content
                                         |
                                         = message.body
                                     td
-                                        | from
-                                        | 
                                         = message.sourceClientId
                                         br
-                                        | at
-                                        | 
                                         = message.publishTimeHuman
-                                    td(width='1px')
-                                        .btn-group
-                                            button.btn.btn-secondary A 
-                                            button.btn.btn-secondary B 
-                                            button.btn.btn-secondary C
     .row
         .col-md-12.d-flex.flex-row-reverse
             .btn-group

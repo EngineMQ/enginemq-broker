@@ -1,8 +1,13 @@
 import { FastifyInstance } from 'fastify';
+//import { MESSAGE_ID_MASK, TOPIC_MASK } from '../../../../common/messageTypes';
 import topicService from '../../services/topicService';
 import pager from '../../utils/pager';
 
 const HTTP_NOT_FOUND = 404;
+//const TOPIC_MASK_STR = TOPIC_MASK.source;
+const TOPIC_MASK_STR = '^[a-z0-9.]+$';
+//const MESSAGE_ID_MASK_EX_STR = MESSAGE_ID_MASK.replace('$', '(-[0-9]+)?$');
+const MESSAGE_ID_MASK_EX_STR = '^[a-z0-9-.]+$';
 
 export default (server: FastifyInstance) => {
     server
@@ -16,7 +21,7 @@ export default (server: FastifyInstance) => {
             });
         })
 
-        .get<{ Params: { topicname: string } }>('/topic/:topicname(^[a-zA-Z0-9.]+$)', async (request, reply) => {
+        .get<{ Params: { topicname: string } }>(`/topic/:topicname(${TOPIC_MASK_STR})`, async (request, reply) => {
             const topicName = request.params.topicname;
             const topic = topicService.getTopic(topicName);
             return reply.view('topic', {
@@ -33,7 +38,7 @@ export default (server: FastifyInstance) => {
             return reply.send('OK');
         })
 
-        .get<{ Params: { topicname: string }, Querystring: { page?: number } }>('/topic/:topicname(^[a-zA-Z0-9.]+$)/messages', async (request, reply) => {
+        .get<{ Params: { topicname: string }, Querystring: { page?: number } }>(`/topic/:topicname(${TOPIC_MASK_STR})/messages`, async (request, reply) => {
             const MESSAGES_PER_PAGE = 25;
 
             const topicName = request.params.topicname;
@@ -56,7 +61,7 @@ export default (server: FastifyInstance) => {
             });
         })
 
-        .get<{ Params: { topicname: string, messageid: string } }>('/topic/:topicname(^[a-zA-Z0-9.]+$)/message/:messageid(^[a-zA-Z0-9.]+$)/messagebody', async (request, reply) => {
+        .get<{ Params: { topicname: string, messageid: string } }>(`/topic/:topicname(${TOPIC_MASK_STR})/message/:messageid(${MESSAGE_ID_MASK_EX_STR})/messagebody`, async (request, reply) => {
             const topicName = request.params.topicname;
             const messageid = request.params.messageid;
             const message = topicService.getTopicMessage(topicName, messageid);

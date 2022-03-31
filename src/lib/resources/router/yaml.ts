@@ -18,11 +18,8 @@ export const getV1Yaml = (resourceId: string, options: RouterOptions): string =>
 export const getLatestYaml = (resourceId: string, options: RouterOptions): string => {
     return getV1Yaml(resourceId, options);
 }
-
-export const tryParseYaml = (yamlData: Buffer): {
-    resourceId: string,
-    options: RouterOptions
-} => {
+type TryParseYamlResult = { resourceId: string, options: RouterOptions } | null;
+export const tryParseYaml = (yamlData: Buffer): TryParseYamlResult => {
     if (!yamlData.length)
         throw new Error('Empty YAML data');
 
@@ -34,5 +31,5 @@ export const tryParseYaml = (yamlData: Buffer): {
     if (yamlV1)
         return { resourceId: yamlV1.meta.id, options: yamlV1.spec };
 
-    throw new Error('Invalid YAML format (check kind and api)');
+    return null;
 }
