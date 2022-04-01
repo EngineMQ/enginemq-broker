@@ -10,14 +10,23 @@ block content
                 a.btn.btn-default.fileup-btn(href='#')
                     i.fa.fa-upload
                     | 
-                    | Import Yaml
+                    | Import from yaml
                     input#upload-yaml(type='file')
         .col-md-6
             .float-right
-                a.btn.btn-default(href='/resources/routers/map')
-                    i.fa.fa-map
-                    | 
-                    | Show in map
+                .btn-group(role='group')
+                    a.btn.btn-default(href='/resources/routers/map')
+                        i.fa.fa-map
+                        | 
+                        | Show in map
+                    a.btn.btn-default(href='/resources/routers/yaml')
+                        i.fa.fa-download
+                        | 
+                        | Export all to yaml
+                    button.btn.btn-danger(href='#' onclick='deleteAllRouter()')
+                        i.fa.fa-times
+                        | 
+                        | Delete all
     br
     .row
         .col-md-12
@@ -60,7 +69,7 @@ block content
                                             a.btn.btn-secondary.btn-xs(href='/resources/router/' + router.resourceId + '/yaml')
                                                 i.fa.fa-download
                                                 | 
-                                                | Yaml export
+                                                | Export to yaml
                                             button.btn.btn-danger.btn-xs(href='#' onclick='deleteRouter("' + router.resourceId + '", "' + router.description + '")')
                                                 i.fa.fa-times
                                                 | 
@@ -80,8 +89,7 @@ block content
                 if (result.isConfirmed) {
                     $.post("/resources/routers/delete", { resourceId })
                     .done(function() {
-                        toastr.success('Router deleted', 'OK');
-                        reloadContentWrapper();
+                        window.location.reload();
                     })
                     .fail(function(jqXHR, textStatus, errorThrown) {
                         toastr.error(errorThrown, 'Error');
@@ -89,6 +97,27 @@ block content
                 }
             })
         }
+
+        function deleteAllRouter()
+        {
+            Swal.fire({
+                title: 'Delete all routers',
+                text: `Do you want to delete all routers?`,
+                confirmButtonText: 'Delete all',
+                showCancelButton: true,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post("/resources/routers/delete/all")
+                    .done(function() {
+                        window.location.reload();
+                    })
+                    .fail(function(jqXHR, textStatus, errorThrown) {
+                        toastr.error(errorThrown, 'Error');
+                    });        
+                }
+            })
+        }
+
         $(function() {
             $.fileup({
                 url: '/resources/routers/upload/yaml',
@@ -99,10 +128,7 @@ block content
                 sizeLimit: 1 * 1000 * 1000,
                 filesLimit: 1,
                 onSuccess: function(response, file_number, file) {
-                    toastr.success('Upload success', 'OK');
-                    setTimeout(() =>{
-                        window.location.reload();
-                    }, 750);
+                    window.location.reload();
                 },
                 onError: function(event, file, file_number, responseText) {
                     const response = JSON.parse(responseText);

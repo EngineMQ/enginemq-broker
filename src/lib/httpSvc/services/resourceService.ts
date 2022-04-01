@@ -1,4 +1,5 @@
 import { RouterOptions } from '../../resources/router/types';
+import { yamlJoin } from '../../utility';
 
 export type RouterDisplay = {
     resourceId: string,
@@ -30,6 +31,13 @@ export default {
         return result;
     },
 
+    getAllRoutersYaml(): string {
+        const result: string[] = [];
+        for (const [resourceId, router] of Context.ResourceHandler.getRouters().entries())
+            result.push(router.getYaml(resourceId));
+        return yamlJoin(result);
+    },
+
     getRouter(resourceId: string) {
         return Context.ResourceHandler
             .getRouters()
@@ -45,6 +53,10 @@ export default {
 
     deleteRouter(resourceId: string) {
         Context.ResourceHandler.deleteRouter(resourceId);
+    },
+
+    deleteAllRouter() {
+        Context.ResourceHandler.deleteAllRouter();
     },
 
     createFromYaml(yaml: Buffer) {

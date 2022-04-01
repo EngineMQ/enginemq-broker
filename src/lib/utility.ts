@@ -1,3 +1,4 @@
+import { EOL } from 'os';
 import * as v8 from 'v8';
 import * as vm from 'vm';
 
@@ -17,6 +18,70 @@ export class MeasureTime {
     }
 }
 
+export const trimNewlines = (string: string) => {
+    let start = 0;
+    let end = string.length;
+
+    while (start < end && (string[start] === '\r' || string[start] === '\n')) {
+        start++;
+    }
+
+    while (end > start && (string[end - 1] === '\r' || string[end - 1] === '\n')) {
+        end--;
+    }
+
+    return start > 0 || end < string.length ? string.slice(start, end) : string;
+}
+
+export const trimNewlinesStart = (string: string) => {
+    const end = string.length;
+    let start = 0;
+
+    while (start < end && (string[start] === '\r' || string[start] === '\n')) {
+        start++;
+    }
+
+    return start > 0 ? string.slice(start, end) : string;
+};
+
+export const trimNewlinesEnd = (string: string) => {
+    let end = string.length;
+
+    while (end > 0 && (string[end - 1] === '\r' || string[end - 1] === '\n')) {
+        end--;
+    }
+
+    return end < string.length ? string.slice(0, end) : string;
+};
+
+export const prettyThousand = (value: number, maxlevel = Number.MAX_VALUE) => {
+    if (value > 2 * 1000 * 1000 * 1000 && maxlevel > 2)
+        return `${Math.round(value / 1000 / 1000 / 1000)}G`;
+    if (value > 2 * 1000 * 1000 && maxlevel > 1)
+        return `${Math.round(value / 1000 / 1000)}M`;
+    if (value > 2 * 1000 && maxlevel > 0)
+        return `${Math.round(value / 1000)}k`;
+    return value;
+}
+
+export const yamlJoin = (yamls: string[]): string => {
+    const yamlsTrimmed = yamls.map((y) => trimNewlines(y));
+    return yamlsTrimmed.join(EOL + EOL + '---' + EOL + EOL) + EOL;
+}
+
+export const yamlAdaptDateTimeHeader = (yaml: string): string => {
+    if (!yaml)
+        return yaml;
+    return `# Exported at ${new Date().toISOString()}` + EOL + EOL + yaml;
+}
+
+export const reduceArrayIfOneItem = <T>(array: Array<T>): Array<T> | T => {
+    if (array.length == 1)
+        if (array[0])
+            return array[0];
+    return array;
+}
+
 export const shuffleArray = <T>(array: Array<T>) => {
     let currentIndex = array.length;
 
@@ -33,22 +98,6 @@ export const shuffleArray = <T>(array: Array<T>) => {
     return array;
 }
 
-export const reduceArrayIfOneItem = <T>(array: Array<T>): Array<T> | T => {
-    if (array.length == 1)
-        if (array[0])
-            return array[0];
-    return array;
-}
-
-export const prettyThousand = (value: number, maxlevel = Number.MAX_VALUE) => {
-    if (value > 2 * 1000 * 1000 * 1000 && maxlevel > 2)
-        return `${Math.round(value / 1000 / 1000 / 1000)}G`;
-    if (value > 2 * 1000 * 1000 && maxlevel > 1)
-        return `${Math.round(value / 1000 / 1000)}M`;
-    if (value > 2 * 1000 && maxlevel > 0)
-        return `${Math.round(value / 1000)}k`;
-    return value;
-}
 type IndexedObject = { [key: string]: any; };
 export const trimStringFields = (obj: IndexedObject) => {
     for (const fieldName of Object.keys(obj)) {

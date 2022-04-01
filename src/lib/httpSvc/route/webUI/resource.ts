@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import resourceService from '../../services/resourceService';
-import { reduceArrayIfOneItem } from '../../../utility';
+import { reduceArrayIfOneItem, yamlAdaptDateTimeHeader } from '../../../utility';
 import { resourceIdRegExp } from '../../../ResourceHandler';
 
 const HTTP_NOT_FOUND = 404;
@@ -17,6 +17,16 @@ export default (server: FastifyInstance) => {
                 breadcrumb: [],
                 routers,
             });
+        })
+
+        .get('/resources/routers/yaml', async (_request, reply) => {
+            const yamlAll = resourceService.getAllRoutersYaml();
+            if (yamlAll)
+                return reply
+                    .type('text/yaml')
+                    .header('Content-Disposition', 'attachment; filename=routers.yaml')
+                    .send(yamlAdaptDateTimeHeader(yamlAll));
+            return reply.code(HTTP_NOT_FOUND).send('Cannot find any router');
         })
 
         .get<{ Params: { resourceId: string } }>(`/resources/router/:resourceId(${resourceIdRegExp})`, async (request, reply) => {
@@ -40,7 +50,7 @@ export default (server: FastifyInstance) => {
                 return reply
                     .type('text/yaml')
                     .header('Content-Disposition', `attachment; filename=${resourceId}.yaml`)
-                    .send(router.getYaml(resourceId));
+                    .send(yamlAdaptDateTimeHeader(router.getYaml(resourceId)));
             return reply.code(HTTP_NOT_FOUND).send(`Cannot find router ${resourceId}`);
         })
 
@@ -120,6 +130,11 @@ export default (server: FastifyInstance) => {
         .post<{ Body: { resourceId: string } }>('/resources/routers/delete', async (request, reply) => {
             const { resourceId } = request.body;
             resourceService.deleteRouter(resourceId);
+            return reply.send('OK');
+        })
+
+        .post('/resources/routers/delete/all', async (_request, reply) => {
+            resourceService.deleteAllRouter();
             return reply.send('OK');
         })
 

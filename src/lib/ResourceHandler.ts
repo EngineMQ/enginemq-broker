@@ -84,18 +84,24 @@ export class ResourceHandler {
         this.storage.deleteResource('router', resourceId);
     }
 
+    public deleteAllRouter() {
+        for (const resourceId of this.routers.keys()) {
+            this.routers.delete(resourceId);
+            this.storage.deleteResource('router', resourceId);
+        }
+    }
+
     public adaptRouterFromYaml(yaml: Buffer) {
-        const routerData = tryParseYaml(yaml);
-        if (!routerData)
-            throw new Error('Invalid YAML format (check kind and api)');
+        const routersData = tryParseYaml(yaml);
+        if (!routersData.length)
+            throw new Error('No valid router found in YAML');
 
-        if (!routerData.resourceId.match(resourceIdRegExp))
-            throw new Error(`Invalid resourceId format '${routerData.resourceId}'`);
-
-        if (this.routers.get(routerData.resourceId))
-            this.updateRouter(routerData.resourceId, routerData.options);
-        else
-            this.addRouter(routerData.options, routerData.resourceId);
+        for (const routerData of routersData)
+            if (routerData.resourceId.match(resourceIdRegExp))
+                if (this.routers.get(routerData.resourceId))
+                    this.updateRouter(routerData.resourceId, routerData.options);
+                else
+                    this.addRouter(routerData.options, routerData.resourceId);
     }
 
 
