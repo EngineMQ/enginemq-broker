@@ -60,7 +60,7 @@ export default {
     },
 
     createFromYaml(yaml: Buffer) {
-        Context.ResourceHandler.adaptRouterFromYaml(yaml);
+        Context.ResourceHandler.adaptRoutersFromYaml(yaml);
     },
 
 }

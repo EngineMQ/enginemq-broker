@@ -1,4 +1,5 @@
 import * as messages from '../../common/messageTypes';
+import { ResourceType } from '../ResourceHandler';
 
 type MessageInfo = {
     sourceClientId: string,
@@ -6,7 +7,7 @@ type MessageInfo = {
 }
 export type MessageStorageItem = messages.ClientMessagePublish & MessageInfo;
 
-export type StorageResourceType = 'validator' | 'router';
+export { ResourceType } from '../ResourceHandler';
 
 export interface IStorage {
     getAllMessages(
@@ -20,9 +21,9 @@ export interface IStorage {
     addOrUpdateMessage(messageId: string, message: MessageStorageItem): void;
     deleteMessage(messageId: string): void;
 
-    getResources(type: StorageResourceType): { resourceId: string, optionjson: string }[];
-    addOrUpdateResource(type: StorageResourceType, resourceId: string, optionjson: string): void;
-    deleteResource(type: StorageResourceType, resourceId: string): void;
+    getResources(type: ResourceType): { resourceId: string, optionjson: string }[];
+    addOrUpdateResource(type: ResourceType, resourceId: string, optionjson: string): void;
+    deleteResource(type: ResourceType, resourceId: string): void;
 
     close(): void;
 }

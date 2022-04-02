@@ -22,7 +22,7 @@ export class Router implements IResource {
         return this.options;
     }
 
-    public setOptions(options: RouterOptions) {
+    public setOptions(options: RouterOptions): RouterOptions {
         validateOptions(options);
 
         this.options = options;

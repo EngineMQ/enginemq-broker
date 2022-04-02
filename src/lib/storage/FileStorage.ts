@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Packr } from 'msgpackr';
 
-import { IStorage, MessageStorageItem, StorageResourceType } from './IStorage';
+import { IStorage, MessageStorageItem, ResourceType } from './IStorage';
 import logger from '../logger';
 
 class FileStorageError extends Error { }
@@ -17,7 +17,7 @@ export class FileStorage implements IStorage {
     private packr = new Packr();
     private folderRoot;
     private get folderMessage() { return path.join(this.folderRoot, subfolderMessage) }
-    private folderResource(type?: StorageResourceType): string {
+    private folderResource(type?: ResourceType): string {
         const resultPath = path.join(this.folderRoot, subfolderResource);
         if (type)
             return path.join(resultPath, type)
@@ -93,7 +93,7 @@ export class FileStorage implements IStorage {
         } catch (error) { throw new FileStorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    public getResources(type: StorageResourceType): { resourceId: string, optionjson: string }[] {
+    public getResources(type: ResourceType): { resourceId: string, optionjson: string }[] {
         const result = [];
 
         const allFiles = this.getAllFilesRecursively(this.folderResource(type));
@@ -111,7 +111,7 @@ export class FileStorage implements IStorage {
         return result;
     }
 
-    public addOrUpdateResource(type: StorageResourceType, resourceId: string, optionjson: string): void {
+    public addOrUpdateResource(type: ResourceType, resourceId: string, optionjson: string): void {
         try {
             const fileData = optionjson;
             fs.writeFileSync(
@@ -122,7 +122,7 @@ export class FileStorage implements IStorage {
         } catch (error) { throw new FileStorageError(`Cannot store ${type} resource '${resourceId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    public deleteResource(type: StorageResourceType, resourceId: string): void {
+    public deleteResource(type: ResourceType, resourceId: string): void {
         try {
             const filename = this.getFileNameForResource(type, resourceId, false);
             if (fs.existsSync(filename))
@@ -169,14 +169,14 @@ export class FileStorage implements IStorage {
         return result;
     }
 
-    private getFileNameForResource(type: StorageResourceType, name: string, createFolder: boolean) {
+    private getFileNameForResource(type: ResourceType, name: string, createFolder: boolean) {
         return path.join(
             this.getFolderForResource(type, createFolder),
             name
         );
     }
 
-    private getFolderForResource(type: StorageResourceType, createFolder: boolean) {
+    private getFolderForResource(type: ResourceType, createFolder: boolean) {
         const result = this.folderResource(type);
 
         if (createFolder)

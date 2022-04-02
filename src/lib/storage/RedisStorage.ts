@@ -3,7 +3,7 @@ import { createClient } from 'redis';
 import { awaitSync } from '@kaciras/deasync';
 
 import * as config from '../../config';
-import { IStorage, MessageStorageItem, StorageResourceType } from './IStorage';
+import { IStorage, MessageStorageItem, ResourceType } from './IStorage';
 import logger from '../logger';
 import { RedisClientType } from '@node-redis/client';
 
@@ -85,9 +85,9 @@ export class RedisStorage implements IStorage {
         } catch (error) { throw new RedisStorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    getResources(type: StorageResourceType): { resourceId: string, optionjson: string }[] { type; return [] }
-    addOrUpdateResource(type: StorageResourceType, resourceId: string, optionjson: string): void { type; resourceId; optionjson; }
-    deleteResource(type: StorageResourceType, resourceId: string): void { type; resourceId; }
+    getResources(type: ResourceType): { resourceId: string, optionjson: string }[] { type; return [] }
+    addOrUpdateResource(type: ResourceType, resourceId: string, optionjson: string): void { type; resourceId; optionjson; }
+    deleteResource(type: ResourceType, resourceId: string): void { type; resourceId; }
 
     public close(): void {
         awaitSync(this.redis.quit());

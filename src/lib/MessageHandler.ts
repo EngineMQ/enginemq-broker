@@ -136,7 +136,7 @@ export class MessageHandler {
             if (!allowRouter)
                 addMessageFunction(item);
             else {
-                const routerResult = this.resourceHandler.adaptRouter(item);
+                const routerResult = this.resourceHandler.runRouterChain(item);
 
                 if (routerResult.includes(item.topic))
                     addMessageFunction(item);

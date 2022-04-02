@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { Packr } from 'msgpackr';
 import * as Sqlite3 from 'better-sqlite3';
 
-import { IStorage, MessageStorageItem, StorageResourceType } from './IStorage';
+import { IStorage, MessageStorageItem, ResourceType } from './IStorage';
 import logger from '../logger';
 
 class Sqlite3StorageError extends Error { }
@@ -87,9 +87,9 @@ export class Sqlite3Storage implements IStorage {
         } catch (error) { throw new Sqlite3StorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    getResources(type: StorageResourceType): { resourceId: string, optionjson: string }[] { type; return [] }
-    addOrUpdateResource(type: StorageResourceType, resourceId: string, optionjson: string): void { type; resourceId; optionjson; }
-    deleteResource(type: StorageResourceType, resourceId: string): void { type; resourceId; }
+    getResources(type: ResourceType): { resourceId: string, optionjson: string }[] { type; return [] }
+    addOrUpdateResource(type: ResourceType, resourceId: string, optionjson: string): void { type; resourceId; optionjson; }
+    deleteResource(type: ResourceType, resourceId: string): void { type; resourceId; }
 
     public close(): void {
         this.db.close();
