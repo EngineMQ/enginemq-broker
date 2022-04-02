@@ -11,7 +11,6 @@ import { MessageStorageItem } from './storage/IStorage';
 import { BufferedSocketOptions, defaultBufferedSocketOptions } from '../common/lib/socket/BufferedSocket';
 import { topicStringToRegExpOrString } from './utility';
 
-const nowMs = () => Date.now();
 const log = logger.child({ module: 'Socket' });
 let socketUniqueId = 1;
 
@@ -33,7 +32,7 @@ export class BrokerSocket extends MsgpackSocket {
     private messageHandler: MessageHandler;
     private clientInfo = { uniqueId: 0, clientId: '', version: '', maxWorkers: 1 };
     private subscriptions: (string | RegExp)[] = [];
-    private lastRcvHeartbeat = nowMs();
+    private lastRcvHeartbeat = Date.now();
     private lastSndHeartbeat = 0;
     private waitListForAck: { messageId: string, onAck: AckFunction }[] = [];
 
@@ -71,7 +70,7 @@ export class BrokerSocket extends MsgpackSocket {
     public override setKeepAlive(enable: boolean, initialDelay: number) { super.setKeepAlive(enable, initialDelay); }
 
     public processHeartbeat(sec: number) {
-        const now = nowMs();
+        const now = Date.now();
         if (now - this.lastSndHeartbeat > sec * 1000 / 100 * HEARTBEAT_FREQ_PERCENT) {
             const brHeatbeat: messages.BrokerMessageHeartbeat = {};
             this.sendMessage('heartbeat', brHeatbeat);
@@ -114,7 +113,7 @@ export class BrokerSocket extends MsgpackSocket {
         const dataMessage: { [name: string]: object } = {};
         dataMessage[cm as keyof object] = object;
         super.sendObj(dataMessage);
-        this.lastSndHeartbeat = nowMs();
+        this.lastSndHeartbeat = Date.now();
 
         this.getLog().debug({ type: cm, data: object }, 'Send message');
     }
@@ -125,7 +124,7 @@ export class BrokerSocket extends MsgpackSocket {
         const cmd = Object.keys(object)[0] as messages.ClientMessageType;
         const parameters = Object.values(object)[0] as object;
 
-        this.lastRcvHeartbeat = nowMs();
+        this.lastRcvHeartbeat = Date.now();
 
         this.getLog().debug({ type: cmd, data: parameters }, 'Receive message');
         switch (cmd) {
@@ -145,7 +144,7 @@ export class BrokerSocket extends MsgpackSocket {
                 break;
             case 'heartbeat':
                 if (validateObject<messages.ClientMessageHeartbeat>(messages.ClientMessageHeartbeat, parameters))
-                    this.lastRcvHeartbeat = nowMs();
+                    this.lastRcvHeartbeat = Date.now();
                 break;
             case 'subscribe':
                 const cmSubscribe = validateObject<messages.ClientMessageSubscribe>(messages.ClientMessageSubscribe, parameters);
@@ -163,7 +162,7 @@ export class BrokerSocket extends MsgpackSocket {
                     options: cmPublish.options,
 
                     sourceClientId: this.clientInfo.clientId,
-                    publishTime: nowMs(),
+                    publishTime: Date.now(),
                 };
                 try {
                     this.messageHandler.addMessage(mhItem)
