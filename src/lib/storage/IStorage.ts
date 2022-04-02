@@ -11,11 +11,11 @@ export type StorageResourceType = 'validator' | 'router';
 export interface IStorage {
     getAllMessages(
         target: MessageStorageItem[],
-        cbProgress: {
+        callbackProgress: {
             total: (count: number) => void
             percent: (count: number, percent: number, size: number) => void
         },
-        cbReady: () => void,
+        callbackReady: () => void,
     ): void;
     addOrUpdateMessage(messageId: string, message: MessageStorageItem): void;
     deleteMessage(messageId: string): void;

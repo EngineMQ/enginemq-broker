@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-process-exit */
 import logger from './lib/logger';
 import * as config from './config';
 import { createBroker, closeBroker } from './lib/broker';
@@ -33,8 +34,8 @@ const stop = async (): Promise<void> => {
   try {
     void closeHttpserver();
     await closeBroker();
-  } catch (err) {
-    log.error(err);
+  } catch (error) {
+    log.error(error);
     process.exit(1);
   }
   process.exit(0);

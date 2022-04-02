@@ -3,8 +3,8 @@ export default {
     getAllClients() {
         const topicNames = Context.Topics.getAllTopics();
         const result = [];
-        for (let i = 0; i < Context.ClientList.length; i++) {
-            const bs = Context.ClientList.getSocket(i);
+        for (let clientIndex = 0; clientIndex < Context.ClientList.length; clientIndex++) {
+            const bs = Context.ClientList.getSocket(clientIndex);
             if (bs) {
                 const cli = bs.getClientInfo();
                 result.push({
@@ -38,8 +38,7 @@ export default {
                     addressDetail: cli.addressDetail,
                     stat: cli.stat,
                     topics: topicNames.filter((topic) => bs.matchSubscription(topic)),
-                    subscriptions: Array
-                        .from(cli.subscriptions)
+                    subscriptions: [...cli.subscriptions]
                         .map((item) => item.toString())
                         .sort((a: string, b: string) => a.localeCompare(b)),
                     groupMembers: Context.ClientList.getItems()
@@ -49,7 +48,7 @@ export default {
                         .sort()
                 }
         }
-        return null;
+        return;
     },
 
     kickClient(uniqueId: number) {

@@ -6,7 +6,7 @@ import { IStorage, MessageStorageItem } from './storage/IStorage';
 import { TopicHandler } from './TopicHandler';
 import * as types from '../common/messageTypes';
 import * as utility from './utility';
-import { AckFn, BrokerSocket } from './BrokerSocket';
+import { AckFunction, BrokerSocket } from './BrokerSocket';
 import { ResourceHandler } from './ResourceHandler';
 
 const log = logger.child({ module: 'Messages' });
@@ -22,7 +22,6 @@ const GARBAGE_LIMIT = 1000;
 const MESSAGELOOP_BOOST_ITERATIONS = 100;
 
 const nanoid = customAlphabet(types.MESSAGE_ID_ALPHABET, types.MESSAGE_ID_LENGTH_DEFAULT);
-const nowMs = () => new Date().getTime();
 const messageIdRegExp = new RegExp(types.MESSAGE_ID_MASK);
 
 export class MessageHandler {
@@ -61,8 +60,8 @@ export class MessageHandler {
                         percent: (_count: number, percent: number, size: number) => log.info(`${percent}% loaded (${size > 1024 * 1024 ? `${Math.round(size / 1024 / 1024)} Mb` : `${Math.round(size / 1024)} kB`})`),
                     },
                     () => {
-                        if (loadList.length) {
-                            const now = nowMs();
+                        if (loadList.length > 0) {
+                            const now = Date.now();
 
                             let countExpired = 0;
                             let countLoaded = 0;
@@ -127,7 +126,7 @@ export class MessageHandler {
             if (topicOfExistingItem)
                 this.topics.removeMessage(topicOfExistingItem, item.options.messageId);
 
-            const addMessageFn = (_msgitem: MessageStorageItem) => {
+            const addMessageFunction = (_msgitem: MessageStorageItem) => {
                 this.topics.addMessage(_msgitem.topic, _msgitem);
                 this.topicIndexerList.set(_msgitem.options.messageId, _msgitem.topic);
                 this.messageIndexerList.set(_msgitem.options.messageId, _msgitem)
@@ -135,19 +134,19 @@ export class MessageHandler {
             };
 
             if (!allowRouter)
-                addMessageFn(item);
+                addMessageFunction(item);
             else {
                 const routerResult = this.resourceHandler.adaptRouter(item);
 
                 if (routerResult.includes(item.topic))
-                    addMessageFn(item);
+                    addMessageFunction(item);
 
                 let newMessageIndex = 0;
                 for (const newTopic of routerResult.filter((r) => r != item.topic)) {
                     newMessageIndex++;
                     const newMessageId = `${item.options.messageId}-${newMessageIndex}`
                     const newMessage = this.cloneMessageForRouter(item, newTopic, newMessageId);
-                    addMessageFn(newMessage);
+                    addMessageFunction(newMessage);
                 }
             }
         } catch (error) {
@@ -167,7 +166,7 @@ export class MessageHandler {
         log.debug('Delete topic all messages');
 
         const exmsgids = this.topics.getTopicMessageIds(topic);
-        if (exmsgids.length) {
+        if (exmsgids.length > 0) {
             const measureTime = new utility.MeasureTime();
             const originalCount = exmsgids.length;
             for (const messageId of exmsgids) {
@@ -188,8 +187,8 @@ export class MessageHandler {
 
     // Private
 
-    private getMessage(messageId: string): MessageStorageItem | null {
-        return this.messageIndexerList.get(messageId) || null;
+    private getMessage(messageId: string): MessageStorageItem | undefined {
+        return this.messageIndexerList.get(messageId) || undefined;
     }
 
     private resendMessage(messageId: string, delayMs: number) {
@@ -197,14 +196,14 @@ export class MessageHandler {
         try {
             const message = this.messageIndexerList.get(messageId);
             if (message) {
-                message.publishTime = nowMs();
+                message.publishTime = Date.now();
                 message.options.delayMs = delayMs;
                 this.addMessage(message, false);
             }
             else
                 throw new MessageError(`Message not found: ${messageId}`);
         }
-        catch (error) {
+        catch {
             log.error({ messageid: messageId }, 'Cannot resend message');
         }
     }
@@ -225,13 +224,13 @@ export class MessageHandler {
             log.error({ messageid: messageId }, 'Cannot delete message, topic not found');
     }
 
-    private cloneMessageForRouter(msg: MessageStorageItem, newTopic: string, newMessageId: string): MessageStorageItem {
+    private cloneMessageForRouter(message: MessageStorageItem, newTopic: string, newMessageId: string): MessageStorageItem {
         const result = {
             topic: newTopic,
-            message: Object.assign({}, msg.message),
-            options: Object.assign({}, msg.options),
-            publishTime: msg.publishTime,
-            sourceClientId: msg.sourceClientId,
+            message: Object.assign({}, message.message),
+            options: Object.assign({}, message.options),
+            publishTime: message.publishTime,
+            sourceClientId: message.sourceClientId,
         }
         // const result = structuredClone(msg);
         // result.topic = newTopic;
@@ -248,7 +247,7 @@ export class MessageHandler {
             .slice(0, GARBAGE_LIMIT);
         measureTime.measure('collect');
 
-        if (exmsgids.length) {
+        if (exmsgids.length > 0) {
             const originalCount = this.messageIndexerList.size;
             for (const exmsgid of exmsgids)
                 this.deleteMessage(exmsgid);
@@ -264,15 +263,15 @@ export class MessageHandler {
 
     private onReleaseClient(socket: BrokerSocket) {
         log.debug({ client: socket.getClientInfo().clientId, address: socket.getClientInfo().address }, 'Release client messages');
-        this.underDeliveryList.forEach((value, key) => {
+        for (const [key, value] of this.underDeliveryList.entries()) {
             if (value == socket) {
                 this.underDeliveryList.delete(key);
                 log.debug({ messageid: key }, 'Delivered message moved back to list');
             }
-        })
+        }
     }
 
-    private createMessageLoopDeliveryAck: AckFn = (deliveryAck: types.ClientMessageDeliveryAck) => {
+    private createMessageLoopDeliveryAck: AckFunction = (deliveryAck: types.ClientMessageDeliveryAck) => {
         const messageId = deliveryAck.messageId;
         let ackIsCompleted = false;
         let ackResendMs = -1;
@@ -326,23 +325,21 @@ export class MessageHandler {
         if (this.loopBroken) return;
         try {
             for (const topic of this.topics.getActiveTopicsRandomized()) {
-                let clientTarget: BrokerSocket | null = null;
+                let clientTarget: BrokerSocket | undefined;
                 for (const client of this.clientList.getRandomized())
-                    if (client.matchSubscription(topic))
-                        if (client.hasEnoughWorker()) {
-                            clientTarget = client;
-                            break;
-                        }
+                    if (client.matchSubscription(topic) && client.hasEnoughWorker()) {
+                        clientTarget = client;
+                        break;
+                    }
                 if (!clientTarget)
                     continue;
 
-                let messageTarget: MessageStorageItem | null = null;
-                for (const msg of this.topics.getNextAvailableMessageIterator(topic))
-                    if (msg)
-                        if (!this.underDeliveryList.has(msg.options.messageId)) {
-                            messageTarget = msg;
-                            break;
-                        }
+                let messageTarget: MessageStorageItem | undefined;
+                for (const message of this.topics.getNextAvailableMessageIterator(topic))
+                    if (message && !this.underDeliveryList.has(message.options.messageId)) {
+                        messageTarget = message;
+                        break;
+                    }
                 if (!messageTarget)
                     continue;
 

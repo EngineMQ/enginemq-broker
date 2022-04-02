@@ -13,7 +13,6 @@ const SORT_LAZY_TIME_MS = 249;
 type MessageId = string;
 type Topic = string;
 
-const nowMs = () => new Date().getTime();
 const log = logger.child({ module: 'Topic' });
 
 export class TopicHandler {
@@ -28,7 +27,7 @@ export class TopicHandler {
     public addMessage(topic: Topic, item: MessageStorageItem, bulkMode = false) {
         if (!this.topics.has(topic)) {
             this.topics.set(topic, []);
-            this.topicSortInfo.set(topic, { newItems: 0, lastSortAt: nowMs(), timerSorter: 0 });
+            this.topicSortInfo.set(topic, { newItems: 0, lastSortAt: Date.now(), timerSorter: 0 });
             this.topicMetric.set(topic, { add: new CounterMetrics(), remove: new CounterMetrics() });
             log.info({ topic }, 'Topic created');
         }
@@ -43,14 +42,14 @@ export class TopicHandler {
         }
     }
 
-    public getMessage(topic: Topic, messageId: MessageId): MessageStorageItem | null {
+    public getMessage(topic: Topic, messageId: MessageId): MessageStorageItem | undefined {
         const msglist = this.topics.get(topic);
         if (msglist) {
             const existingIndex = msglist.findIndex((item: MessageStorageItem) => item.options.messageId === messageId);
             if (existingIndex >= 0)
-                return msglist[existingIndex] || null;
+                return msglist[existingIndex] || undefined;
         }
-        return null;
+        return undefined;
     }
 
     public reSortAllTopics() {
@@ -79,26 +78,23 @@ export class TopicHandler {
     public getTopicMessages(topic: Topic, from?: number, count?: number): MessageStorageItem[] {
         const msglist = this.topics.get(topic);
         if (msglist)
-            if (from || count)
-                return msglist.slice(from, (from || 0) + (count || 0));
-            else
-                return msglist;
+            return from || count ? msglist.slice(from, (from || 0) + (count || 0)) : msglist;
         return [];
     }
 
     public removeTopicAllMessages(topic: Topic) {
         if (this.topics.has(topic)) {
             this.topics.set(topic, []);
-            this.topicSortInfo.set(topic, { newItems: 0, lastSortAt: nowMs(), timerSorter: 0 });
+            this.topicSortInfo.set(topic, { newItems: 0, lastSortAt: Date.now(), timerSorter: 0 });
             this.topicMetric.set(topic, { add: new CounterMetrics(), remove: new CounterMetrics() });
         }
     }
 
     public getSomeExpiredMessages(): MessageId[] {
-        const now = nowMs();
+        const now = Date.now();
 
         const rndTopics = this.getActiveTopicsRandomized();
-        if (rndTopics.length) {
+        if (rndTopics.length > 0) {
             const msglist = this.topics.get(rndTopics[0] || '');
             if (msglist)
                 return msglist
@@ -117,17 +113,17 @@ export class TopicHandler {
             ageHuman: { min: string, max: string, avg: string },
         }[] = [];
         for (const [topic, msglist] of this.topics.entries()) {
-            const now = nowMs();
+            const now = Date.now();
             let minAge = Number.MAX_SAFE_INTEGER;
             let maxAge = Number.MIN_SAFE_INTEGER;
             let sumAge = 0;
-            if (msglist.length)
-                for (const msg of msglist) {
-                    if (minAge > now - msg.publishTime)
-                        minAge = now - msg.publishTime;
-                    if (maxAge < now - msg.publishTime)
-                        maxAge = now - msg.publishTime;
-                    sumAge += now - msg.publishTime;
+            if (msglist.length > 0)
+                for (const message of msglist) {
+                    if (minAge > now - message.publishTime)
+                        minAge = now - message.publishTime;
+                    if (maxAge < now - message.publishTime)
+                        maxAge = now - message.publishTime;
+                    sumAge += now - message.publishTime;
                 }
             else
                 maxAge = minAge = 0;
@@ -137,13 +133,13 @@ export class TopicHandler {
                 age: {
                     min: minAge,
                     max: maxAge,
-                    avg: msglist.length ? Math.round(sumAge / msglist.length) : 0,
+                    avg: msglist.length > 0 ? Math.round(sumAge / msglist.length) : 0,
                 },
                 ageHuman:
                 {
                     min: prettyMilliseconds(minAge, { compact: true }),
                     max: prettyMilliseconds(maxAge, { compact: true }),
-                    avg: prettyMilliseconds(Math.round(msglist.length ? Math.round(sumAge / msglist.length) : 0), { compact: true }),
+                    avg: prettyMilliseconds(Math.round(msglist.length > 0 ? Math.round(sumAge / msglist.length) : 0), { compact: true }),
                 },
             })
         }
@@ -151,7 +147,7 @@ export class TopicHandler {
         return result;
     }
     public getAllTopics() {
-        return Array.from(this.topics.keys()).sort();
+        return [...this.topics.keys()].sort();
     }
 
     public getActiveTopicsRandomized(): string[] {
@@ -163,7 +159,7 @@ export class TopicHandler {
     }
 
     public getNextAvailableMessageIterator(topic: string) {
-        const now = nowMs();
+        const now = Date.now();
 
         const isItemSchedulable = (item: MessageStorageItem): boolean => {
             if (item.options.delayMs && now < item.publishTime + item.options.delayMs)
@@ -199,7 +195,7 @@ export class TopicHandler {
                 add: metrics.add.getCountByMinutes(),
                 remove: metrics.remove.getCountByMinutes(),
             }
-        return null;
+        return;
     }
 
 
@@ -216,7 +212,7 @@ export class TopicHandler {
 
         const sortInfo = this.topicSortInfo.get(topic);
         if (sortInfo) {
-            if (nowMs() > sortInfo.lastSortAt + SORT_AFTER_TIME_MS)
+            if (Date.now() > sortInfo.lastSortAt + SORT_AFTER_TIME_MS)
                 needsortReason = 'time';
             if (sortInfo.newItems >= SORT_AFTER_NEWITEMS)
                 needsortReason = 'count';
@@ -242,7 +238,7 @@ export class TopicHandler {
 
             const sortInfo = this.topicSortInfo.get(topic);
             if (sortInfo) {
-                sortInfo.lastSortAt = nowMs();
+                sortInfo.lastSortAt = Date.now();
                 sortInfo.newItems = 0;
                 if (sortInfo.timerSorter) {
                     clearTimeout(sortInfo.timerSorter);

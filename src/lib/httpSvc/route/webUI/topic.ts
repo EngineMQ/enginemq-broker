@@ -67,7 +67,7 @@ export default (server: FastifyInstance) => {
             const message = topicService.getTopicMessage(topicName, messageid);
 
             if (message) {
-                const messagestr = JSON.stringify(message.message, null, 2);
+                const messagestr = JSON.stringify(message.message, undefined, 2);
                 return reply.send(messagestr);
             }
             return reply.code(HTTP_NOT_FOUND).send(`Cannot find message ${messageid} on topic ${topicName}`);

@@ -20,10 +20,10 @@ const log = logger.child({ module: 'Http' });
 const logPlugins = logger.child({ module: 'Http' });
 logPlugins.level = 'warn';
 
-export default async (): Promise<FastifyInstance | null> => {
+export default async (): Promise<FastifyInstance | undefined> => {
     if (!config.apiEnabled && !config.webUIEnabled) {
         log.info('Http server disabled');
-        return null;
+        return undefined;
     }
 
     log.info('Init http server');
@@ -40,12 +40,12 @@ export default async (): Promise<FastifyInstance | null> => {
     await server.register(fastifyFormBody);
     await server.register(fastifyMultipart);
 
-    server.addHook('onRequest', (req, _reply, done) => {
-        req.log.debug({ method: req.method, url: req.raw.url, session: req.session, }, 'Incoming request');
-        req.log = logPlugins;
+    server.addHook('onRequest', (request, _reply, done) => {
+        request.log.debug({ method: request.method, url: request.raw.url, session: request.session, }, 'Incoming request');
+        request.log = logPlugins;
         done();
     });
-    server.addHook('onResponse', async (req, reply) => {
+    server.addHook('onResponse', async (request, reply) => {
         await reply.headers({
             'Surrogate-Control': 'no-store',
             'Cache-Control': 'no-store, max-age=0, must-revalidate',
@@ -53,9 +53,9 @@ export default async (): Promise<FastifyInstance | null> => {
             Expires: '0',
         });
         if (reply.raw.statusCode >= HTTP_ERROR_MIN)
-            req.log.error({ url: req.raw.url, statusMessage: reply.raw.statusMessage, statusCode: reply.raw.statusCode, }, 'Request error');
+            request.log.error({ url: request.raw.url, statusMessage: reply.raw.statusMessage, statusCode: reply.raw.statusCode, }, 'Request error');
         else
-            req.log.debug({ url: req.raw.url, statusCode: reply.raw.statusCode, }, 'Request completed');
+            request.log.debug({ url: request.raw.url, statusCode: reply.raw.statusCode, }, 'Request completed');
     })
 
     if (config.webUIEnabled) {

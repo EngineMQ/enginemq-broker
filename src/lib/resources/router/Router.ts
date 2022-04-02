@@ -28,9 +28,8 @@ export class Router implements IResource {
         this.options = options;
 
         for (const targets of [this.options.copyTo, this.options.moveTo])
-            if (targets)
-                if (Array.isArray(targets))
-                    targets.sort();
+            if (targets && Array.isArray(targets))
+                targets.sort();
         // this.inputTopicExpr = topicStrToRegexpOrString(options.inputTopic);
         return options;
     }
@@ -70,7 +69,7 @@ export class Router implements IResource {
 
         return {
             topics: result,
-            holdOriginal: this.options.copyTo && this.options.copyTo.length ? true : false,
+            holdOriginal: this.options.copyTo && this.options.copyTo.length > 0 ? true : false,
         };
     }
 }

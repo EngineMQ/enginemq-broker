@@ -19,7 +19,7 @@ export default {
                     timeHuman: new Date(message.time).toLocaleString(),
                     module: message.module,
                     text: message.text,
-                    dataStr: Object.keys(message.data).length ? JSON.stringify(message.data, null, 2) : '',
+                    dataStr: Object.keys(message.data).length > 0 ? JSON.stringify(message.data, undefined, 2) : '',
                 }
             })
 

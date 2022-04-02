@@ -114,8 +114,8 @@ export default (server: FastifyInstance) => {
             resourceService.insertOrUpdateRouter(resourceId, {
                 description,
                 topic,
-                copyTo: reduceArrayIfOneItem(copyTo.split('\r\n').filter((i) => i)),
-                moveTo: reduceArrayIfOneItem(moveTo.split('\r\n').filter((i) => i)),
+                copyTo: reduceArrayIfOneItem(copyTo.split('\r\n').filter(Boolean)),
+                moveTo: reduceArrayIfOneItem(moveTo.split('\r\n').filter(Boolean)),
             });
             return reply.send('OK');
         })

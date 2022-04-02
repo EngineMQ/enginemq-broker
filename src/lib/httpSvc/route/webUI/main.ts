@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 
-let i = 0;
+let index = 0;
 export default (server: FastifyInstance) => {
 
     server
@@ -14,7 +14,7 @@ export default (server: FastifyInstance) => {
             const { username, password } = request.query
             return reply.view('main', {
                 title: 'Dashboard',
-                u: username + (i++).toString(),
+                u: username + (index++).toString(),
                 password
             });
             // await reply.send({ data: username + password });

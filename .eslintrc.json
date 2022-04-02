@@ -13,7 +13,8 @@
             "excludedFiles": [],
             "extends": [
                 "plugin:@typescript-eslint/recommended",
-                "plugin:@typescript-eslint/recommended-requiring-type-checking"
+                "plugin:@typescript-eslint/recommended-requiring-type-checking",
+                "plugin:unicorn/recommended"
             ],
             "parserOptions": {
                 "project": [
@@ -92,7 +93,9 @@
                 "@typescript-eslint/quotes": [
                     "error",
                     "single"
-                ]
+                ],
+                "unicorn/filename-case": "off",
+                "unicorn/empty-brace-spaces": "off"
             }
         }
     ],
@@ -103,12 +106,14 @@
         "es2022": true
     },
     "plugins": [
-        "@typescript-eslint"
+        "@typescript-eslint",
+        "unicorn"
     ],
     "extends": [
         "eslint:recommended",
         "plugin:@typescript-eslint/recommended",
-        "plugin:@typescript-eslint/recommended-requiring-type-checking"
+        "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "plugin:unicorn/recommended"
     ],
     "rules": {
         "no-case-declarations": "off",

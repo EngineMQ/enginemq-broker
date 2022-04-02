@@ -1,4 +1,4 @@
-import { EventEmitter } from 'stream';
+import { EventEmitter } from 'node:stream';
 
 import logger from './logger';
 import { BrokerSocket } from './BrokerSocket';
@@ -63,10 +63,13 @@ export class ClientList extends EventEmitter {
     }
 
     public destroy(uniqueId: number) {
-        const bs = this.clients.find((i) => i.getClientInfo().clientDetail.uniqueId == uniqueId);
+        const bs = this.clients.find((cli) => cli.getClientInfo().clientDetail.uniqueId == uniqueId);
         if (bs)
             bs.destroy();
     }
 
-    public destroyAll = () => this.clients.forEach((client) => client.destroy())
+    public destroyAll = () => {
+        for (const client of this.clients)
+            client.destroy()
+    }
 }

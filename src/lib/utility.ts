@@ -1,20 +1,21 @@
-import { EOL } from 'os';
-import * as v8 from 'v8';
-import * as vm from 'vm';
+import { EOL } from 'node:os';
+import * as v8 from 'node:v8';
+import * as vm from 'node:vm';
 
 export class MeasureTime {
-    private start = new Date().getTime();
+    private start = Date.now();
     private measures = new Map<string, number>();
 
     public measure(name: string) {
-        this.measures.set(name, new Date().getTime() - this.start);
-        this.start = new Date().getTime();
+        this.measures.set(name, Date.now() - this.start);
+        this.start = Date.now();
     }
 
-    public writeLog(cb: (values: string[]) => void) {
+    public writeLog(callback: (values: string[]) => void) {
         const values: string[] = [];
-        this.measures.forEach((value, key) => values.push(`${key}=${value}ms`));
-        cb(values);
+        for (const [key, value] of this.measures.entries())
+            values.push(`${key}=${value}ms`);
+        callback(values);
     }
 }
 
@@ -76,9 +77,7 @@ export const yamlAdaptDateTimeHeader = (yaml: string): string => {
 }
 
 export const reduceArrayIfOneItem = <T>(array: Array<T>): Array<T> | T => {
-    if (array.length == 1)
-        if (array[0])
-            return array[0];
+    if (array.length == 1 && array[0]) return array[0];
     return array;
 }
 
@@ -99,11 +98,11 @@ export const shuffleArray = <T>(array: Array<T>) => {
 }
 
 type IndexedObject = { [key: string]: any; };
-export const trimStringFields = (obj: IndexedObject) => {
-    for (const fieldName of Object.keys(obj)) {
-        const field = obj[fieldName];
+export const trimStringFields = (object: IndexedObject) => {
+    for (const fieldName of Object.keys(object)) {
+        const field = object[fieldName];
         if (typeof field === 'string')
-            obj[fieldName] = field.trim();
+            object[fieldName] = field.trim();
         else if (typeof field === 'object')
             if (Array.isArray(field)) {
                 const newArray: any[] = [];
@@ -112,33 +111,32 @@ export const trimStringFields = (obj: IndexedObject) => {
                         newArray.push(arrayItem.trim());
                     else if (typeof arrayItem === 'object' && !Array.isArray(arrayItem))
                         newArray.push(trimStringFields(arrayItem as IndexedObject));
-                obj[fieldName] = newArray;
+                object[fieldName] = newArray;
             }
             else
-                obj[fieldName] = trimStringFields(field as IndexedObject);
+                object[fieldName] = trimStringFields(field as IndexedObject);
     }
-    return obj;
+    return object;
 }
 
-export const topicStrToRegExpOrString = (topicstr: string): string | RegExp => {
-    if (topicstr.match(/^[a-z0-9.*#]+$/i))
-        if (topicstr.indexOf('#') >= 0 || topicstr.indexOf('*') >= 0) {
-            while (topicstr.indexOf('^') >= 0) topicstr = topicstr.replace('^', '')
+export const topicStringToRegExpOrString = (topicstr: string): string | RegExp => {
+    if (/^[\d#*.a-z]+$/i.test(topicstr) && (topicstr.includes('#') || topicstr.includes('*'))) {
+        while (topicstr.includes('^')) topicstr = topicstr.replace('^', '')
 
-            while (topicstr.indexOf('$') >= 0) topicstr = topicstr.replace('$', '')
+        while (topicstr.includes('$')) topicstr = topicstr.replace('$', '')
 
-            while (topicstr.indexOf('+') >= 0) topicstr = topicstr.replace('+', '')
+        while (topicstr.includes('+')) topicstr = topicstr.replace('+', '')
 
-            while (topicstr.indexOf('.') >= 0) topicstr = topicstr.replace('.', '\\_')
-            while (topicstr.indexOf('_') >= 0) topicstr = topicstr.replace('_', '.')
+        while (topicstr.includes('.')) topicstr = topicstr.replace('.', '\\_')
+        while (topicstr.includes('_')) topicstr = topicstr.replace('_', '.')
 
-            while (topicstr.indexOf('#') >= 0) topicstr = topicstr.replace('#', '[^.]+')
+        while (topicstr.includes('#')) topicstr = topicstr.replace('#', '[^.]+')
 
-            while (topicstr.indexOf('*') >= 0) topicstr = topicstr.replace('*', '._')
-            while (topicstr.indexOf('_') >= 0) topicstr = topicstr.replace('_', '*')
+        while (topicstr.includes('*')) topicstr = topicstr.replace('*', '._')
+        while (topicstr.includes('_')) topicstr = topicstr.replace('_', '*')
 
-            return new RegExp('^' + topicstr + '$', 'i');
-        }
+        return new RegExp('^' + topicstr + '$', 'i');
+    }
     return topicstr;
 }
 

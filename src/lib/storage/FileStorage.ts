@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { Packr } from 'msgpackr';
 
 import { IStorage, MessageStorageItem, StorageResourceType } from './IStorage';
@@ -18,10 +18,10 @@ export class FileStorage implements IStorage {
     private folderRoot;
     private get folderMessage() { return path.join(this.folderRoot, subfolderMessage) }
     private folderResource(type?: StorageResourceType): string {
-        const resPath = path.join(this.folderRoot, subfolderResource);
+        const resultPath = path.join(this.folderRoot, subfolderResource);
         if (type)
-            return path.join(resPath, type)
-        return resPath;
+            return path.join(resultPath, type)
+        return resultPath;
     }
 
     constructor(folderRoot: string) {
@@ -36,19 +36,19 @@ export class FileStorage implements IStorage {
 
     public getAllMessages(
         target: MessageStorageItem[],
-        cbProgress: {
+        callbackProgress: {
             total: (count: number) => void
             percent: (count: number, percent: number, size: number) => void
         },
-        cbReady: () => void,
+        callbackReady: () => void,
     ) {
-        const REPORT_ITEMS = 10000;
+        const REPORT_ITEMS = 10_000;
         try {
             const allFiles = this.getAllFilesRecursively(this.folderMessage);
             log.debug({ count: allFiles.length }, 'Find messages');
-            cbProgress.total(allFiles.length);
+            callbackProgress.total(allFiles.length);
 
-            if (allFiles.length) {
+            if (allFiles.length > 0) {
                 let index = 0;
                 let size = 0;
                 for (const file of allFiles) {
@@ -56,20 +56,20 @@ export class FileStorage implements IStorage {
                     try {
                         fileData = fs.readFileSync(file);
                         size += fileData.length;
-                    } catch (error) { throw new Error(`Cannot read file ${file}`) }
+                    } catch { throw new Error(`Cannot read file ${file}`) }
 
-                    let fileObj: MessageStorageItem;
+                    let fileObject: MessageStorageItem;
                     try {
-                        fileObj = this.packr.unpack(fileData) as MessageStorageItem;
+                        fileObject = this.packr.unpack(fileData) as MessageStorageItem;
                     } catch (error) { throw new Error(`Cannot decode file (maybe damaged) ${file}: ` + (error instanceof Error ? error.message : '')) }
-                    target.push(fileObj);
+                    target.push(fileObject);
 
                     if (++index % REPORT_ITEMS == 0)
-                        cbProgress.percent(index, Math.round(100 * index / allFiles.length), size);
+                        callbackProgress.percent(index, Math.round(100 * index / allFiles.length), size);
                 }
-                cbProgress.percent(allFiles.length, 100, size);
+                callbackProgress.percent(allFiles.length, 100, size);
             }
-            cbReady();
+            callbackReady();
         } catch (error) { throw new FileStorageError(`Cannot read messages: ${error instanceof Error ? error.message : ''}`); }
     }
 
@@ -101,7 +101,7 @@ export class FileStorage implements IStorage {
             let fileData: Buffer;
             try {
                 fileData = fs.readFileSync(file);
-            } catch (error) { throw new Error(`Cannot read file ${file}`) }
+            } catch { throw new Error(`Cannot read file ${file}`) }
             result.push({
                 resourceId: path.basename(file),
                 optionjson: fileData.toString()
@@ -156,8 +156,8 @@ export class FileStorage implements IStorage {
         let subfolder = '';
         if (messageId.length >= subfolderDepth * subfolderLength) {
             const paths = [];
-            for (let i = 0; i < subfolderDepth; i++)
-                paths.push(messageId.substring(i * subfolderLength, (i + 1) * subfolderLength));
+            for (let index = 0; index < subfolderDepth; index++)
+                paths.push(messageId.slice(index * subfolderLength, (index + 1) * subfolderLength));
             subfolder = path.join(...paths);
         }
         const result = path.join(this.folderMessage, subfolder);

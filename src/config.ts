@@ -6,13 +6,13 @@ dotenv.config();
 const DEFAULT_SERVICE_NAME = 'enginemq-broker';
 const DEFAULT_LOG_LEVEL = 'warn';
 
-const DEFAULT_BROKER_PORT = 16677;
+const DEFAULT_BROKER_PORT = 16_677;
 const DEFAULT_HOST = '0.0.0.0';
 const DEFAULT_STORAGE = 'fs(folder=../storage)';
 const DEFAULT_MAXCLIENTWORKERS = 4;
 const DEFAULT_MAXPACKETSIZEKB = 1024;
 
-const DEFAULT_HTTP_PORT = 16688;
+const DEFAULT_HTTP_PORT = 16_688;
 
 //--System--
 export const isProduction = process.env['NODE_ENV'] === 'production';

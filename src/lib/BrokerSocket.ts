@@ -1,4 +1,4 @@
-import * as net from 'net';
+import * as net from 'node:net';
 import { version } from '../../package.json';
 
 import * as config from '../config';
@@ -9,9 +9,9 @@ import { MsgpackSocket } from '../common/lib/socket/MsgpackSocket';
 import { MessageHandler } from './MessageHandler';
 import { MessageStorageItem } from './storage/IStorage';
 import { BufferedSocketOptions, defaultBufferedSocketOptions } from '../common/lib/socket/BufferedSocket';
-import { topicStrToRegExpOrString } from './utility';
+import { topicStringToRegExpOrString } from './utility';
 
-const nowMs = () => new Date().getTime();
+const nowMs = () => Date.now();
 const log = logger.child({ module: 'Socket' });
 let socketUniqueId = 1;
 
@@ -23,34 +23,33 @@ export declare interface BrokerSocket {
     on(event: 'buffered_data', listener: (data: Buffer) => void): this;
     on(event: 'end', listener: () => void): this;
     on(event: 'close', listener: (hadError: boolean) => void): this;
-    on(event: 'obj_data', listener: (obj: object) => void): this;
+    on(event: 'obj_data', listener: (object: object) => void): this;
 
     on(event: 'subscriptions', listener: (subscriptions: (string | RegExp)[]) => void): this;
     on(event: 'mq-no-heartbeat', listener: () => void): this;
 }
-export type AckFn = (deliveryAck: messages.ClientMessageDeliveryAck) => boolean;
+export type AckFunction = (deliveryAck: messages.ClientMessageDeliveryAck) => boolean;
 export class BrokerSocket extends MsgpackSocket {
     private messageHandler: MessageHandler;
     private clientInfo = { uniqueId: 0, clientId: '', version: '', maxWorkers: 1 };
     private subscriptions: (string | RegExp)[] = [];
     private lastRcvHeartbeat = nowMs();
     private lastSndHeartbeat = 0;
-    private waitListForAck: { messageId: string, onAck: AckFn }[] = [];
+    private waitListForAck: { messageId: string, onAck: AckFunction }[] = [];
 
     constructor(socket: net.Socket, messageHandler: MessageHandler) {
         const options: BufferedSocketOptions = {
             ...defaultBufferedSocketOptions,
-            ...{
-                maxPacketSize: {
-                    value: config.maxPacketSizeBytes,
-                    onExcept: (packetSize: number) => this.getLog().error({ size: packetSize, maxsize: config.maxPacketSizeBytes }, 'Packet size exceeded max value'),
-                }
+            maxPacketSize: {
+                value: config.maxPacketSizeBytes,
+                onExcept: (packetSize: number) => this.getLog().error({ size: packetSize, maxsize: config.maxPacketSizeBytes }, 'Packet size exceeded max value'),
             }
+
         };
         super(socket, options);
         this.messageHandler = messageHandler;
 
-        this.on('obj_data', (obj: object) => this.onObjData(obj));
+        this.on('obj_data', (object: object) => this.onObjData(object));
     }
 
 
@@ -90,14 +89,11 @@ export class BrokerSocket extends MsgpackSocket {
                 if (sub.toLowerCase() === topic.toLowerCase())
                     return true;
             }
-            else if (sub instanceof RegExp) {
-                if (sub.test(topic))
-                    return true;
-            }
+            else if (sub instanceof RegExp && sub.test(topic)) return true;
         return false;
     }
 
-    public delivery(message: messages.BrokerMessageDelivery, onAck: AckFn) {
+    public delivery(message: messages.BrokerMessageDelivery, onAck: AckFunction) {
         this.waitListForAck.push({ messageId: message.options.messageId, onAck: onAck });
         this.sendMessage('delivery', message);
     }
@@ -114,27 +110,27 @@ export class BrokerSocket extends MsgpackSocket {
     // Private
     private getLog = () => log.child({ client: this.getClientInfo().clientId, address: this.getSocketAddressInfo().address })
 
-    private sendMessage(cm: messages.BrokerMessageType, obj: object) {
+    private sendMessage(cm: messages.BrokerMessageType, object: object) {
         const dataMessage: { [name: string]: object } = {};
-        dataMessage[cm as keyof object] = obj;
+        dataMessage[cm as keyof object] = object;
         super.sendObj(dataMessage);
         this.lastSndHeartbeat = nowMs();
 
-        this.getLog().debug({ type: cm, data: obj }, 'Send message');
+        this.getLog().debug({ type: cm, data: object }, 'Send message');
     }
 
-    private onObjData(obj: object) {
-        if (Object.keys(obj).length !== 1) return;
+    private onObjData(object: object) {
+        if (Object.keys(object).length !== 1) return;
 
-        const cmd = Object.keys(obj)[0] as messages.ClientMessageType;
-        const params = Object.values(obj)[0] as object;
+        const cmd = Object.keys(object)[0] as messages.ClientMessageType;
+        const parameters = Object.values(object)[0] as object;
 
         this.lastRcvHeartbeat = nowMs();
 
-        this.getLog().debug({ type: cmd, data: params }, 'Receive message');
+        this.getLog().debug({ type: cmd, data: parameters }, 'Receive message');
         switch (cmd) {
             case 'hello':
-                const cmHello = validateObject<messages.ClientMessageHello>(messages.ClientMessageHello, params);
+                const cmHello = validateObject<messages.ClientMessageHello>(messages.ClientMessageHello, parameters);
                 if (!cmHello) return;
 
                 this.clientInfo = {
@@ -148,17 +144,17 @@ export class BrokerSocket extends MsgpackSocket {
                 this.sendMessage('welcome', bmWelcome);
                 break;
             case 'heartbeat':
-                if (validateObject<messages.ClientMessageHeartbeat>(messages.ClientMessageHeartbeat, params))
+                if (validateObject<messages.ClientMessageHeartbeat>(messages.ClientMessageHeartbeat, parameters))
                     this.lastRcvHeartbeat = nowMs();
                 break;
             case 'subscribe':
-                const cmSubscribe = validateObject<messages.ClientMessageSubscribe>(messages.ClientMessageSubscribe, params);
+                const cmSubscribe = validateObject<messages.ClientMessageSubscribe>(messages.ClientMessageSubscribe, parameters);
                 if (!cmSubscribe) return;
 
                 this.updateSubscriptions(cmSubscribe.subscriptions);
                 break;
             case 'publish':
-                const cmPublish = validateObject<messages.ClientMessagePublish>(messages.ClientMessagePublish, params);
+                const cmPublish = validateObject<messages.ClientMessagePublish>(messages.ClientMessagePublish, parameters);
                 if (!cmPublish) return;
 
                 const mhItem: MessageStorageItem = {
@@ -181,7 +177,7 @@ export class BrokerSocket extends MsgpackSocket {
                 }
                 break;
             case 'deliveryAck':
-                const cmDeliveryAck = validateObject<messages.ClientMessageDeliveryAck>(messages.ClientMessageDeliveryAck, params);
+                const cmDeliveryAck = validateObject<messages.ClientMessageDeliveryAck>(messages.ClientMessageDeliveryAck, parameters);
                 if (!cmDeliveryAck) return;
 
                 const messageId = cmDeliveryAck.messageId;
@@ -199,9 +195,8 @@ export class BrokerSocket extends MsgpackSocket {
         this.getLog().debug({ subscriptions }, 'Update subscriptions');
         this.subscriptions = [];
         for (const sub of subscriptions)
-            if (sub.match(messages.TOPIC_WILDCARD_MASK))
-                if (sub.length <= messages.TOPIC_LENGTH_MAX)
-                    this.subscriptions.push(topicStrToRegExpOrString(sub));
+            if (messages.TOPIC_WILDCARD_MASK.test(sub) && sub.length <= messages.TOPIC_LENGTH_MAX)
+                this.subscriptions.push(topicStringToRegExpOrString(sub));
         this.emit('subscriptions', this.subscriptions);
     }
 }

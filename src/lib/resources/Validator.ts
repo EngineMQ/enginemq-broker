@@ -1,5 +1,5 @@
 import { IResource } from './IResource';
-import { topicStrToRegExpOrString } from '../utility';
+import { topicStringToRegExpOrString } from '../utility';
 
 type ErrorResult = string;
 
@@ -17,7 +17,7 @@ export class Validator implements IResource {
 
     constructor(options: ValidatorOptions) {
         this._name = options.name;
-        this.topic = topicStrToRegExpOrString(options.topic);
+        this.topic = topicStringToRegExpOrString(options.topic);
     }
 
     public matchTopic(topic: string): boolean {
@@ -25,16 +25,14 @@ export class Validator implements IResource {
             if (this.topic.toLowerCase() === topic.toLowerCase())
                 return true;
         }
-        else if (this.topic instanceof RegExp) {
-            if (this.topic.test(topic))
-                return true;
-        }
+        else if (this.topic instanceof RegExp && this.topic.test(topic))
+            return true;
         return false;
 
     }
 
-    public validate(msg: object): ErrorResult | null {
-        msg.toString() + this.description;
-        return null;
+    public validate(message: object): ErrorResult | undefined {
+        message.toString() + this.description;
+        return;
     }
 }

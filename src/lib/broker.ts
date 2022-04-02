@@ -1,4 +1,4 @@
-import * as net from 'net';
+import * as net from 'node:net';
 
 import * as config from '../config';
 import logger from './logger';

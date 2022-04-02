@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { Packr } from 'msgpackr';
 import * as Sqlite3 from 'better-sqlite3';
 
@@ -36,17 +36,17 @@ export class Sqlite3Storage implements IStorage {
 
     public getAllMessages(
         target: MessageStorageItem[],
-        cbProgress: {
+        callbackProgress: {
             total: (count: number) => void
             percent: (count: number, percent: number, size: number) => void
         },
-        cbReady: () => void,
+        callbackReady: () => void,
     ) {
-        const REPORT_ITEMS = 10000;
+        const REPORT_ITEMS = 10_000;
         try {
             const allMessageCount = this.db.prepare('SELECT COUNT(*) FROM message').pluck().get() as number;
             log.debug({ count: allMessageCount }, 'Find messages');
-            cbProgress.total(allMessageCount);
+            callbackProgress.total(allMessageCount);
 
             if (allMessageCount) {
                 let index = 0;
@@ -56,27 +56,27 @@ export class Sqlite3Storage implements IStorage {
                     if (Buffer.isBuffer(row.Data)) {
                         size += row.Data.length;
 
-                        let fileObj: MessageStorageItem;
+                        let fileObject: MessageStorageItem;
                         try {
-                            fileObj = this.packr.unpack(row.Data) as MessageStorageItem;
+                            fileObject = this.packr.unpack(row.Data) as MessageStorageItem;
                         } catch (error) { throw new Error(`Cannot decode file (maybe damaged) ${row.MessageId}: ` + (error instanceof Error ? error.message : '')) }
-                        target.push(fileObj);
+                        target.push(fileObject);
 
                         if (++index % REPORT_ITEMS == 0)
-                            cbProgress.percent(index, Math.round(100 * index / allMessageCount), size);
+                            callbackProgress.percent(index, Math.round(100 * index / allMessageCount), size);
                     }
                 }
-                cbProgress.percent(allMessageCount, 100, size);
+                callbackProgress.percent(allMessageCount, 100, size);
             }
-            cbReady();
+            callbackReady();
         } catch (error) { throw new Sqlite3StorageError(`Cannot load messages: ${error instanceof Error ? error.message : ''}`); }
     }
 
     public addOrUpdateMessage(messageId: string, message: MessageStorageItem): void {
         try {
-            const dbData = this.packr.pack(message);
-            this.prepares.insert.run({ id: messageId, data: dbData });
-            log.debug({ messageId, size: dbData.length }, 'Store message');
+            const databaseData = this.packr.pack(message);
+            this.prepares.insert.run({ id: messageId, data: databaseData });
+            log.debug({ messageId, size: databaseData.length }, 'Store message');
         } catch (error) { throw new Sqlite3StorageError(`Cannot create message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
@@ -107,22 +107,22 @@ export class Sqlite3Storage implements IStorage {
         catch (error) { throw new Sqlite3StorageError(`Cannot create folder '${folder}': ${error instanceof Error ? error.message : ''}`); }
 
         try {
-            const db = new Sqlite3(file, {
+            const database = new Sqlite3(file, {
                 verbose: (line: string) => log.trace({ cmd: line }, 'SQLite3 command'),
             });
             for (const pragma of initPragmas)
-                db.pragma(pragma);
+                database.pragma(pragma);
             for (const command of initCommands)
-                db.exec(command);
-            return db;
+                database.exec(command);
+            return database;
         }
         catch (error) { throw new Sqlite3StorageError(`Error initializing sqlite3 database '${file}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    private initPrepares(db: Sqlite3.Database) {
+    private initPrepares(database: Sqlite3.Database) {
         return {
-            insert: db.prepare('INSERT OR REPLACE INTO message (MessageId, Data) VALUES (@id, @data)'),
-            delete: db.prepare('DELETE FROM message WHERE MessageId = @id'),
+            insert: database.prepare('INSERT OR REPLACE INTO message (MessageId, Data) VALUES (@id, @data)'),
+            delete: database.prepare('DELETE FROM message WHERE MessageId = @id'),
         }
     }
 }

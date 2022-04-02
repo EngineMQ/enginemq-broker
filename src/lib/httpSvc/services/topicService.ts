@@ -64,7 +64,7 @@ export default {
                 }
             };
         }
-        return null;
+        return;
     },
 
     clearTopic(topicname: string) {
@@ -90,7 +90,7 @@ export default {
                         publishTime: m.publishTime,
                         publishTimeHuman: new Date(m.publishTime).toLocaleString(),
                         sourceClientId: m.sourceClientId,
-                        body: JSON.stringify(m.message).substring(0, 64),
+                        body: JSON.stringify(m.message).slice(0, 64),
                     }
                 }),
             };

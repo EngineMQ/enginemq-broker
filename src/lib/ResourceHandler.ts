@@ -27,14 +27,14 @@ export class ResourceHandler {
 
     // Public
 
-    public adaptRouter(msg: MessageStorageItem): string[] {
+    public adaptRouter(message: MessageStorageItem): string[] {
         const visitedTopics: string[] = [];
         const runRouter = (topic: string): string[] => {
             visitedTopics.push(topic);
 
             const result: string[] = [];
 
-            const applicableRouters = Array.from(this.routers.values()).filter((router) => router.matchTopic(topic));
+            const applicableRouters = [...this.routers.values()].filter((router) => router.matchTopic(topic));
             let removeTopic = applicableRouters.length > 0;
 
             for (const router of applicableRouters) {
@@ -52,7 +52,7 @@ export class ResourceHandler {
                 result.push(topic);
             return result;
         }
-        return runRouter(msg.topic).sort();
+        return runRouter(message.topic).sort();
     }
 
     public getRouters() {
@@ -65,7 +65,7 @@ export class ResourceHandler {
 
         const router = new Router(options);
         this.routers.set(resourceId, router);
-        this.storage.addOrUpdateResource('router', resourceId, JSON.stringify(router.getOptions(), null, 2));
+        this.storage.addOrUpdateResource('router', resourceId, JSON.stringify(router.getOptions(), undefined, 2));
 
         return resourceId;
     }
@@ -76,7 +76,7 @@ export class ResourceHandler {
             throw new Error(`Router '${resourceId}' not found`);
 
         router.setOptions(options);
-        this.storage.addOrUpdateResource('router', resourceId, JSON.stringify(router.getOptions(), null, 2));
+        this.storage.addOrUpdateResource('router', resourceId, JSON.stringify(router.getOptions(), undefined, 2));
     }
 
     public deleteRouter(resourceId: string) {
@@ -93,11 +93,11 @@ export class ResourceHandler {
 
     public adaptRouterFromYaml(yaml: Buffer) {
         const routersData = tryParseYaml(yaml);
-        if (!routersData.length)
+        if (routersData.length === 0)
             throw new Error('No valid router found in YAML');
 
         for (const routerData of routersData)
-            if (routerData.resourceId.match(resourceIdRegExp))
+            if (new RegExp(resourceIdRegExp).test(routerData.resourceId))
                 if (this.routers.get(routerData.resourceId))
                     this.updateRouter(routerData.resourceId, routerData.options);
                 else
@@ -111,9 +111,9 @@ export class ResourceHandler {
     private init() {
         for (const storageResource of this.storage.getResources('router')) {
             try {
-                const optionsObj = validateObject<RouterOptions>(RouterOptions, JSON.parse(storageResource.optionjson), true);
-                if (optionsObj) {
-                    const router = new Router(optionsObj);
+                const optionsObject = validateObject<RouterOptions>(RouterOptions, JSON.parse(storageResource.optionjson), true);
+                if (optionsObject) {
+                    const router = new Router(optionsObject);
                     this.routers.set(storageResource.resourceId, router);
                     log.info({ resourceName: router.description }, 'Init router resource');
                 }

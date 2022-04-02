@@ -7,7 +7,7 @@ export default (server: FastifyInstance) => {
 
         .get('/logs', async (_request, reply) => {
             const logs = logService.getAllLogs();
-            const firstLevel = Object.keys(logs.levels).length ? Object.keys(logs.levels)[0] : '';
+            const firstLevel = Object.keys(logs.levels).length > 0 ? Object.keys(logs.levels)[0] : '';
             return reply.view('logList', {
                 title: 'Logs',
                 subtitle: `Last ${MEMORYLOG_MAX_ITEMS}`,

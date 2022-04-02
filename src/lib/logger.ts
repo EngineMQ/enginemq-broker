@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { Writable } from 'stream'
+import { Writable } from 'node:stream'
 import { pino } from 'pino';
 
 import * as config from '../config';
@@ -52,7 +52,7 @@ class MemoryLogStore {
                     items.splice(0, items.length - MEMORYLOG_MAX_ITEMS);
             }
 
-            if (uiNotificationLevels.find((i) => i.level == level))
+            if (uiNotificationLevels.some((notifyLevel) => notifyLevel.level == level))
                 this.hasUiNotification = true;
         }
     }
@@ -85,7 +85,7 @@ class MemoryLogStore {
     public getLevels(): Record<string, number> {
         const result: Record<string, number> = {};
 
-        const keys = Array.from(this.logs.keys());
+        const keys = [...this.logs.keys()];
         keys.sort(levelSorter);
 
         for (const key of keys)
@@ -104,25 +104,25 @@ class MemoryLogStream extends Writable {
         this.store = store;
     }
 
-    public override _write(chunk: any, _encoding: string, callback: (error?: Error | null) => void) {
+    public override _write(chunk: any, _encoding: string, callback: (error?: Error | undefined) => void) {
         try {
             const logObject = JSON.parse(chunk.toString() as string);
             delete logObject.hostname;
             delete logObject.pid;
             delete logObject.name;
 
-            const logExt = Object.assign({}, logObject);
-            delete logExt.level;
-            delete logExt.time;
-            delete logExt.module;
-            delete logExt.msg;
+            const logExtendedData = Object.assign({}, logObject);
+            delete logExtendedData.level;
+            delete logExtendedData.time;
+            delete logExtendedData.module;
+            delete logExtendedData.msg;
 
             this.store.add({
                 level: logObject.level as string,
                 time: logObject.time as number,
                 module: logObject.module as string,
                 text: logObject.msg as string,
-                data: logExt as object
+                data: logExtendedData as object
             });
         }
         catch (error) { error; }

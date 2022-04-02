@@ -13,7 +13,7 @@ const log = logger.child({ module: 'RedisStorage' });
 const KEYNAME = `${config.serviceName}-messages`;
 
 export class RedisStorage implements IStorage {
-    private _redis: RedisClientType | null = null;
+    private _redis: RedisClientType | undefined = undefined;
     private redis: RedisClientType;
     private packr = new Packr();
 
@@ -33,16 +33,16 @@ export class RedisStorage implements IStorage {
 
     public getAllMessages(
         target: MessageStorageItem[],
-        cbProgress: {
+        callbackProgress: {
             total: (count: number) => void
             percent: (count: number, percent: number, size: number) => void
         },
-        cbReady: () => void,
+        callbackReady: () => void,
     ): void {
-        const REPORT_ITEMS = 10000;
+        const REPORT_ITEMS = 10_000;
         const allMessageCount = awaitSync(this.redis.hLen(KEYNAME));
         log.debug({ count: allMessageCount }, 'Find messages');
-        cbProgress.total(allMessageCount);
+        callbackProgress.total(allMessageCount);
 
         void (async () => {
             if (allMessageCount) {
@@ -53,28 +53,28 @@ export class RedisStorage implements IStorage {
                         const valueBuffer = Buffer.from(value, 'binary');
                         size += valueBuffer.length;
 
-                        let fileObj: MessageStorageItem;
+                        let fileObject: MessageStorageItem;
                         try {
-                            fileObj = this.packr.unpack(valueBuffer) as MessageStorageItem;
+                            fileObject = this.packr.unpack(valueBuffer) as MessageStorageItem;
                         } catch (error) { throw new Error(`Cannot decode file (maybe damaged) ${field}: ` + (error instanceof Error ? error.message : '')) }
-                        target.push(fileObj);
+                        target.push(fileObject);
 
                         if (++index % REPORT_ITEMS == 0)
-                            cbProgress.percent(index, Math.round(100 * index / allMessageCount), size);
+                            callbackProgress.percent(index, Math.round(100 * index / allMessageCount), size);
                     }
                 }
-                cbProgress.percent(allMessageCount, 100, size);
+                callbackProgress.percent(allMessageCount, 100, size);
             }
-            cbReady();
+            callbackReady();
         })();
     }
 
     public addOrUpdateMessage(messageId: string, message: MessageStorageItem): void {
         try {
-            const dbData = this.packr.pack(message);
+            const databaseData = this.packr.pack(message);
             new TextEncoder().encode()
-            awaitSync(this.redis.hSet(KEYNAME, messageId, dbData.toString('binary')));
-            log.debug({ messageId, size: dbData.length }, 'Store message');
+            awaitSync(this.redis.hSet(KEYNAME, messageId, databaseData.toString('binary')));
+            log.debug({ messageId, size: databaseData.length }, 'Store message');
         } catch (error) { throw new RedisStorageError(`Cannot create message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
@@ -105,7 +105,7 @@ export class RedisStorage implements IStorage {
                     name: config.serviceName,
                 });
                 await this._redis.connect();
-                this._redis.on('error', (err) => log.error(err));
+                this._redis.on('error', (error) => log.error(error));
             }
             catch (error) { throw new RedisStorageError(`Error initial connection to redis '${connection}': ${error instanceof Error ? error.message : ''}`); }
         })();

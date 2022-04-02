@@ -42,12 +42,12 @@ export const validateOptions = (options: RouterOptions) => {
 
     if (!options.topic)
         throw new Error('Validation error: topic mandatory');
-    if (!options.topic.match(TOPIC_MASK))
+    if (!TOPIC_MASK.test(options.topic))
         throw new Error('Validation error: invalid topic format');
     if (options.topic.length > TOPIC_LENGTH_MAX)
         throw new Error('Validation error: topic too long');
 
-    if (!(options.copyTo && options.copyTo.length || options.moveTo && options.moveTo.length))
+    if (!(options.copyTo && options.copyTo.length > 0 || options.moveTo && options.moveTo.length > 0))
         throw new Error('Validation error: copyTo or moveTo is mandatory');
 
     for (const targets of [options.copyTo, options.moveTo])
@@ -56,14 +56,14 @@ export const validateOptions = (options: RouterOptions) => {
                 if (targets.length > ROUTE_MAX_ITEMS)
                     throw new Error('Validation error: too much target topics');
                 for (const target of targets) {
-                    if (!target.match(TOPIC_MASK))
+                    if (!TOPIC_MASK.test(target))
                         throw new Error(`Validation error: invalid topic format ${target}`);
                     if (target.length > TOPIC_LENGTH_MAX)
                         throw new Error(`Validation error: topic too long ${target}`);
                 }
             }
             else {
-                if (!targets.match(TOPIC_MASK))
+                if (!TOPIC_MASK.test(targets))
                     throw new Error(`Validation error: invalid topic format ${targets}`);
                 if (targets.length > TOPIC_LENGTH_MAX)
                     throw new Error(`Validation error: topic too long ${targets}`);

@@ -1,4 +1,4 @@
-import * as path from 'path';
+import * as path from 'node:path';
 import { FastifyInstance } from 'fastify';
 import pointOfView from 'point-of-view';
 import * as pug from 'pug';
@@ -13,6 +13,7 @@ export default async (server: FastifyInstance) => {
 
     await server.register(pointOfView, {
         engine: { pug },
+        // eslint-disable-next-line unicorn/prefer-module
         root: path.join(__dirname, 'webUIViews'),
         viewExt: 'pug',
         includeViewExtension: true,
