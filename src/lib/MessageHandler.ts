@@ -110,6 +110,8 @@ export class MessageHandler {
         });
     }
 
+    public get length() { return [...this.topicIndexerList.keys()].length; }
+
     public addMessage(item: MessageStorageItem, allowRouter = true) {
         try {
             if (!item.options.messageId)

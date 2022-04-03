@@ -1,4 +1,8 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
+
+process.env['LOG_LEVEL'] = 'warn';
+process.env['STORAGE'] = 'null()';
+
 import * as enginemq from 'enginemq-client';
 import { version } from '../../package.json'
 
@@ -30,6 +34,8 @@ describe('client', () => {
     });
 
     test('connect client', async () => {
+        expect.assertions(6);
+
         const client = new enginemq.EngineMqClient({ clientId: 'test-client', connectAutoStart: false });
 
         const mqConnected = jest.fn();
@@ -50,6 +56,7 @@ describe('client', () => {
         await new Promise((d) => setTimeout(d, 250));
         expect(mqConnected).toBeCalled();
         expect(mqReady).toBeCalled();
+        expect(global.Context.ClientList).toHaveLength(1);
 
         client.close();
 
@@ -57,22 +64,30 @@ describe('client', () => {
         expect(mqDisconnected).toBeCalled();
     });
 
-    test('publish', async () => {
+    const MESSAGE_COUNT = Math.round(Math.random() * 100) + 1;
+    test(`publish ${MESSAGE_COUNT} messages`, async () => {
+        expect.assertions(1);
+
         const client = new enginemq.EngineMqClient({ clientId: 'test-client', connectAutoStart: false });
 
         client.on('mq-ready', async () => {
-            await client.publish(
-                'log.analitics.wordpress',
-                { str: 'Example data' });
+            for (let index = 0; index < MESSAGE_COUNT; index++)
+                await client.publish(
+                    'log.analitics.wordpress',
+                    { str: 'Example data' });
         });
 
         client.connect();
-        await new Promise((d) => setTimeout(d, 250));
+        await new Promise((d) => setTimeout(d, 1000));
+
+        expect(global.Context.MessageHandler).toHaveLength(MESSAGE_COUNT);
 
         client.close();
     });
 
     test('publish invalid messageid', async () => {
+        expect.assertions(1);
+
         const client = new enginemq.EngineMqClient({ clientId: 'test-client', connectAutoStart: false });
 
         client.on('mq-ready', async () => {
