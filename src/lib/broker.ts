@@ -61,14 +61,16 @@ export const closeBroker = async () => {
     log.info('Broker shutdown');
     return new Promise((resolve, reject) => {
         log.info('Stop messageloop');
-        messageHandler.breakLoop();
+        messageHandler.close();
 
         log.info('Stop storage');
         storage.close();
 
         log.info('Disconnect clients');
-        clientList.destroyAll();
+        clientList.close();
 
+        if (!server.listening)
+            reject();
         server.close((error) => {
             if (error) {
                 log.error('Broker stop failed: ' + error.message);

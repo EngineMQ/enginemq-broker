@@ -12,6 +12,7 @@ export declare interface ClientList {
 }
 export class ClientList extends EventEmitter {
     private heartbeatSec = 0;
+    private timerHeartbeat = 0;
     private clients: BrokerSocket[] = [];
     //[Symbol.iterator]() { return shuffleArray(this.clients)[Symbol.iterator](); }
     [Symbol.iterator]() { return this.clients[Symbol.iterator](); }
@@ -21,10 +22,16 @@ export class ClientList extends EventEmitter {
 
         this.heartbeatSec = heartbeatSec;
         if (heartbeatSec)
-            setInterval(() => {
+            this.timerHeartbeat = setInterval(() => {
                 for (const client of this.clients)
                     client.processHeartbeat(heartbeatSec)
-            }, heartbeatSec * 100);
+            }, heartbeatSec * 100) as unknown as number;
+    }
+
+    public close() {
+        if (this.timerHeartbeat)
+            clearInterval(this.timerHeartbeat);
+        this.destroyAll();
     }
 
     public add(client: BrokerSocket) {

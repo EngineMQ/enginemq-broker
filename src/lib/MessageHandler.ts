@@ -25,6 +25,8 @@ const nanoid = customAlphabet(types.MESSAGE_ID_ALPHABET, types.MESSAGE_ID_LENGTH
 const messageIdRegExp = new RegExp(types.MESSAGE_ID_MASK);
 
 export class MessageHandler {
+    private timerExpiredMessages = 0;
+    private timerMessageLoop = 0;
     private clientList: ClientList;
     private storage: IStorage;
     private topics: TopicHandler;
@@ -40,7 +42,7 @@ export class MessageHandler {
         this.resourceHandler = resourceHandler;
 
         this.clientList.on('remove', (socket: BrokerSocket) => this.onReleaseClient(socket))
-        setTimeout(() => this.removeSomeExpiredMessages(), GARBAGE_SEC * 1000);
+        this.timerExpiredMessages = setTimeout(() => this.removeSomeExpiredMessages(), GARBAGE_SEC * 1000) as unknown as number;
     }
 
 
@@ -158,9 +160,16 @@ export class MessageHandler {
     private loopBroken = false;
     public startLoop() {
         this.loopBroken = false;
-        setTimeout(this.messageLoop, 0);
+        this.timerMessageLoop = setTimeout(this.messageLoop, 0) as unknown as number;
     }
-    public breakLoop() { this.loopBroken = true; }
+
+    public close() {
+        this.loopBroken = true;
+        if (this.timerExpiredMessages)
+            clearTimeout(this.timerExpiredMessages);
+        if (this.timerMessageLoop)
+            clearTimeout(this.timerMessageLoop);
+    }
 
     public deleteTopicAllMessage(topic: Topic) {
         log.debug('Delete topic all messages');
@@ -255,10 +264,10 @@ export class MessageHandler {
             measureTime.writeLog((valuestr: string[]) => log.info({ expired: exmsgids.length, total: originalCount, times: valuestr }, 'Garbage expired messages'));
         }
 
-        setTimeout(() => this.removeSomeExpiredMessages(),
+        this.timerExpiredMessages = setTimeout(() => this.removeSomeExpiredMessages(),
             exmsgids.length == GARBAGE_LIMIT ?
                 GARBAGE_BOOST_SEC * 1000 :
-                GARBAGE_SEC * 1000);
+                GARBAGE_SEC * 1000) as unknown as number;
     }
 
     private onReleaseClient(socket: BrokerSocket) {
@@ -355,7 +364,7 @@ export class MessageHandler {
 
             this.boostCount++;
             if (this.boostCount > MESSAGELOOP_BOOST_ITERATIONS) {
-                setTimeout(this.messageLoop, 0);
+                this.timerMessageLoop = setTimeout(this.messageLoop, 0) as unknown as number;
                 this.boostCount = 0;
             }
             else
