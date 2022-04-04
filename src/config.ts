@@ -1,7 +1,8 @@
 import * as dotenv from 'dotenv';
 import { get } from 'env-var';
 
-dotenv.config();
+if (process.env['NODE_ENV'] != 'test')
+    dotenv.config();
 
 const DEFAULT_SERVICE_NAME = 'enginemq-broker';
 const DEFAULT_LOG_LEVEL = 'warn';

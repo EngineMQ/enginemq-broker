@@ -20,7 +20,7 @@ let server: net.Server;
 let storage: IStorage;
 let resourceHandler: ResourceHandler;
 
-export const createBroker = async (): Promise<{
+export const createBroker = async (storageOverride?: string): Promise<{
     server: net.Server,
     clientList: ClientList,
     messageHandler: MessageHandler,
@@ -31,7 +31,7 @@ export const createBroker = async (): Promise<{
     log.info('Init broker');
 
     topics = new TopicHandler();
-    storage = storageConfig(config.storage);
+    storage = storageConfig(storageOverride || config.storage);
     resourceHandler = new ResourceHandler(storage);
     messageHandler = new MessageHandler(clientList, storage, topics, resourceHandler);
     await messageHandler.loadMessages()

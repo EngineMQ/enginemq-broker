@@ -174,7 +174,7 @@ export class MessageHandler {
     }
 
     public deleteTopicAllMessage(topic: Topic) {
-        log.debug('Delete topic all messages');
+        log.debug(`Delete topic '${topic}' all messages`);
 
         const exmsgids = this.topics.getTopicMessageIds(topic);
         if (exmsgids.length > 0) {
@@ -192,6 +192,11 @@ export class MessageHandler {
             measureTime.measure('delete');
             measureTime.writeLog((valuestr: string[]) => log.info({ total: originalCount, times: valuestr }, 'Delete bulk messages'));
         }
+    }
+
+    public deleteAllMessage() {
+        for (const topic of this.topics.getAllTopics())
+            this.deleteTopicAllMessage(topic);
     }
 
 
