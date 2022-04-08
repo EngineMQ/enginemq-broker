@@ -23,17 +23,18 @@ block content
                     | 
                     | Import from yaml
                     input#upload-yaml(type='file')
-        .col-md-6
-            .float-right
-                .btn-group(role='group')
-                    a.btn.btn-default(href='/resources/yaml')
-                        i.fa.fa-download
-                        | 
-                        | Export all resources to yaml
-                    button.btn.btn-danger(href='#' onclick='deleteAllResource()')
-                        i.fa.fa-times
-                        | 
-                        | Delete all resources
+        if (resources.routers.length || resources.validators.length)
+            .col-md-6
+                .float-right
+                    .btn-group(role='group')
+                        a.btn.btn-default(href='/resources/yaml')
+                            i.fa.fa-download
+                            | 
+                            | Export all resources to yaml
+                        button.btn.btn-danger(href='#' onclick='deleteAllResource()')
+                            i.fa.fa-times
+                            | 
+                            | Delete all resources
 
     .row
         .col-md-11.offset-md-1
