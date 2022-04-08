@@ -42,6 +42,8 @@
     "src"
   ],
   "exclude": [
-    "#src/test"
+    "src/public",
+    "src/assets",
+    "src/test"
   ]
 }
