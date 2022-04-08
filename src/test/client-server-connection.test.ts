@@ -28,6 +28,7 @@ describe('client-server connection', () => {
                     };
                     messageHandler.deleteAllMessage();
                     resourceHandler.deleteAllRouter();
+                    resourceHandler.deleteAllValidator();
                     return createHttpserver()
                 })
         })

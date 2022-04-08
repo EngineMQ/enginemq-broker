@@ -39,10 +39,6 @@ export class Validator implements IResource {
 
         this.validateFunction = CreateAjvValidator().compile(options.schema);
 
-        console.log(this.checkValidation({ foo: 12 }))
-        console.dir(this.validateFunction, { depth: undefined });
-        console.log(this.checkValidation({ foo: 12 }))
-
         return options;
     }
 
