@@ -1,10 +1,13 @@
+import * as yaml from 'js-yaml';
+
 import logger from './logger';
 import { IStorage, MessageStorageItem } from './storage/IStorage';
-import { Router } from './resources/router/Router';
 import { validateObject } from '../common/lib/ajv';
 import { customAlphabet } from 'nanoid';
+
+import { Router } from './resources/router/Router';
 import { RouterOptions } from './resources/router/types';
-import { tryParseYaml } from './resources/router/yaml';
+import { tryParseYaml as tryParseRouterYaml } from './resources/router/yaml';
 
 const log = logger.child({ module: 'Resources' });
 
@@ -28,6 +31,35 @@ export class ResourceHandler {
 
 
     // Public
+
+    public adaptFromYaml(yamlData: Buffer) {
+        if (yamlData.length === 0)
+            throw new Error('Empty YAML data');
+
+        let objs: object[] = [];
+        try { objs = yaml.loadAll(yamlData.toString()) as object[]; }
+        catch { throw new Error('Invalid YAML format'); }
+
+        let resourceCount = 0;
+        for (const routerData of tryParseRouterYaml(objs)) {
+            resourceCount++;
+            if (new RegExp(resourceIdRegExp).test(routerData.resourceId))
+                if (this.routers.get(routerData.resourceId))
+                    this.updateRouter(routerData.resourceId, routerData.options);
+                else
+                    this.addRouter(routerData.options, routerData.resourceId);
+        }
+        log.info({ count: resourceCount }, 'Resources adopted from yaml');
+    }
+
+    public deleteAllResource() {
+        this.deleteAllRouter();
+        log.info('All resources deleted');
+    }
+
+
+
+    // Routers
 
     public runRouterChain(message: MessageStorageItem): string[] {
         const visitedTopics: string[] = [];
@@ -98,19 +130,6 @@ export class ResourceHandler {
             this.storage.deleteResource('router', resourceId);
         }
         log.info('All routers deleted');
-    }
-
-    public adaptRoutersFromYaml(yaml: Buffer) {
-        const routersData = tryParseYaml(yaml);
-        if (routersData.length === 0)
-            throw new Error('No valid router found in YAML');
-
-        for (const routerData of routersData)
-            if (new RegExp(resourceIdRegExp).test(routerData.resourceId))
-                if (this.routers.get(routerData.resourceId))
-                    this.updateRouter(routerData.resourceId, routerData.options);
-                else
-                    this.addRouter(routerData.options, routerData.resourceId);
     }
 
 

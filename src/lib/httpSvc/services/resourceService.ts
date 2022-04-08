@@ -37,7 +37,11 @@ export default {
     },
 
     createFromYaml(yaml: Buffer) {
-        Context.ResourceHandler.adaptRoutersFromYaml(yaml);
+        Context.ResourceHandler.adaptFromYaml(yaml);
+    },
+
+    deleteAll() {
+        Context.ResourceHandler.deleteAllResource();
     },
 
 }

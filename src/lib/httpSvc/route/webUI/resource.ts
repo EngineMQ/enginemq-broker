@@ -12,4 +12,10 @@ export default (server: FastifyInstance) => {
                 resources: resourceGroups,
             });
         })
+
+        .post('/resources/delete/all', async (_request, reply) => {
+            resourceService.deleteAll();
+            return reply.send('OK');
+        })
+
 };

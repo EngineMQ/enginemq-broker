@@ -18,17 +18,11 @@ export const getV1Yaml = (resourceId: string, options: RouterOptions): string =>
 export const getLatestYaml = (resourceId: string, options: RouterOptions): string => {
     return getV1Yaml(resourceId, options);
 }
+
 type TryParseYamlResult = { resourceId: string, options: RouterOptions };
-export const tryParseYaml = (yamlData: Buffer): TryParseYamlResult[] => {
-    if (yamlData.length === 0)
-        throw new Error('Empty YAML data');
-
-    let objs: object[] = [];
-    try { objs = yaml.loadAll(yamlData.toString()) as object[]; }
-    catch { throw new Error('Invalid YAML format'); }
-
+export const tryParseYaml = (yamlObjects: object[]): TryParseYamlResult[] => {
     const result = [];
-    for (const object of objs) {
+    for (const object of yamlObjects) {
         const yamlV1 = validateObject<RouterYamlV1>(RouterYamlV1, object);
         if (yamlV1)
             result.push({ resourceId: yamlV1.meta.id, options: yamlV1.spec });
