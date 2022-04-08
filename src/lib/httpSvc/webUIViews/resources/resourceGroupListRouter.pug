@@ -31,7 +31,7 @@ h4
                     | 
                     | Create first router
     each router in resources.routers
-        .col-md-3
+        .col-md-4
             .card.card-primary
                 .card-header
                     h3.card-title
@@ -51,6 +51,11 @@ h4
                             button.btn.btn-warning.btn-xs(href='#' onclick='deleteRouter("' + router.resourceId + '", "' + router.description + '")' title='Delete')
                                 i.fa.fa-times.fa-fw
                 .card-body
+                    if (router.badges.length)
+                        .float-right
+                            each badge of router.badges
+                                span.badge.pull-right(class='badge-' + badge.style)
+                                    = badge.text
                     each detail of router.details
                         = detail
                         br

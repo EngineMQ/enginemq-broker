@@ -7,6 +7,7 @@ export type ResourceDisplay = {
     resourceId: string,
     description: string,
     details: string[],
+    badges?: { text: string, style: string }[],
 }
 const RouterDisplaySorter = (a: ResourceDisplay, b: ResourceDisplay) => a.description.localeCompare(b.description);
 
@@ -20,17 +21,13 @@ export default {
 
             const output = router.getOutputTopics();
             const details = output.topics.map((t) => `${router.topic} -> ${t}`);
-            details.sort();
-            if (output.holdOriginal)
-                details.unshift('hold');
-            else
-                details.unshift('move');
 
             routers.push({
                 resourceType: 'router',
                 resourceId,
                 description: router.description,
-                details,
+                details: details.sort(),
+                badges: output.holdOriginal ? [{ text: 'hold', style: 'success' }] : [{ text: 'move', style: 'warning' }],
             });
         }
         routers.sort(RouterDisplaySorter);

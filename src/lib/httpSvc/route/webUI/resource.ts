@@ -22,6 +22,13 @@ export default (server: FastifyInstance) => {
                 .send(yamlAdaptDateTimeHeader(yamlAll));
         })
 
+        .post('/resources/upload/yaml', async (request, reply) => {
+            const file = await request.file();
+            const buffer = await file.toBuffer();
+            resourceService.createFromYaml(buffer);
+            return reply.send('OK');
+        })
+
         .post('/resources/delete/all', async (_request, reply) => {
             resourceService.deleteAll();
             return reply.send('OK');

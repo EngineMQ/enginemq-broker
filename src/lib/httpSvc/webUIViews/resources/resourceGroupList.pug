@@ -28,7 +28,9 @@ block content
                         | 
                         | Delete all resources
 
-    include resourceGroupListRouter.pug
+    .row
+        .col-md-11.offset-md-1
+            include resourceGroupListRouter.pug
 
     script(type='text/javascript').
         function deleteAllResource()
@@ -53,7 +55,7 @@ block content
 
         $(function() {
             $.fileup({
-                url: '/resources/routers/upload/yaml',
+                url: '/resources/upload/yaml',
                 inputID: 'upload-yaml',
                 queueID: 'notused',
                 autostart: true,
