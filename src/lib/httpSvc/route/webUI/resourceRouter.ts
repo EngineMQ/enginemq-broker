@@ -1,5 +1,4 @@
 import { FastifyInstance } from 'fastify';
-import resourceService from '../../services/resourceService';
 import resourceServiceRouter from '../../services/resourceServiceRouter';
 import { reduceArrayIfOneItem, yamlAdaptDateTimeHeader } from '../../../utility';
 import { resourceIdRegExp } from '../../../ResourceHandler';
@@ -109,13 +108,6 @@ export default (server: FastifyInstance) => {
                 copyTo: reduceArrayIfOneItem(copyTo.split('\r\n').filter(Boolean)),
                 moveTo: reduceArrayIfOneItem(moveTo.split('\r\n').filter(Boolean)),
             });
-            return reply.send('OK');
-        })
-
-        .post('/resources/routers/upload/yaml', async (request, reply) => {
-            const file = await request.file();
-            const buffer = await file.toBuffer();
-            resourceService.createFromYaml(buffer);
             return reply.send('OK');
         })
 

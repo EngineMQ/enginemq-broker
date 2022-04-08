@@ -1,4 +1,6 @@
 import { ResourceType } from '../../ResourceHandler';
+import { yamlJoin } from '../../utility';
+import resourceServiceRouter from './resourceServiceRouter';
 
 export type ResourceDisplay = {
     resourceType: ResourceType,
@@ -34,6 +36,12 @@ export default {
         routers.sort(RouterDisplaySorter);
 
         return { routers };
+    },
+
+    getAllResourceYaml(): string {
+        const result: string[] = [];
+        result.push(resourceServiceRouter.getAllRoutersYaml());
+        return yamlJoin(result);
     },
 
     createFromYaml(yaml: Buffer) {

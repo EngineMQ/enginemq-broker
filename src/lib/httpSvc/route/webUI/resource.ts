@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { yamlAdaptDateTimeHeader } from '../../../utility';
 import resourceService from '../../services/resourceService';
 
 export default (server: FastifyInstance) => {
@@ -11,6 +12,14 @@ export default (server: FastifyInstance) => {
                 breadcrumb: [],
                 resources: resourceGroups,
             });
+        })
+
+        .get('/resources/yaml', async (_request, reply) => {
+            const yamlAll = resourceService.getAllResourceYaml();
+            return reply
+                .type('text/yaml')
+                .header('Content-Disposition', 'attachment; filename=resources.yaml')
+                .send(yamlAdaptDateTimeHeader(yamlAll));
         })
 
         .post('/resources/delete/all', async (_request, reply) => {
