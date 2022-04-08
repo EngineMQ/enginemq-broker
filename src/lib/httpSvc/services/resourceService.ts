@@ -1,6 +1,7 @@
 import { ResourceType } from '../../ResourceHandler';
 import { yamlJoin } from '../../utility';
 import resourceServiceRouter from './resourceServiceRouter';
+import resourceServiceValidator from './resourceServiceValidator';
 
 export type ResourceDisplay = {
     resourceType: ResourceType,
@@ -15,6 +16,7 @@ export default {
 
     getAllResourcesByGroup(): {
         routers: ResourceDisplay[],
+        validators: ResourceDisplay[],
     } {
         const routers: ResourceDisplay[] = [];
         for (const [resourceId, router] of Context.ResourceHandler.getRouters().entries()) {
@@ -32,12 +34,28 @@ export default {
         }
         routers.sort(RouterDisplaySorter);
 
-        return { routers };
+        const validators: ResourceDisplay[] = [];
+        for (const [resourceId, validator] of Context.ResourceHandler.getValidators().entries())
+            validators.push({
+                resourceType: 'validator',
+                resourceId,
+                description: validator.description,
+                details: validator.topics.sort(),
+            });
+        validators.sort(RouterDisplaySorter);
+
+        return {
+            routers,
+            validators,
+        };
     },
 
     getAllResourceYaml(): string {
         const result: string[] = [];
-        result.push(resourceServiceRouter.getAllRoutersYaml());
+        result.push(
+            resourceServiceRouter.getAllRoutersYaml(),
+            resourceServiceValidator.getAllValidatorsYaml(),
+        );
         return yamlJoin(result);
     },
 

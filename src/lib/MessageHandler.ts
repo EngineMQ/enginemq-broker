@@ -126,6 +126,8 @@ export class MessageHandler {
             if (item.options.expirationMs && item.options.expirationMs < 0)
                 throw new MessageError(`Invalid expirationMs value: ${item.options.expirationMs}`);
 
+            this.resourceHandler.checkValidation(item);
+
             const topicOfExistingItem = this.topicIndexerList.get(item.options.messageId);
             if (topicOfExistingItem)
                 this.topics.removeMessage(topicOfExistingItem, item.options.messageId);
@@ -141,6 +143,8 @@ export class MessageHandler {
                 addMessageFunction(item);
             else {
                 const routerResult = this.resourceHandler.runRouterChain(item);
+                for (const newTopic of routerResult)
+                    this.resourceHandler.checkValidation(item, newTopic);
 
                 if (routerResult.includes(item.topic))
                     addMessageFunction(item);

@@ -1,73 +1,69 @@
 hr
 
 h4
-    | Routers
+    | Validators
     | 
-    if (resources.routers.length)
-        a.btn.btn-default.btn-sm(href='/resources/routers/map')
-            i.fa.fa-map
-            | 
-            | Map
+    if (resources.validators.length)
         .float-right
             .btn-group(role='group')
-                a.btn.btn-default.btn-xs(href='/resources/routers/yaml')
+                a.btn.btn-default.btn-xs(href='/resources/validators/yaml')
                     i.fa.fa-download
                     | 
-                    | Export all routers to yaml
-                button.btn.btn-default.btn-xs(href='#' onclick='deleteAllRouter()')
+                    | Export all validators to yaml
+                button.btn.btn-default.btn-xs(href='#' onclick='deleteAllValidators()')
                     i.fa.fa-times
                     | 
-                    | Delete all routers
+                    | Delete all validators
 .row
-    if (!resources.routers.length)
+    if (!resources.validators.length)
         .col-md-12
             center
                 h4
-                    i.fa.fa-route
+                    i.fa.fa-check-double
                     | 
-                    | No router
-                a.btn.btn-info.btn-xs(href='/resources/routers/new')
-                    | Create first router
-    each router in resources.routers
+                    | No validator
+                a.btn.btn-info.btn-xs(href='/resources/validators/new')
+                    | Create first validator
+    each validator in resources.validators
         .col-md-4
             .card.card-primary
                 .card-header
                     h3.card-title
                         Primary
-                            a(href='/resources/router/' + router.resourceId)
-                                = router.description
+                            a(href='/resources/validator/' + validator.resourceId)
+                                = validator.description
                                 small.text-muted
                                     br
                                     | #
-                                    = router.resourceId
+                                    = validator.resourceId
                     .card-tools
                         .btn-group(role='group')
-                            a.btn.btn-secondary.btn-xs(href='/resources/routers/copy/' + router.resourceId title='Copy')
+                            a.btn.btn-secondary.btn-xs(href='/resources/validators/copy/' + validator.resourceId title='Copy')
                                 i.fa.fa-copy.fa-fw(title='Copy')
-                            a.btn.btn-secondary.btn-xs(href='/resources/router/' + router.resourceId + '/yaml' title='Export to yaml')
+                            a.btn.btn-secondary.btn-xs(href='/resources/validator/' + validator.resourceId + '/yaml' title='Export to yaml')
                                 i.fa.fa-download.fa-fw
-                            button.btn.btn-warning.btn-xs(href='#' onclick='deleteRouter("' + router.resourceId + '", "' + router.description + '")' title='Delete')
+                            button.btn.btn-warning.btn-xs(href='#' onclick='deleteValidator("' + validator.resourceId + '", "' + validator.description + '")' title='Delete')
                                 i.fa.fa-times.fa-fw
                 .card-body
-                    if (router.badges && router.badges.length)
+                    if (validator.badges && validator.badges.length)
                         .float-right
-                            each badge of router.badges
+                            each badge of validator.badges
                                 span.badge.pull-right(class='badge-' + badge.style)
                                     = badge.text
-                    each detail of router.details
+                    each detail of validator.details
                         = detail
                         br
 script(type='text/javascript').
-    function deleteRouter(resourceId, description)
+    function deleteValidator(resourceId, description)
     {
         Swal.fire({
-            title: 'Delete router',
-            text: `Do you want to delete '${description}' router?`,
+            title: 'Delete validator',
+            text: `Do you want to delete '${description}' validator?`,
             confirmButtonText: 'Delete',
             showCancelButton: true,
         }).then((result) => {
             if (result.isConfirmed) {
-                $.post("/resources/routers/delete", { resourceId })
+                $.post("/resources/validators/delete", { resourceId })
                 .done(function() {
                     window.location.reload();
                 })
@@ -78,16 +74,16 @@ script(type='text/javascript').
         })
     }
 
-    function deleteAllRouter()
+    function deleteAllValidators()
     {
         Swal.fire({
-            title: 'Delete all routers',
-            text: `Do you want to delete all routers?`,
+            title: 'Delete all validators',
+            text: `Do you want to delete all validators?`,
             confirmButtonText: 'Delete all',
             showCancelButton: true,
         }).then((result) => {
             if (result.isConfirmed) {
-                $.post("/resources/routers/delete/all")
+                $.post("/resources/validators/delete/all")
                 .done(function() {
                     window.location.reload();
                 })

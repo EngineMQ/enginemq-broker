@@ -22,6 +22,8 @@ export class Router implements IResource {
         return this.options;
     }
 
+    public static checkOptions(options: RouterOptions): void { validateOptions(options); }
+
     public setOptions(options: RouterOptions): RouterOptions {
         validateOptions(options);
 

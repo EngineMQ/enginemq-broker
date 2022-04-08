@@ -6,6 +6,7 @@ import topic from './topic';
 import log from './log';
 import resource from './resource';
 import resourceRouter from './resourceRouter';
+import resourceValidator from './resourceValidator';
 
 export default (server: FastifyInstance) => {
     main(server);
@@ -14,4 +15,5 @@ export default (server: FastifyInstance) => {
     log(server);
     resource(server);
     resourceRouter(server);
+    resourceValidator(server);
 }

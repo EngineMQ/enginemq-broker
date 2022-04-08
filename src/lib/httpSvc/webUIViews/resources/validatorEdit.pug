@@ -1,0 +1,53 @@
+extends ../_base
+block content
+    form#validator
+        input(type='hidden' name='resourceId' value=resourceId)
+        .row
+            .col-md-6 
+                .form-group
+                    label(for='description') Validator description
+                    input.form-control#description(type='text' name='description' value=validator.description placeholder='Description of validator')
+                .form-group
+                    label Topics
+                    textarea.form-control(rows='5' name='topics' placeholder='Topics you are validating')
+                        if (validator.topics)
+                            if (Array.isArray(validator.topics))
+                                each topic of validator.topics
+                                    = topic
+                                    = newline
+                            else
+                                = validator.topics
+            .col-md-6 
+                .form-group
+                    label Validation schema
+                    code
+                        textarea.form-control(rows='15' name='schema' placeholder='One or more topics to listen')
+                            = validator.schema
+
+        .row
+            .col-md-12
+                a.btn.btn-success(href='#' onclick='updateValidator()')
+                    | Save
+                if (resourceId)
+                    .float-right.small
+                        | Resource ID: 
+                        | #
+                        = resourceId
+
+    script(type='text/javascript').
+        $(function() {
+            setTimeout(() => { $('#description').focus() }, 100);
+        });
+
+        function updateValidator()
+        {
+            const formData = $('#validator').serialize();
+            $.post("/resources/validators/update", formData)
+            .done(function() {
+                window.location.href = '/resources';
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                const error = JSON.parse(jqXHR.responseText);
+                toastr.error(error.message, errorThrown);
+            });        
+        }

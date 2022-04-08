@@ -2,10 +2,9 @@ import { FastifyInstance } from 'fastify';
 import resourceServiceRouter from '../../services/resourceServiceRouter';
 import { reduceArrayIfOneItem, yamlAdaptDateTimeHeader } from '../../../utility';
 import { resourceIdRegExp } from '../../../ResourceHandler';
+import { BREADCRUMB_TO_LIST } from './resource';
 
 const HTTP_NOT_FOUND = 404;
-
-const BREADCRUMB_TO_LIST = [{ url: '/resources', title: 'Resources' }];
 
 export default (server: FastifyInstance) => {
     server

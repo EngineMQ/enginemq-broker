@@ -2,6 +2,8 @@ import { FastifyInstance } from 'fastify';
 import { yamlAdaptDateTimeHeader } from '../../../utility';
 import resourceService from '../../services/resourceService';
 
+export const BREADCRUMB_TO_LIST = [{ url: '/resources', title: 'Resources' }];
+
 export default (server: FastifyInstance) => {
     server
 

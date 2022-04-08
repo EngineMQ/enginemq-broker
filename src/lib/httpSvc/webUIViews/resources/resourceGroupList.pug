@@ -10,7 +10,14 @@ block content
                         | New
                         | 
                     .dropdown-menu(aria-labelledby='dropdownMenuNew')
-                        a.dropdown-item(href='/resources/routers/new') Router
+                        a.dropdown-item(href='/resources/routers/new')
+                            i.fa.fa-route
+                            | 
+                            | Router
+                        a.dropdown-item(href='/resources/validators/new')
+                            i.fa.fa-check-double
+                            | 
+                            | Validator
                 a.btn.btn-default.fileup-btn(href='#')
                     i.fa.fa-upload
                     | 
@@ -31,6 +38,7 @@ block content
     .row
         .col-md-11.offset-md-1
             include resourceGroupListRouter.pug
+            include resourceGroupListValidator.pug
 
     script(type='text/javascript').
         function deleteAllResource()
