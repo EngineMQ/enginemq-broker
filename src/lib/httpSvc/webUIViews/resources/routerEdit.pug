@@ -1,4 +1,4 @@
-extends _base
+extends ../_base
 block content
     form#router
         input(type='hidden' name='resourceId' value=resourceId)
@@ -54,7 +54,7 @@ block content
             const formData = $('#router').serialize();
             $.post("/resources/routers/update", formData)
             .done(function() {
-                window.location.href = '/resources/routers';
+                window.location.href = '/resources';
             })
             .fail(function(jqXHR, textStatus, errorThrown) {
                 const error = JSON.parse(jqXHR.responseText);

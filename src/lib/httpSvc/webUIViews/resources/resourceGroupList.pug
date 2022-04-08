@@ -1,0 +1,71 @@
+extends ../_base
+block content
+    .row
+        .col-md-6
+            .btn-group(role='group')
+                .dropdown
+                    a.btn.btn-info.dropdown-toggle#dropdownMenuNew(href='#' role='button' data-toggle='dropdown')
+                        i.fa.fa-plus
+                        | 
+                        | New
+                        | 
+                    .dropdown-menu(aria-labelledby='dropdownMenuNew')
+                        a.dropdown-item(href='/resources/routers/new') Router
+                a.btn.btn-default.fileup-btn(href='#')
+                    i.fa.fa-upload
+                    | 
+                    | Import from yaml
+                    input#upload-yaml(type='file')
+        .col-md-6
+            .float-right
+                .btn-group(role='group')
+                    a.btn.btn-default(href='/resources/yaml')
+                        i.fa.fa-download
+                        | 
+                        | Export all resource to yaml
+                    button.btn.btn-danger(href='#' onclick='deleteAllResource()')
+                        i.fa.fa-times
+                        | 
+                        | Delete all resource
+
+    include resourceGroupListRouter.pug
+
+    script(type='text/javascript').
+        function deleteAllResource()
+        {
+            Swal.fire({
+                title: 'Delete all resources',
+                text: `Do you want to delete all resources?`,
+                confirmButtonText: 'Delete all',
+                showCancelButton: true,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post("/resources/delete/all")
+                    .done(function() {
+                        window.location.reload();
+                    })
+                    .fail(function(jqXHR, textStatus, errorThrown) {
+                        toastr.error(errorThrown, 'Error');
+                    });        
+                }
+            })
+        }
+
+        $(function() {
+            $.fileup({
+                url: '/resources/routers/upload/yaml',
+                inputID: 'upload-yaml',
+                queueID: 'notused',
+                autostart: true,
+                fieldName: 'resourceYaml',
+                sizeLimit: 1 * 1000 * 1000,
+                filesLimit: 1,
+                onSuccess: function(response, file_number, file) {
+                    window.location.reload();
+                },
+                onError: function(event, file, file_number, responseText) {
+                    const response = JSON.parse(responseText);
+                    toastr.error(response.message, 'Error');
+                },
+            });
+        });        

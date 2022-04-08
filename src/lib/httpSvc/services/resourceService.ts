@@ -1,62 +1,39 @@
-import { RouterOptions } from '../../resources/router/types';
-import { yamlJoin } from '../../utility';
+import { ResourceType } from '../../ResourceHandler';
 
-export type RouterDisplay = {
+export type ResourceDisplay = {
+    resourceType: ResourceType,
     resourceId: string,
     description: string,
-    routes: { from: string, to: string }[],
-    hold: boolean,
+    details: string[],
 }
-const RouterDisplaySorter = (a: RouterDisplay, b: RouterDisplay) => a.description.localeCompare(b.description);
+const RouterDisplaySorter = (a: ResourceDisplay, b: ResourceDisplay) => a.description.localeCompare(b.description);
 
 export default {
 
-    getAllRouters(): RouterDisplay[] {
-        const result = [];
+    getAllResourcesByGroup(): {
+        routers: ResourceDisplay[],
+    } {
+        const routers: ResourceDisplay[] = [];
         for (const [resourceId, router] of Context.ResourceHandler.getRouters().entries()) {
 
-            const routes = [];
             const output = router.getOutputTopics();
-            for (const outputTopic of output.topics)
-                routes.push({ from: router.topic, to: outputTopic });
+            const details = output.topics.map((t) => `${router.topic} -> ${t}`);
+            details.sort();
+            if (output.holdOriginal)
+                details.unshift('hold');
+            else
+                details.unshift('move');
 
-            result.push({
+            routers.push({
+                resourceType: 'router',
                 resourceId,
                 description: router.description,
-                routes: routes,
-                hold: output.holdOriginal,
+                details,
             });
         }
-        result.sort(RouterDisplaySorter);
-        return result;
-    },
+        routers.sort(RouterDisplaySorter);
 
-    getAllRoutersYaml(): string {
-        const result: string[] = [];
-        for (const [resourceId, router] of Context.ResourceHandler.getRouters().entries())
-            result.push(router.getYaml(resourceId));
-        return yamlJoin(result);
-    },
-
-    getRouter(resourceId: string) {
-        return Context.ResourceHandler
-            .getRouters()
-            .get(resourceId);
-    },
-
-    insertOrUpdateRouter(resourceId: string, options: RouterOptions) {
-        if (resourceId)
-            Context.ResourceHandler.updateRouter(resourceId, options);
-        else
-            Context.ResourceHandler.addRouter(options);
-    },
-
-    deleteRouter(resourceId: string) {
-        Context.ResourceHandler.deleteRouter(resourceId);
-    },
-
-    deleteAllRouter() {
-        Context.ResourceHandler.deleteAllRouter();
+        return { routers };
     },
 
     createFromYaml(yaml: Buffer) {
