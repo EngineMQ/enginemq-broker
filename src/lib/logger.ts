@@ -155,6 +155,11 @@ export default pino({
                 payload: reply.payload,
             };
         },
+        err(error: Error) {
+            if (config.isProduction)
+                delete error.stack;
+            return pino.stdSerializers.err(error);
+        }
     },
 }, pino.multistream([
     { stream: new MemoryLogStream(memoryLogStore) },

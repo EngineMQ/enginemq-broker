@@ -34,3 +34,6 @@ export const uiPort = get('HTTP_PORT').default(DEFAULT_HTTP_PORT).asPortNumber()
 export const uiHost = get('HTTP_HOST').default(DEFAULT_HOST).asString();
 export const apiEnabled = get('API_ENABLED').default('true').asBool();
 export const webUIEnabled = get('WEBUI_ENABLED').default('true').asBool();
+
+if (isProduction)
+    Error.stackTraceLimit = 0;
