@@ -20,7 +20,7 @@
         "test": "jest",
         "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
         "clean": "tsc --build --clean && rimraf ./build",
-        "copystatic": "copyfiles src/**/*.pug src/public/**/*.* src/assets/**/*.* build/",
+        "copystatic": "copyfiles -E src/**/*.pug src/public/*.* src/public/**/*.* src/assets/**/*.* build/",
         "build": "npm run clean && tsc --build --force && npm run copystatic",
         "docker-build": "docker build . -t enginemq/enginemq-broker:$npm_package_version",
         "docker-push": "docker push enginemq/enginemq-broker:$npm_package_version"

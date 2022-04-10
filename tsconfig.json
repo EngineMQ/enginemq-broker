@@ -12,7 +12,7 @@
     "outDir": "./build",
     "removeComments": true,
     "importHelpers": false,
-    "declaration": true,
+    "declaration": false,
     "declarationMap": false,
     "strict": true,
     "allowUnreachableCode": false,
