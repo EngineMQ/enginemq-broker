@@ -1,8 +1,8 @@
 export interface IResource {
     get description(): string;
 
-    //     getOptions(): object;
+    getOptions(): object;
+    setOptions(options: object): object;
 
-    //     saveToYaml(): string;
-    //     loadFromYaml(): string;
+    getYaml(resourceId: string): string;
 }

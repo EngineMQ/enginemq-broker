@@ -40,10 +40,6 @@ export class Router implements IResource {
         return getLatestYaml(resourceId, this.options);
     }
 
-    public setupFromYaml() {
-
-    }
-
     public matchTopic(topic: string): boolean {
         // if (typeof this.inputTopicExpr === 'string') {
         //     if (this.inputTopicExpr.toLowerCase() === topic.toLowerCase())
