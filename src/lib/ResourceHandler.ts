@@ -20,7 +20,7 @@ const genResourceId = () => customAlphabet('0123456789abcdef', RESOURCE_ID_LENGT
 
 export const resourceIdRegExp = `^[0-9a-f]{${RESOURCE_ID_LENGTH}}$`;
 
-export type ResourceType = 'router' | 'validator';
+export type ResourceType = 'router' | 'validator' | 'auth';
 
 export class ResourceHandler {
     private routers = new Map<string, Router>();
@@ -47,11 +47,11 @@ export class ResourceHandler {
 
         for (const routerData of tryParseRouterYaml(objs))
             try { Router.checkOptions(routerData.options); }
-            catch (error) { throw new Error(`Yaml error in ${routerData.resourceId} ${error instanceof Error ? error.message : ''}`); }
+            catch (error) { throw new Error(`Yaml error in router ${routerData.resourceId} ${error instanceof Error ? error.message : ''}`); }
 
-        for (const routerData of tryParseValidatorYaml(objs))
-            try { Validator.checkOptions(routerData.options); }
-            catch (error) { throw new Error(`Yaml error in ${routerData.resourceId} ${error instanceof Error ? error.message : ''}`); }
+        for (const validatorData of tryParseValidatorYaml(objs))
+            try { Validator.checkOptions(validatorData.options); }
+            catch (error) { throw new Error(`Yaml error in validator ${validatorData.resourceId} ${error instanceof Error ? error.message : ''}`); }
 
         let resourceCount = 0;
 

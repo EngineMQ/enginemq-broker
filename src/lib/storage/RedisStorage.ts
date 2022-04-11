@@ -85,9 +85,17 @@ export class RedisStorage implements IStorage {
         } catch (error) { throw new RedisStorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    getResources(type: ResourceType): { resourceId: string, optionjson: string }[] { type; return [] }
-    addOrUpdateResource(type: ResourceType, resourceId: string, optionjson: string): void { type; resourceId; optionjson; }
-    deleteResource(type: ResourceType, resourceId: string): void { type; resourceId; }
+    getResources(type: ResourceType): { resourceId: string, optionjson: string }[] {
+        type; return []
+    }
+
+    addOrUpdateResource(type: ResourceType, resourceId: string, optionjson: string): void {
+        type; resourceId; optionjson;
+    }
+
+    deleteResource(type: ResourceType, resourceId: string): void {
+        type; resourceId;
+    }
 
     public close(): void {
         awaitSync(this.redis.quit());
