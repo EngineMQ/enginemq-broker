@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { Packr } from 'msgpackr';
 import * as Sqlite3 from 'better-sqlite3';
 
-import { IStorage, MessageStorageItem, ResourceList, ResourceType } from './IStorage';
+import { IStorage, MessageStorageItem, ResourceStorageItem, ResourceType } from './IStorage';
 import logger from '../logger';
 
 class Sqlite3StorageError extends Error { }
@@ -48,19 +48,18 @@ export class Sqlite3Storage implements IStorage {
     // Public
 
     public getAllMessages(
-        target: MessageStorageItem[],
         callbackProgress: {
             total: (count: number) => void
             percent: (count: number, percent: number, size: number) => void
         },
-        callbackReady: () => void,
-    ) {
+    ): MessageStorageItem[] {
         const REPORT_ITEMS = 10_000;
         try {
             const allMessageCount = this.db.prepare('SELECT COUNT(*) FROM message').pluck().get() as number;
             log.debug({ count: allMessageCount }, 'Find messages');
             callbackProgress.total(allMessageCount);
 
+            const result = [];
             if (allMessageCount) {
                 let index = 0;
                 let size = 0;
@@ -73,7 +72,7 @@ export class Sqlite3Storage implements IStorage {
                         try {
                             fileObject = this.packr.unpack(row.Data) as MessageStorageItem;
                         } catch (error) { throw new Error(`Cannot decode file (maybe damaged) ${row.MessageId}: ` + (error instanceof Error ? error.message : '')) }
-                        target.push(fileObject);
+                        result.push(fileObject);
 
                         if (++index % REPORT_ITEMS == 0)
                             callbackProgress.percent(index, Math.round(100 * index / allMessageCount), size);
@@ -81,7 +80,7 @@ export class Sqlite3Storage implements IStorage {
                 }
                 callbackProgress.percent(allMessageCount, 100, size);
             }
-            callbackReady();
+            return result;
         } catch (error) { throw new Sqlite3StorageError(`Cannot load messages: ${error instanceof Error ? error.message : ''}`); }
     }
 
@@ -100,8 +99,7 @@ export class Sqlite3Storage implements IStorage {
         } catch (error) { throw new Sqlite3StorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    // eslint-disable-next-line @typescript-eslint/require-await
-    public async getResources(type: ResourceType): Promise<ResourceList> {
+    public getResources(type: ResourceType): ResourceStorageItem[] {
         try {
             const resources = [];
             for (const _row of this.db.prepare('SELECT ResourceType, ResourceId, Option FROM resource').iterate()) {

@@ -8,23 +8,19 @@ type MessageInfo = {
 export { ResourceType } from '../ResourceHandler';
 
 export type MessageStorageItem = messages.ClientMessagePublish & MessageInfo;
-
-export type ResourceListItem = { resourceId: string, optionjson: string };
-export type ResourceList = ResourceListItem[];
+export type ResourceStorageItem = { resourceId: string, optionjson: string };
 
 export interface IStorage {
     getAllMessages(
-        target: MessageStorageItem[],
         callbackProgress: {
             total: (count: number) => void
             percent: (count: number, percent: number, size: number) => void
         },
-        callbackReady: () => void,
-    ): void;
+    ): MessageStorageItem[];
     addOrUpdateMessage(messageId: string, message: MessageStorageItem): void;
     deleteMessage(messageId: string): void;
 
-    getResources(type: ResourceType): Promise<ResourceList>;
+    getResources(type: ResourceType): ResourceStorageItem[];
     addOrUpdateResource(type: ResourceType, resourceId: string, optionjson: string): void;
     deleteResource(type: ResourceType, resourceId: string): void;
 

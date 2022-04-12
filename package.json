@@ -31,7 +31,6 @@
         }
     },
     "dependencies": {
-        "@kaciras/deasync": "^1.0.2",
         "@mgcrea/fastify-session": "^0.15.2",
         "@sinclair/typebox": "^0.23.4",
         "ajv": "^8.11.0",
@@ -55,7 +54,6 @@
         "point-of-view": "^5.2.0",
         "pretty-ms": "^7.0.1",
         "pug": "^3.0.2",
-        "redis": "^4.0.6",
         "timsort": "^0.3.0"
     },
     "devDependencies": {
@@ -65,8 +63,8 @@
         "@types/node": "17.0.23",
         "@types/pug": "^2.0.6",
         "@types/timsort": "^0.3.0",
-        "@typescript-eslint/eslint-plugin": "^5.18.0",
-        "@typescript-eslint/parser": "^5.18.0",
+        "@typescript-eslint/eslint-plugin": "^5.19.0",
+        "@typescript-eslint/parser": "^5.19.0",
         "copyfiles": "^2.4.1",
         "enginemq-client": "^1.0.3",
         "eslint": "^8.13.0",
