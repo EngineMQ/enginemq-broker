@@ -13,7 +13,6 @@ describe('client-server connection', () => {
         'null()',
         'fs(folder=../storage)',
         'sqlite3(file=../sqlite3/enginemq-broker.sqlite3)',
-        //'redis(url=redis://localhost:6379/0)',
     ])('engine: %s', (storageEngine: string) => {
 
         beforeAll(async () => {

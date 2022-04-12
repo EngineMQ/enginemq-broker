@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Packr } from 'msgpackr';
 
-import { IStorage, MessageStorageItem, ResourceType } from './IStorage';
+import { IStorage, MessageStorageItem, ResourceStorageItem, ResourceType } from './IStorage';
 import logger from '../logger';
 
 class FileStorageError extends Error { }
@@ -35,19 +35,18 @@ export class FileStorage implements IStorage {
     // Public
 
     public getAllMessages(
-        target: MessageStorageItem[],
         callbackProgress: {
             total: (count: number) => void
             percent: (count: number, percent: number, size: number) => void
         },
-        callbackReady: () => void,
-    ) {
+    ): MessageStorageItem[] {
         const REPORT_ITEMS = 10_000;
         try {
             const allFiles = this.getAllFilesRecursively(this.folderMessage);
             log.debug({ count: allFiles.length }, 'Find messages');
             callbackProgress.total(allFiles.length);
 
+            const result = [];
             if (allFiles.length > 0) {
                 let index = 0;
                 let size = 0;
@@ -62,14 +61,14 @@ export class FileStorage implements IStorage {
                     try {
                         fileObject = this.packr.unpack(fileData) as MessageStorageItem;
                     } catch (error) { throw new Error(`Cannot decode file (maybe damaged) ${file}: ` + (error instanceof Error ? error.message : '')) }
-                    target.push(fileObject);
+                    result.push(fileObject);
 
                     if (++index % REPORT_ITEMS == 0)
                         callbackProgress.percent(index, Math.round(100 * index / allFiles.length), size);
                 }
                 callbackProgress.percent(allFiles.length, 100, size);
             }
-            callbackReady();
+            return result;
         } catch (error) { throw new FileStorageError(`Cannot read messages: ${error instanceof Error ? error.message : ''}`); }
     }
 
@@ -93,7 +92,7 @@ export class FileStorage implements IStorage {
         } catch (error) { throw new FileStorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    public getResources(type: ResourceType): { resourceId: string, optionjson: string }[] {
+    public getResources(type: ResourceType): ResourceStorageItem[] {
         const result = [];
 
         const allFiles = this.getAllFilesRecursively(this.folderResource(type));
@@ -117,7 +116,7 @@ export class FileStorage implements IStorage {
             fs.writeFileSync(
                 this.getFileNameForResource(type, resourceId, true),
                 fileData);
-            log.debug({ name: resourceId, size: fileData.length }, 'Store resource');
+            log.debug({ type, name: resourceId, size: fileData.length }, 'Store resource');
 
         } catch (error) { throw new FileStorageError(`Cannot store ${type} resource '${resourceId}': ${error instanceof Error ? error.message : ''}`); }
     }
@@ -127,7 +126,7 @@ export class FileStorage implements IStorage {
             const filename = this.getFileNameForResource(type, resourceId, false);
             if (fs.existsSync(filename))
                 fs.unlinkSync(filename);
-            log.debug({ name: resourceId }, `Delete ${type} resource`);
+            log.debug({ type, name: resourceId }, `Delete ${type} resource`);
         } catch (error) { throw new FileStorageError(`Cannot delete ${type} resource '${resourceId}': ${error instanceof Error ? error.message : ''}`); }
     }
 

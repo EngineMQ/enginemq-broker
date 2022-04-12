@@ -52,59 +52,56 @@ export class MessageHandler {
 
     public async loadMessages(): Promise<void> {
         return new Promise((resolve, reject) => {
-            const loadList: MessageStorageItem[] = [];
             log.info('Init messages');
             try {
-                this.storage.getAllMessages(
-                    loadList,
+                const loadList: MessageStorageItem[] = this.storage.getAllMessages(
                     {
                         total: (count: number) => log.info(`${count ? count : 'No'} messages found`),
                         percent: (_count: number, percent: number, size: number) => log.info(`${percent}% loaded (${size > 1024 * 1024 ? `${Math.round(size / 1024 / 1024)} Mb` : `${Math.round(size / 1024)} kB`})`),
-                    },
-                    () => {
-                        if (loadList.length > 0) {
-                            const now = Date.now();
-
-                            let countExpired = 0;
-                            let countLoaded = 0;
-                            log.info('Indexing messages');
-                            for (const item of loadList) {
-
-                                const topic = item.topic;
-                                const messageId = item.options.messageId;
-
-                                if (item.options.expirationMs && now > item.publishTime + item.options.expirationMs) {
-                                    this.storage.deleteMessage(messageId);
-                                    countExpired++
-                                    continue;
-                                }
-                                this.topics.addMessage(topic, item, true)
-
-                                this.topicIndexerList.set(messageId, topic);
-                                this.messageIndexerList.set(messageId, item);
-                                countLoaded++;
-                            }
-                            if (countExpired > 0)
-                                log.info({ expired: countExpired, loaded: countLoaded }, 'Delete expired messages');
-
-                            this.topics.reSortAllTopics();
-                            for (const topicInfo of this.topics
-                                .getTopicsInfo()
-                                .filter((topic) => topic.count))
-                                log.info({
-                                    topic: topicInfo.topicName,
-                                    count: topicInfo.count,
-                                    age:
-                                    {
-                                        min: topicInfo.ageHuman.min,
-                                        max: topicInfo.ageHuman.max,
-                                        avg: topicInfo.ageHuman.avg,
-                                    }
-                                }, 'Topic message stat');
-                        }
-                        utility.gc();
-                        resolve();
                     });
+
+                if (loadList.length > 0) {
+                    const now = Date.now();
+
+                    let countExpired = 0;
+                    let countLoaded = 0;
+                    log.info('Indexing messages');
+                    for (const item of loadList) {
+
+                        const topic = item.topic;
+                        const messageId = item.options.messageId;
+
+                        if (item.options.expirationMs && now > item.publishTime + item.options.expirationMs) {
+                            this.storage.deleteMessage(messageId);
+                            countExpired++
+                            continue;
+                        }
+                        this.topics.addMessage(topic, item, true)
+
+                        this.topicIndexerList.set(messageId, topic);
+                        this.messageIndexerList.set(messageId, item);
+                        countLoaded++;
+                    }
+                    if (countExpired > 0)
+                        log.info({ expired: countExpired, loaded: countLoaded }, 'Delete expired messages');
+
+                    this.topics.reSortAllTopics();
+                    for (const topicInfo of this.topics
+                        .getTopicsInfo()
+                        .filter((topic) => topic.count))
+                        log.info({
+                            topic: topicInfo.topicName,
+                            count: topicInfo.count,
+                            age:
+                            {
+                                min: topicInfo.ageHuman.min,
+                                max: topicInfo.ageHuman.max,
+                                avg: topicInfo.ageHuman.avg,
+                            }
+                        }, 'Topic message stat');
+                }
+                utility.gc();
+                resolve();
             }
             catch (error) { reject(error); }
         });

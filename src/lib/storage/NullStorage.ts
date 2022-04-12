@@ -1,21 +1,18 @@
-import { IStorage, MessageStorageItem, ResourceType } from './IStorage';
+import { IStorage, MessageStorageItem, ResourceStorageItem, ResourceType } from './IStorage';
 import logger from '../logger';
 
 const log = logger.child({ module: 'NullStorage' });
 
 export class NullStorage implements IStorage {
     public getAllMessages(
-        target: MessageStorageItem[],
         callbackProgress: {
             total: (count: number) => void
             percent: (count: number, percent: number, size: number) => void
         },
-        callbackReady: () => void,
-    ) {
+    ): MessageStorageItem[] {
         log.warn('NullStorage in use, not data will be saved');
-        target;
         callbackProgress.total(0);
-        callbackReady();
+        return [];
     }
 
     public addOrUpdateMessage(messageId: string): void {
@@ -26,16 +23,16 @@ export class NullStorage implements IStorage {
         log.debug({ messageId }, 'Delete message (no)');
     }
 
-    getResources(type: ResourceType): { resourceId: string, optionjson: string }[] {
+    public getResources(type: ResourceType): ResourceStorageItem[] {
         type;
         return [];
     }
 
-    addOrUpdateResource(type: ResourceType, resourceId: string, optionjson: string): void {
+    public addOrUpdateResource(type: ResourceType, resourceId: string, optionjson: string): void {
         log.debug({ type, resourceId, size: optionjson.length }, 'Store resource (no)');
     }
 
-    deleteResource(type: ResourceType, resourceId: string): void {
+    public deleteResource(type: ResourceType, resourceId: string): void {
         log.debug({ type, resourceId }, 'Delete resource (no)');
     }
 

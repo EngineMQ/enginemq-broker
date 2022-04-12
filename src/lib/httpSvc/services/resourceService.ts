@@ -1,5 +1,6 @@
 import { ResourceType } from '../../ResourceHandler';
 import { yamlJoin } from '../../utility';
+import resourceServiceAuth from './resourceServiceAuth';
 import resourceServiceRouter from './resourceServiceRouter';
 import resourceServiceValidator from './resourceServiceValidator';
 
@@ -7,16 +8,17 @@ export type ResourceDisplay = {
     resourceType: ResourceType,
     resourceId: string,
     description: string,
-    details: string[],
+    details?: string[],
     badges?: { text: string, style: string }[],
 }
-const RouterDisplaySorter = (a: ResourceDisplay, b: ResourceDisplay) => a.description.localeCompare(b.description);
+const ResourceDisplaySorter = (a: ResourceDisplay, b: ResourceDisplay) => a.description.localeCompare(b.description);
 
 export default {
 
     getAllResourcesByGroup(): {
         routers: ResourceDisplay[],
         validators: ResourceDisplay[],
+        auths: ResourceDisplay[],
     } {
         const routers: ResourceDisplay[] = [];
         for (const [resourceId, router] of Context.ResourceHandler.getRouters().entries()) {
@@ -32,7 +34,7 @@ export default {
                 badges: output.holdOriginal ? [{ text: 'hold', style: 'success' }] : [{ text: 'move', style: 'warning' }],
             });
         }
-        routers.sort(RouterDisplaySorter);
+        routers.sort(ResourceDisplaySorter);
 
         const validators: ResourceDisplay[] = [];
         for (const [resourceId, validator] of Context.ResourceHandler.getValidators().entries())
@@ -42,11 +44,32 @@ export default {
                 description: validator.description,
                 details: validator.topics.sort(),
             });
-        validators.sort(RouterDisplaySorter);
+        validators.sort(ResourceDisplaySorter);
+
+        const auths: ResourceDisplay[] = [];
+        for (const [resourceId, auth] of Context.ResourceHandler.getAuths().entries()) {
+
+            const topicsCount = auth.getTopicsCount();
+
+            auths.push({
+                resourceType: 'auth',
+                resourceId,
+                description: auth.description,
+                details: [
+                    `${topicsCount.subscribeTo || 'No'} subscribes`,
+                    `${topicsCount.publishTo || 'No'} publishes`,
+                    '',
+                    auth.maskedToken,
+                ],
+                badges: auth.webAccess ? [{ text: 'Web access', style: 'primary' }] : [],
+            });
+        }
+        auths.sort(ResourceDisplaySorter);
 
         return {
             routers,
             validators,
+            auths,
         };
     },
 
@@ -55,6 +78,7 @@ export default {
         result.push(
             resourceServiceRouter.getAllRoutersYaml(),
             resourceServiceValidator.getAllValidatorsYaml(),
+            resourceServiceAuth.getAllAuthYaml(),
         );
         return yamlJoin(result);
     },

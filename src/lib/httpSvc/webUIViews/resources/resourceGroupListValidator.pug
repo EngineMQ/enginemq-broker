@@ -50,9 +50,10 @@ h4
                             each badge of validator.badges
                                 span.badge.pull-right(class='badge-' + badge.style)
                                     = badge.text
-                    each detail of validator.details
-                        = detail
-                        br
+                    if (validator.details && validator.details.length)
+                        each detail of validator.details
+                            = detail
+                            br
 script(type='text/javascript').
     function deleteValidator(resourceId, description)
     {

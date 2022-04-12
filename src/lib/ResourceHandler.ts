@@ -13,6 +13,10 @@ import { Validator } from './resources/validator/Validator';
 import { ValidatorOptions } from './resources/validator/types';
 import { tryParseYaml as tryParseValidatorYaml } from './resources/validator/yaml';
 
+import { Auth } from './resources/auth/Auth';
+import { AuthOptions } from './resources/auth/types';
+import { tryParseYaml as tryParseAuthYaml } from './resources/auth/yaml';
+
 const log = logger.child({ module: 'Resources' });
 
 const RESOURCE_ID_LENGTH = 20;
@@ -20,11 +24,17 @@ const genResourceId = () => customAlphabet('0123456789abcdef', RESOURCE_ID_LENGT
 
 export const resourceIdRegExp = `^[0-9a-f]{${RESOURCE_ID_LENGTH}}$`;
 
-export type ResourceType = 'router' | 'validator';
+export type ResourceType = 'router' | 'validator' | 'auth';
 
-export class ResourceHandler {
+export interface ILoginHandler {
+    isAnonymousMode(): boolean;
+    getAuthByToken(token: string): Auth | undefined;
+}
+
+export class ResourceHandler implements ILoginHandler {
     private routers = new Map<string, Router>();
     private validators = new Map<string, Validator>();
+    private auths = new Map<string, Auth>();
     private storage: IStorage;
 
     constructor(storage: IStorage) {
@@ -47,11 +57,15 @@ export class ResourceHandler {
 
         for (const routerData of tryParseRouterYaml(objs))
             try { Router.checkOptions(routerData.options); }
-            catch (error) { throw new Error(`Yaml error in ${routerData.resourceId} ${error instanceof Error ? error.message : ''}`); }
+            catch (error) { throw new Error(`Yaml error in router ${routerData.resourceId} ${error instanceof Error ? error.message : ''}`); }
 
-        for (const routerData of tryParseValidatorYaml(objs))
-            try { Validator.checkOptions(routerData.options); }
-            catch (error) { throw new Error(`Yaml error in ${routerData.resourceId} ${error instanceof Error ? error.message : ''}`); }
+        for (const validatorData of tryParseValidatorYaml(objs))
+            try { Validator.checkOptions(validatorData.options); }
+            catch (error) { throw new Error(`Yaml error in validator ${validatorData.resourceId} ${error instanceof Error ? error.message : ''}`); }
+
+        for (const authData of tryParseAuthYaml(objs))
+            try { Auth.checkOptions(authData.options); }
+            catch (error) { throw new Error(`Yaml error in auth ${authData.resourceId} ${error instanceof Error ? error.message : ''}`); }
 
         let resourceCount = 0;
 
@@ -73,12 +87,22 @@ export class ResourceHandler {
                     this.addValidator(validatorData.options, validatorData.resourceId);
         }
 
+        for (const authData of tryParseAuthYaml(objs)) {
+            resourceCount++;
+            if (new RegExp(resourceIdRegExp).test(authData.resourceId))
+                if (this.routers.get(authData.resourceId))
+                    this.updateAuth(authData.resourceId, authData.options);
+                else
+                    this.addAuth(authData.options, authData.resourceId);
+        }
+
         log.info({ count: resourceCount }, 'Resources adopted from yaml');
     }
 
     public deleteAllResource() {
         this.deleteAllRouter();
         this.deleteAllValidator();
+        this.deleteAllAuth();
         log.info('All resources deleted');
     }
 
@@ -215,33 +239,121 @@ export class ResourceHandler {
 
 
 
+    // Auths
+
+    public generateNewUniqueToken(): string {
+        let result;
+        while (!result || this.getAuthByToken(result))
+            result = Auth.generateNewToken();
+        return result;
+    }
+
+    public isAnonymousMode(): boolean { return this.auths.size === 0; }
+
+    public getAuthByToken(token: string): Auth | undefined {
+        for (const auth of this.auths.values())
+            if (auth.token === token)
+                return auth;
+        return;
+    }
+
+    public checkTokenAlreadyUsed(token: string, resourceId: string): boolean {
+        for (const [id, auth] of this.auths.entries())
+            if (auth.token === token && id != resourceId)
+                return true;
+        return false;
+    }
+
+    public getAuths() {
+        return this.auths;
+    }
+
+    public addAuth(options: AuthOptions, resourceId?: string): string {
+        if (!resourceId)
+            resourceId = genResourceId();
+
+        const auth = new Auth(options);
+        this.auths.set(resourceId, auth);
+        this.storage.addOrUpdateResource('auth', resourceId, JSON.stringify(auth.getOptions(), undefined, 2));
+
+        log.info({ resourceId, options }, 'Auth added');
+
+        return resourceId;
+    }
+
+    public updateAuth(resourceId: string, options: AuthOptions) {
+        const auth = this.auths.get(resourceId);
+        if (!auth)
+            throw new Error(`Auth '${resourceId}' not found`);
+
+        if (this.checkTokenAlreadyUsed(options.token, resourceId))
+            throw new Error('Validation error: token already used');
+        auth.setOptions(options);
+        this.storage.addOrUpdateResource('auth', resourceId, JSON.stringify(auth.getOptions(), undefined, 2));
+
+        log.info({ resourceId, options }, 'Auth updated');
+    }
+
+    public deleteAuth(resourceId: string) {
+        this.auths.delete(resourceId);
+        this.storage.deleteResource('auth', resourceId);
+
+        log.info({ resourceId }, 'Auth deleted');
+    }
+
+    public deleteAllAuth() {
+        for (const resourceId of this.auths.keys()) {
+            this.auths.delete(resourceId);
+            this.storage.deleteResource('auth', resourceId);
+        }
+        log.info('All auths deleted');
+    }
+
+
+
     // Private
 
     private init() {
-        for (const storageResource of this.storage.getResources('router')) {
+
+        for (const routerResource of this.storage.getResources('router')) {
             try {
-                const optionsObject = validateObject<RouterOptions>(RouterOptions, JSON.parse(storageResource.optionjson), true);
+                const optionsObject = validateObject<RouterOptions>(RouterOptions, JSON.parse(routerResource.optionjson), true);
                 if (optionsObject) {
                     const router = new Router(optionsObject);
-                    this.routers.set(storageResource.resourceId, router);
+                    this.routers.set(routerResource.resourceId, router);
                     log.info({ resourceName: router.description }, 'Init router');
                 }
             }
             catch (error) {
-                log.error({ resourceName: storageResource.resourceId, error: error instanceof Error ? error.message : '' }, 'Init router failed');
+                log.error({ resourceName: routerResource.resourceId, error: error instanceof Error ? error.message : '' }, 'Init router failed');
             }
         }
-        for (const storageResource of this.storage.getResources('validator')) {
+
+        for (const validatorResource of this.storage.getResources('validator')) {
             try {
-                const optionsObject = validateObject<ValidatorOptions>(ValidatorOptions, JSON.parse(storageResource.optionjson), true);
+                const optionsObject = validateObject<ValidatorOptions>(ValidatorOptions, JSON.parse(validatorResource.optionjson), true);
                 if (optionsObject) {
                     const validator = new Validator(optionsObject);
-                    this.validators.set(storageResource.resourceId, validator);
+                    this.validators.set(validatorResource.resourceId, validator);
                     log.info({ resourceName: validator.description }, 'Init validator');
                 }
             }
             catch (error) {
-                log.error({ resourceName: storageResource.resourceId, error: error instanceof Error ? error.message : '' }, 'Init validator failed');
+                log.error({ resourceName: validatorResource.resourceId, error: error instanceof Error ? error.message : '' }, 'Init validator failed');
+            }
+        }
+
+        for (const authResource of this.storage.getResources('auth')) {
+            try {
+                const optionsObject = validateObject<AuthOptions>(AuthOptions, JSON.parse(authResource.optionjson), true);
+                if (optionsObject) {
+                    const auth = new Auth(optionsObject);
+                    this.auths.set(authResource.resourceId, auth);
+                    log.info({ resourceName: auth.description }, 'Init auth');
+                }
+            }
+            catch (error) {
+                log.error({ resourceName: authResource.resourceId, error: error instanceof Error ? error.message : '' }, 'Init auth failed');
             }
         }
     }

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Writable } from 'node:stream'
-import { pino } from 'pino';
+import { Level, pino } from 'pino';
 
 import * as config from '../config';
 
@@ -162,6 +162,6 @@ export default pino({
         }
     },
 }, pino.multistream([
-    { stream: new MemoryLogStream(memoryLogStore) },
-    { stream: process.stdout },
+    { stream: new MemoryLogStream(memoryLogStore), level: config.logLevel as Level },
+    { stream: process.stdout, level: config.logLevel as Level },
 ]));
