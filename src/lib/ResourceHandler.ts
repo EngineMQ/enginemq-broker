@@ -13,6 +13,10 @@ import { Validator } from './resources/validator/Validator';
 import { ValidatorOptions } from './resources/validator/types';
 import { tryParseYaml as tryParseValidatorYaml } from './resources/validator/yaml';
 
+import { Auth } from './resources/auth/Auth';
+import { AuthOptions } from './resources/auth/types';
+import { tryParseYaml as tryParseAuthYaml } from './resources/auth/yaml';
+
 const log = logger.child({ module: 'Resources' });
 
 const RESOURCE_ID_LENGTH = 20;
@@ -25,6 +29,7 @@ export type ResourceType = 'router' | 'validator' | 'auth';
 export class ResourceHandler {
     private routers = new Map<string, Router>();
     private validators = new Map<string, Validator>();
+    private auths = new Map<string, Auth>();
     private storage: IStorage;
 
     constructor(storage: IStorage) {
@@ -53,6 +58,10 @@ export class ResourceHandler {
             try { Validator.checkOptions(validatorData.options); }
             catch (error) { throw new Error(`Yaml error in validator ${validatorData.resourceId} ${error instanceof Error ? error.message : ''}`); }
 
+        for (const authData of tryParseAuthYaml(objs))
+            try { Auth.checkOptions(authData.options); }
+            catch (error) { throw new Error(`Yaml error in auth ${authData.resourceId} ${error instanceof Error ? error.message : ''}`); }
+
         let resourceCount = 0;
 
         for (const routerData of tryParseRouterYaml(objs)) {
@@ -73,12 +82,22 @@ export class ResourceHandler {
                     this.addValidator(validatorData.options, validatorData.resourceId);
         }
 
+        for (const authData of tryParseAuthYaml(objs)) {
+            resourceCount++;
+            if (new RegExp(resourceIdRegExp).test(authData.resourceId))
+                if (this.routers.get(authData.resourceId))
+                    this.updateAuth(authData.resourceId, authData.options);
+                else
+                    this.addAuth(authData.options, authData.resourceId);
+        }
+
         log.info({ count: resourceCount }, 'Resources adopted from yaml');
     }
 
     public deleteAllResource() {
         this.deleteAllRouter();
         this.deleteAllValidator();
+        this.deleteAllAuth();
         log.info('All resources deleted');
     }
 
@@ -215,6 +234,76 @@ export class ResourceHandler {
 
 
 
+    // Auths
+
+    public generateNewUniqueToken(): string {
+        let result;
+        while (!result || this.getAuthByToken(result))
+            result = Auth.generateNewToken();
+        return result;
+    }
+
+    public getAuthByToken(token: string): Auth | undefined {
+        for (const auth of this.auths.values())
+            if (auth.token === token)
+                return auth;
+        return;
+    }
+
+    public checkTokenAlreadyUsed(token: string, resourceId: string): boolean {
+        for (const [id, auth] of this.auths.entries())
+            if (auth.token === token && id != resourceId)
+                return true;
+        return false;
+    }
+
+    public getAuths() {
+        return this.auths;
+    }
+
+    public addAuth(options: AuthOptions, resourceId?: string): string {
+        if (!resourceId)
+            resourceId = genResourceId();
+
+        const auth = new Auth(options);
+        this.auths.set(resourceId, auth);
+        this.storage.addOrUpdateResource('auth', resourceId, JSON.stringify(auth.getOptions(), undefined, 2));
+
+        log.info({ resourceId, options }, 'Auth added');
+
+        return resourceId;
+    }
+
+    public updateAuth(resourceId: string, options: AuthOptions) {
+        const auth = this.auths.get(resourceId);
+        if (!auth)
+            throw new Error(`Auth '${resourceId}' not found`);
+
+        if (this.checkTokenAlreadyUsed(options.token, resourceId))
+            throw new Error('Validation error: token already used');
+        auth.setOptions(options);
+        this.storage.addOrUpdateResource('auth', resourceId, JSON.stringify(auth.getOptions(), undefined, 2));
+
+        log.info({ resourceId, options }, 'Auth updated');
+    }
+
+    public deleteAuth(resourceId: string) {
+        this.auths.delete(resourceId);
+        this.storage.deleteResource('auth', resourceId);
+
+        log.info({ resourceId }, 'Auth deleted');
+    }
+
+    public deleteAllAuth() {
+        for (const resourceId of this.auths.keys()) {
+            this.auths.delete(resourceId);
+            this.storage.deleteResource('auth', resourceId);
+        }
+        log.info('All auths deleted');
+    }
+
+
+
     // Private
 
     private init() {
@@ -242,6 +331,19 @@ export class ResourceHandler {
             }
             catch (error) {
                 log.error({ resourceName: storageResource.resourceId, error: error instanceof Error ? error.message : '' }, 'Init validator failed');
+            }
+        }
+        for (const authResource of this.storage.getResources('auth')) {
+            try {
+                const optionsObject = validateObject<AuthOptions>(AuthOptions, JSON.parse(authResource.optionjson), true);
+                if (optionsObject) {
+                    const auth = new Auth(optionsObject);
+                    this.auths.set(authResource.resourceId, auth);
+                    log.info({ resourceName: auth.description }, 'Init auth');
+                }
+            }
+            catch (error) {
+                log.error({ resourceName: authResource.resourceId, error: error instanceof Error ? error.message : '' }, 'Init auth failed');
             }
         }
     }

@@ -1,17 +1,37 @@
+import { customAlphabet } from 'nanoid';
+
 import { IResource } from '../IResource';
 import { AuthOptions, validateOptions } from './types';
 import { getLatestYaml } from './yaml';
-// import { topicStrToRegexpOrString } from "../utility";
 
-export class Router implements IResource {
+export const AUTHTOKEN_LENGTH_MAX = 128;
+export const AUTHTOKEN_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+export const AUTHTOKEN_MASK = `^[${AUTHTOKEN_ALPHABET}]{1,${AUTHTOKEN_LENGTH_MAX}}$`;
+export const AUTHTOKEN_LENGTH_DEFAULT = 32;
+export const AUTHTOKEN_MASK_REGEXP = new RegExp(AUTHTOKEN_MASK);
+
+const nanoid = customAlphabet(AUTHTOKEN_ALPHABET, AUTHTOKEN_LENGTH_DEFAULT);
+
+export class Auth implements IResource {
     private options: AuthOptions;
-    // private inputTopicExpr: string | RegExp;
 
     get description(): string {
         return this.options.description;
     }
-    get topic(): string {
-        return this.options.topic;
+
+    get token(): string {
+        return this.options.token;
+    }
+
+    get maskedToken(): string {
+        if (!this.options.token)
+            return '';
+        // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+        return `${this.options.token.slice(0, 3)}...${this.options.token.slice(-3)}`;
+    }
+
+    get webAccess(): boolean {
+        return this.options.webAccess;
     }
 
     constructor(options: AuthOptions) {
@@ -22,6 +42,8 @@ export class Router implements IResource {
         return this.options;
     }
 
+    public static generateNewToken(): string { return nanoid(); }
+
     public static checkOptions(options: AuthOptions): void { validateOptions(options); }
 
     public setOptions(options: AuthOptions): AuthOptions {
@@ -29,10 +51,9 @@ export class Router implements IResource {
 
         this.options = options;
 
-        for (const targets of [this.options.copyTo, this.options.moveTo])
+        for (const targets of [this.options.publishTo, this.options.subscribeTo])
             if (targets && Array.isArray(targets))
                 targets.sort();
-        // this.inputTopicExpr = topicStrToRegexpOrString(options.inputTopic);
         return options;
     }
 
@@ -40,34 +61,37 @@ export class Router implements IResource {
         return getLatestYaml(resourceId, this.options);
     }
 
-    public matchTopic(topic: string): boolean {
-        // if (typeof this.inputTopicExpr === 'string') {
-        //     if (this.inputTopicExpr.toLowerCase() === topic.toLowerCase())
-        //         return true;
-        // }
-        // else if (this.inputTopicExpr instanceof RegExp) {
-        //     if (this.inputTopicExpr.test(topic))
-        //         return true;
-        // }
-        // return false;
-        return this.options.topic.toLowerCase() === topic.toLowerCase();
+    public isValidPublishTopic(topic: string): boolean {
+        if (Array.isArray(this.options.publishTo)) {
+            for (const pt of this.options.publishTo)
+                if (pt.toLowerCase() === topic.toLowerCase())
+                    return true;
+        }
+        else
+            if (this.options.publishTo?.toLowerCase() === topic.toLowerCase())
+                return false;
+        return false;
     }
 
-    public getOutputTopics(): {
-        topics: string[],
-        holdOriginal: boolean
-    } {
-        const result: string[] = [];
-        for (const targets of [this.options.copyTo, this.options.moveTo])
-            if (targets)
-                if (Array.isArray(targets))
-                    result.push(...targets)
-                else
-                    result.push(targets);
+    public isValidSubscribeTopic(topic: string): boolean {
+        if (Array.isArray(this.options.subscribeTo)) {
+            for (const pt of this.options.subscribeTo)
+                if (pt.toLowerCase() === topic.toLowerCase())
+                    return true;
+        }
+        else
+            if (this.options.subscribeTo?.toLowerCase() === topic.toLowerCase())
+                return false;
+        return false;
+    }
 
+    public getTopicsCount() {
         return {
-            topics: result,
-            holdOriginal: this.options.copyTo && this.options.copyTo.length > 0 ? true : false,
-        };
+            // eslint-disable-next-line @typescript-eslint/no-extra-parens
+            publishTo: Array.isArray(this.options.publishTo) ? this.options.publishTo.length : (this.options.publishTo ? 1 : 0),
+            // eslint-disable-next-line @typescript-eslint/no-extra-parens
+            subscribeTo: Array.isArray(this.options.subscribeTo) ? this.options.subscribeTo.length : (this.options.subscribeTo ? 1 : 0),
+        }
     }
+
 }

@@ -1,0 +1,63 @@
+extends ../_base
+block content
+    form#auth
+        input(type='hidden' name='resourceId' value=resourceId)
+        .row
+            .col-md-6 
+                .form-group
+                    label(for='description') Auth description
+                    input.form-control#description(type='text' name='description' value=auth.description placeholder='Description of auth')
+                .form-group
+                    label(for='token') Secret token
+                    input.form-control#topic(type='text' name='token' value=auth.token placeholder='Secret token')
+        .row
+            .col-md-6 
+                .form-group
+                    label Publish to topics
+                    textarea.form-control(rows='5' name='publishTo' placeholder='One or more topics where you have the right to send a message (one per line)')
+                        if (auth.publishTo)
+                            if (Array.isArray(auth.publishTo))
+                                each publishTo of auth.publishTo
+                                    = publishTo
+                                    = newline
+                            else
+                                = auth.publishTo
+
+            .col-md-6 
+                .form-group
+                    label Subscribe to topics
+                    textarea.form-control(rows='5' name='subscribeTo' placeholder='One or more topics you have the right to subscribe to (one per line)')
+                        if (auth.subscribeTo)
+                            if (Array.isArray(auth.subscribeTo))
+                                each subscribeTo of auth.subscribeTo
+                                    = subscribeTo
+                                    = newline
+                            else
+                                = auth.subscribeTo
+        .row
+            .col-md-12
+                a.btn.btn-success(href='#' onclick='updateAuth()')
+                    | Save
+                if (resourceId)
+                    .float-right.small
+                        | Resource ID: 
+                        | #
+                        = resourceId
+
+    script(type='text/javascript').
+        $(function() {
+            setTimeout(() => { $('#description').focus() }, 100);
+        });
+
+        function updateAuth()
+        {
+            const formData = $('#auth').serialize();
+            $.post("/resources/auths/update", formData)
+            .done(function() {
+                window.location.href = '/resources';
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                const error = JSON.parse(jqXHR.responseText);
+                toastr.error(error.message, errorThrown);
+            });        
+        }
