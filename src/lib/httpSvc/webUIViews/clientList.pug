@@ -9,6 +9,7 @@ block content
                         thead
                             tr
                                 th Client ID
+                                th Auth
                                 th Live topics
                                 th Address
                                 th Age
@@ -19,6 +20,8 @@ block content
                                         h5 
                                             a(href='/client/' + client.uniqueId)
                                                 = client.clientId
+                                    td
+                                        = client.authDescription
                                     td
                                         if (client.topics)
                                             each topic in client.topics

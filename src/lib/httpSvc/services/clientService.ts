@@ -11,6 +11,7 @@ export default {
                     uniqueId: cli.clientDetail.uniqueId,
                     clientId: cli.clientDetail.clientId,
                     info: cli.clientDetail,
+                    authDescription: cli.authDescription,
                     address: cli.address,
                     stat: cli.stat,
                     topics: topicNames.filter((topic) => bs.matchSubscription(topic))
@@ -35,6 +36,7 @@ export default {
                     uniqueId: cli.clientDetail.uniqueId,
                     clientId: cli.clientDetail.clientId,
                     info: cli.clientDetail,
+                    authDescription: cli.authDescription,
                     addressDetail: cli.addressDetail,
                     stat: cli.stat,
                     topics: topicNames.filter((topic) => bs.matchSubscription(topic)),

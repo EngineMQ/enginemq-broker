@@ -10,6 +10,8 @@ import { MessageHandler } from './MessageHandler';
 import { MessageStorageItem } from './storage/IStorage';
 import { BufferedSocketOptions, defaultBufferedSocketOptions } from '../common/lib/socket/BufferedSocket';
 import { topicStringToRegExpOrString } from './utility';
+import { ILoginHandler } from './ResourceHandler';
+import { Auth } from './resources/auth/Auth';
 
 const log = logger.child({ module: 'Socket' });
 let socketUniqueId = 1;
@@ -27,16 +29,18 @@ export declare interface BrokerSocket {
     on(event: 'subscriptions', listener: (subscriptions: (string | RegExp)[]) => void): this;
     on(event: 'mq-no-heartbeat', listener: () => void): this;
 }
+type ClientInfo = { uniqueId: number, clientId: string, auth?: Auth, version: string, maxWorkers: number };
 export type AckFunction = (deliveryAck: messages.ClientMessageDeliveryAck) => boolean;
 export class BrokerSocket extends MsgpackSocket {
     private messageHandler: MessageHandler;
-    private clientInfo = { uniqueId: 0, clientId: '', version: '', maxWorkers: 1 };
+    private loginHandler: ILoginHandler;
+    private clientInfo: ClientInfo = { uniqueId: 0, clientId: '', version: '', maxWorkers: 1 };
     private subscriptions: (string | RegExp)[] = [];
     private lastRcvHeartbeat = Date.now();
     private lastSndHeartbeat = 0;
     private waitListForAck: { messageId: string, onAck: AckFunction }[] = [];
 
-    constructor(socket: net.Socket, messageHandler: MessageHandler) {
+    constructor(socket: net.Socket, messageHandler: MessageHandler, loginHandler: ILoginHandler) {
         const options: BufferedSocketOptions = {
             ...defaultBufferedSocketOptions,
             maxPacketSize: {
@@ -47,6 +51,7 @@ export class BrokerSocket extends MsgpackSocket {
         };
         super(socket, options);
         this.messageHandler = messageHandler;
+        this.loginHandler = loginHandler;
 
         this.on('obj_data', (object: object) => this.onObjData(object));
     }
@@ -59,6 +64,7 @@ export class BrokerSocket extends MsgpackSocket {
         return {
             clientId: this.clientInfo.clientId,
             clientDetail: this.clientInfo,
+            authDescription: this.clientInfo.auth ? this.clientInfo.auth.description : '',
             subscriptions: this.subscriptions,
             stat: this.getSocketStat(),
             address: this.getSocketAddressInfo().address,
@@ -132,15 +138,34 @@ export class BrokerSocket extends MsgpackSocket {
                 const cmHello = validateObject<messages.ClientMessageHello>(messages.ClientMessageHello, parameters);
                 if (!cmHello) return;
 
-                this.clientInfo = {
-                    uniqueId: socketUniqueId++,
-                    clientId: cmHello.clientId,
-                    version: cmHello.version,
-                    maxWorkers: Math.max(Math.min(cmHello.maxWorkers, config.maxClientWorkers), config.minWorkers),
-                };
+                try {
+                    let auth: Auth | undefined;
+                    if (cmHello.authToken)
+                        auth = this.loginHandler.getAuthByToken(cmHello.authToken);
+                    if (!auth && !this.loginHandler.isAnonymousMode())
+                        throw new Error('Login error');
 
-                const bmWelcome: messages.BrokerMessageWelcome = { version: version, heartbeatSec: config.heartbeatSec };
-                this.sendMessage('welcome', bmWelcome);
+                    this.clientInfo = {
+                        uniqueId: socketUniqueId++,
+                        clientId: cmHello.clientId,
+                        auth: auth,
+                        version: cmHello.version,
+                        maxWorkers: Math.max(Math.min(cmHello.maxWorkers, config.maxClientWorkers), config.minWorkers),
+                    };
+                    const bmWelcome: messages.BrokerMessageWelcome = {
+                        version: version,
+                        heartbeatSec: config.heartbeatSec,
+                    };
+                    this.sendMessage('welcome', bmWelcome);
+                }
+                catch (error) {
+                    const bmWelcome: messages.BrokerMessageWelcome = {
+                        version: version,
+                        heartbeatSec: 0,
+                        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+                    };
+                    this.sendMessage('welcome', bmWelcome);
+                }
                 break;
             case 'heartbeat':
                 if (validateObject<messages.ClientMessageHeartbeat>(messages.ClientMessageHeartbeat, parameters))

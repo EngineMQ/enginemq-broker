@@ -26,7 +26,12 @@ export const resourceIdRegExp = `^[0-9a-f]{${RESOURCE_ID_LENGTH}}$`;
 
 export type ResourceType = 'router' | 'validator' | 'auth';
 
-export class ResourceHandler {
+export interface ILoginHandler {
+    isAnonymousMode(): boolean;
+    getAuthByToken(token: string): Auth | undefined;
+}
+
+export class ResourceHandler implements ILoginHandler {
     private routers = new Map<string, Router>();
     private validators = new Map<string, Validator>();
     private auths = new Map<string, Auth>();
@@ -242,6 +247,8 @@ export class ResourceHandler {
             result = Auth.generateNewToken();
         return result;
     }
+
+    public isAnonymousMode(): boolean { return this.auths.size === 0; }
 
     public getAuthByToken(token: string): Auth | undefined {
         for (const auth of this.auths.values())

@@ -36,7 +36,7 @@ export const createBroker = async (storageOverride?: string): Promise<{
     messageHandler = new MessageHandler(clientList, storage, topics, resourceHandler);
     await messageHandler.loadMessages()
         .then(() => {
-            server = net.createServer((socket: net.Socket) => clientList.add(new BrokerSocket(socket, messageHandler)));
+            server = net.createServer((socket: net.Socket) => clientList.add(new BrokerSocket(socket, messageHandler, resourceHandler)));
             server
                 .on('listening', () => {
                     const addr = server.address() as net.AddressInfo;
