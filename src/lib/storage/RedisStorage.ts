@@ -3,14 +3,15 @@ import { createClient } from 'redis';
 import { awaitSync } from '@kaciras/deasync';
 
 import * as config from '../../config';
-import { IStorage, MessageStorageItem, ResourceType } from './IStorage';
+import { IStorage, MessageStorageItem, ResourceList, ResourceType } from './IStorage';
 import logger from '../logger';
 import { RedisClientType } from '@node-redis/client';
 
 class RedisStorageError extends Error { }
 
 const log = logger.child({ module: 'RedisStorage' });
-const KEYNAME = `${config.serviceName}-messages`;
+const KEYNAME_MESSAGE = `${config.serviceName}-message`;
+const KEYNAME_RESOURCES = (type: ResourceType) => `${config.serviceName}-resource-${type}`;
 
 export class RedisStorage implements IStorage {
     private _redis: RedisClientType | undefined = undefined;
@@ -40,7 +41,7 @@ export class RedisStorage implements IStorage {
         callbackReady: () => void,
     ): void {
         const REPORT_ITEMS = 10_000;
-        const allMessageCount = awaitSync(this.redis.hLen(KEYNAME));
+        const allMessageCount = awaitSync(this.redis.hLen(KEYNAME_MESSAGE));
         log.debug({ count: allMessageCount }, 'Find messages');
         callbackProgress.total(allMessageCount);
 
@@ -48,7 +49,7 @@ export class RedisStorage implements IStorage {
             if (allMessageCount) {
                 let index = 0;
                 let size = 0;
-                for await (const { field, value } of this.redis.hScanIterator(KEYNAME, { COUNT: 256 })) {
+                for await (const { field, value } of this.redis.hScanIterator(KEYNAME_MESSAGE, { COUNT: 256 })) {
                     if (typeof field === 'string') {
                         const valueBuffer = Buffer.from(value, 'binary');
                         size += valueBuffer.length;
@@ -72,29 +73,44 @@ export class RedisStorage implements IStorage {
     public addOrUpdateMessage(messageId: string, message: MessageStorageItem): void {
         try {
             const databaseData = this.packr.pack(message);
-            new TextEncoder().encode()
-            awaitSync(this.redis.hSet(KEYNAME, messageId, databaseData.toString('binary')));
+            awaitSync(this.redis.hSet(KEYNAME_MESSAGE, messageId, databaseData.toString('binary')));
             log.debug({ messageId, size: databaseData.length }, 'Store message');
         } catch (error) { throw new RedisStorageError(`Cannot create message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
     public deleteMessage(messageId: string): void {
         try {
-            awaitSync(this.redis.hDel(KEYNAME, messageId));
+            awaitSync(this.redis.hDel(KEYNAME_MESSAGE, messageId));
             log.debug({ messageId }, 'Delete message');
         } catch (error) { throw new RedisStorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    getResources(type: ResourceType): { resourceId: string, optionjson: string }[] {
-        type; return []
+    // eslint-disable-next-line @typescript-eslint/require-await
+    public async getResources(type: ResourceType): Promise<ResourceList> {
+        try {
+            const resources = [];
+            for await (const { field, value } of this.redis.hScanIterator(KEYNAME_RESOURCES(type), { COUNT: 256 })) {
+                if (typeof field === 'string')
+                    resources.push({ resourceId: field, optionjson: value });
+            }
+            return resources;
+        } catch (error) { throw new RedisStorageError(`Cannot load resources '${type}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    addOrUpdateResource(type: ResourceType, resourceId: string, optionjson: string): void {
-        type; resourceId; optionjson;
+    public addOrUpdateResource(type: ResourceType, resourceId: string, optionjson: string): void {
+        try {
+            // awaitSync(this.redis.hSet(KEYNAME_RESOURCES(type), resourceId, optionjson));
+            void this.redis.hSet(KEYNAME_RESOURCES(type), resourceId, optionjson);
+            log.debug({ type, resourceId }, 'Store resource');
+        } catch (error) { throw new RedisStorageError(`Cannot store ${type} resource '${resourceId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    deleteResource(type: ResourceType, resourceId: string): void {
-        type; resourceId;
+    public deleteResource(type: ResourceType, resourceId: string): void {
+        try {
+            // awaitSync(this.redis.hDel(KEYNAME_RESOURCES(type), resourceId));
+            void this.redis.hDel(KEYNAME_RESOURCES(type), resourceId);
+            log.debug({ type, resourceId }, 'Delete resource');
+        } catch (error) { throw new RedisStorageError(`Cannot delete ${type} resource '${resourceId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
     public close(): void {

@@ -27,7 +27,7 @@ block content
                     | 
                     | Import from yaml
                     input#upload-yaml(type='file')
-        if (resources.routers.length || resources.validators.length)
+        if (resources.routers.length || resources.validators.length || resources.auths.length)
             .col-md-6
                 .float-right
                     .btn-group(role='group')

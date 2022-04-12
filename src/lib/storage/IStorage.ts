@@ -5,9 +5,12 @@ type MessageInfo = {
     sourceClientId: string,
     publishTime: number,
 }
+export { ResourceType } from '../ResourceHandler';
+
 export type MessageStorageItem = messages.ClientMessagePublish & MessageInfo;
 
-export { ResourceType } from '../ResourceHandler';
+export type ResourceListItem = { resourceId: string, optionjson: string };
+export type ResourceList = ResourceListItem[];
 
 export interface IStorage {
     getAllMessages(
@@ -21,7 +24,7 @@ export interface IStorage {
     addOrUpdateMessage(messageId: string, message: MessageStorageItem): void;
     deleteMessage(messageId: string): void;
 
-    getResources(type: ResourceType): { resourceId: string, optionjson: string }[];
+    getResources(type: ResourceType): Promise<ResourceList>;
     addOrUpdateResource(type: ResourceType, resourceId: string, optionjson: string): void;
     deleteResource(type: ResourceType, resourceId: string): void;
 

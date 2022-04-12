@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Packr } from 'msgpackr';
 
-import { IStorage, MessageStorageItem, ResourceType } from './IStorage';
+import { IStorage, MessageStorageItem, ResourceList, ResourceType } from './IStorage';
 import logger from '../logger';
 
 class FileStorageError extends Error { }
@@ -93,7 +93,8 @@ export class FileStorage implements IStorage {
         } catch (error) { throw new FileStorageError(`Cannot delete message '${messageId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
-    public getResources(type: ResourceType): { resourceId: string, optionjson: string }[] {
+    // eslint-disable-next-line @typescript-eslint/require-await
+    public async getResources(type: ResourceType): Promise<ResourceList> {
         const result = [];
 
         const allFiles = this.getAllFilesRecursively(this.folderResource(type));
@@ -117,7 +118,7 @@ export class FileStorage implements IStorage {
             fs.writeFileSync(
                 this.getFileNameForResource(type, resourceId, true),
                 fileData);
-            log.debug({ name: resourceId, size: fileData.length }, 'Store resource');
+            log.debug({ type, name: resourceId, size: fileData.length }, 'Store resource');
 
         } catch (error) { throw new FileStorageError(`Cannot store ${type} resource '${resourceId}': ${error instanceof Error ? error.message : ''}`); }
     }
@@ -127,7 +128,7 @@ export class FileStorage implements IStorage {
             const filename = this.getFileNameForResource(type, resourceId, false);
             if (fs.existsSync(filename))
                 fs.unlinkSync(filename);
-            log.debug({ name: resourceId }, `Delete ${type} resource`);
+            log.debug({ type, name: resourceId }, `Delete ${type} resource`);
         } catch (error) { throw new FileStorageError(`Cannot delete ${type} resource '${resourceId}': ${error instanceof Error ? error.message : ''}`); }
     }
 
