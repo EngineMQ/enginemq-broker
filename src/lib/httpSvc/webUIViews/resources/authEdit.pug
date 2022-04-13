@@ -13,8 +13,8 @@ block content
         .row
             .col-md-6 
                 .form-group
-                    label Publish to topics
-                    textarea.form-control(rows='5' name='publishTo' placeholder='One or more topics where you have the right to send a message (one per line)')
+                    label Publish to topics permissions
+                    textarea.form-control(rows='8' name='publishTo' placeholder='One or more topics where you have the right to send a message (one per line)')
                         if (auth.publishTo)
                             if (Array.isArray(auth.publishTo))
                                 each publishTo of auth.publishTo
@@ -25,8 +25,8 @@ block content
 
             .col-md-6 
                 .form-group
-                    label Subscribe to topics
-                    textarea.form-control(rows='5' name='subscribeTo' placeholder='One or more topics you have the right to subscribe to (one per line)')
+                    label Subscribe to topics permissions
+                    textarea.form-control(rows='8' name='subscribeTo' placeholder='One or more topics you have the right to subscribe to (one per line)')
                         if (auth.subscribeTo)
                             if (Array.isArray(auth.subscribeTo))
                                 each subscribeTo of auth.subscribeTo

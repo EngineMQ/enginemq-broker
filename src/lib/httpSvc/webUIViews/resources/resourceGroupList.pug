@@ -1,5 +1,11 @@
 extends ../_base
 block content
+    if (!resources.auths.length)
+        center
+            span.badge.badge-warning
+                i.fa.fa-fw.fa-exclamation-triangle
+                | No authorization resource is defined, so anyone can log in and send or receive messages on any topic!
+        br
     .row
         .col-md-6
             .btn-group(role='group')
@@ -47,7 +53,7 @@ block content
             include resourceGroupListAuth.pug
     br
     br
-    
+
     script(type='text/javascript').
         function deleteAllResource()
         {

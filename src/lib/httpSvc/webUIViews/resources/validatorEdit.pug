@@ -9,7 +9,7 @@ block content
                     input.form-control#description(type='text' name='description' value=validator.description placeholder='Description of validator')
                 .form-group
                     label Topics
-                    textarea.form-control(rows='5' name='topics' placeholder='Topics you are validating')
+                    textarea.form-control(rows='8' name='topics' placeholder='Topics you are validating (one per line)')
                         if (validator.topics)
                             if (Array.isArray(validator.topics))
                                 each topic of validator.topics

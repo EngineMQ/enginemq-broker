@@ -56,8 +56,8 @@ export default {
                 resourceId,
                 description: auth.description,
                 details: [
-                    `${topicsCount.subscribeTo || 'No'} subscribes`,
-                    `${topicsCount.publishTo || 'No'} publishes`,
+                    `${topicsCount.subscribeTo || 'No'} subscribe permissions`,
+                    `${topicsCount.publishTo || 'No'} publish permissions`,
                     '',
                     auth.maskedToken,
                 ],

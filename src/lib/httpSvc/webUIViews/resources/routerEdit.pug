@@ -14,7 +14,7 @@ block content
             .col-md-6 
                 .form-group
                     label Copy to topics
-                    textarea.form-control(rows='5' name='copyTo' placeholder='One or more topics to which to copy messages (one per line)')
+                    textarea.form-control(rows='8' name='copyTo' placeholder='One or more topics to which to copy messages (one per line)')
                         if (router.copyTo)
                             if (Array.isArray(router.copyTo))
                                 each copyTo of router.copyTo
@@ -26,7 +26,7 @@ block content
             .col-md-6 
                 .form-group
                     label Move to topics
-                    textarea.form-control(rows='5' name='moveTo' placeholder='One or more topics to which to move messages (one per line)')
+                    textarea.form-control(rows='8' name='moveTo' placeholder='One or more topics to which to move messages (one per line)')
                         if (router.moveTo)
                             if (Array.isArray(router.moveTo))
                                 each moveTo of router.moveTo

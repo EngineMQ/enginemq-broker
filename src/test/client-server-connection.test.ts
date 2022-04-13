@@ -3,7 +3,6 @@
 //process.env['LOG_LEVEL'] = 'debug';
 
 import * as enginemq from 'enginemq-client';
-import { version } from '../../package.json'
 
 import { createBroker, closeBroker } from '../lib/broker';
 import { createHttpserver, closeHttpserver } from '../lib/http';
@@ -28,6 +27,7 @@ describe('client-server connection', () => {
                     messageHandler.deleteAllMessage();
                     resourceHandler.deleteAllRouter();
                     resourceHandler.deleteAllValidator();
+                    resourceHandler.deleteAllAuth();
                     return createHttpserver()
                 })
         })
@@ -41,7 +41,7 @@ describe('client-server connection', () => {
         });
 
         test('connect and disconnect', async () => {
-            expect.assertions(6);
+            expect.assertions(4);
 
             const client = new enginemq.EngineMqClient({ clientId: 'test-client', connectAutoStart: false });
 
@@ -49,10 +49,8 @@ describe('client-server connection', () => {
             client.on('mq-connected', mqConnected);
 
             const mqReady = jest.fn();
-            client.on('mq-ready', (serverVersion, heartbeatSec) => {
+            client.on('mq-ready', () => {
                 mqReady();
-                expect(serverVersion).toEqual(version);
-                expect(heartbeatSec).toEqual(0);
             });
 
             const mqDisconnected = jest.fn();
