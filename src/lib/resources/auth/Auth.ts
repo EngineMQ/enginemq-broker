@@ -69,7 +69,7 @@ export class Auth implements IResource {
         }
         else
             if (this.options.publishTo?.toLowerCase() === topic.toLowerCase())
-                return false;
+                return true;
         return false;
     }
 
@@ -81,7 +81,7 @@ export class Auth implements IResource {
         }
         else
             if (this.options.subscribeTo?.toLowerCase() === topic.toLowerCase())
-                return false;
+                return true;
         return false;
     }
 

@@ -1,5 +1,6 @@
 import * as net from 'node:net';
-import { version } from '../../package.json';
+import { version as brokerVersion } from '../../package.json';
+import { diff as semverDiff, major as semverMajor, ReleaseType } from 'semver';
 
 import * as config from '../config';
 import logger from './logger';
@@ -103,12 +104,12 @@ export class BrokerSocket extends MsgpackSocket {
         this.sendMessage('delivery', message);
     }
 
-    public hasEnoughWorker() {
+    public hasIdleWorker() {
         return this.waitListForAck.length < this.clientInfo.maxWorkers;
     }
 
     public sendDeliveryReport(report: messages.BrokerMessageDeliveryReport) {
-        this.sendMessage('deliveryreport', report);
+        this.sendMessage('deliveryReport', report);
     }
 
 
@@ -134,37 +135,41 @@ export class BrokerSocket extends MsgpackSocket {
 
         this.getLog().debug({ type: cmd, data: parameters }, 'Receive message');
         switch (cmd) {
-            case 'hello':
-                const cmHello = validateObject<messages.ClientMessageHello>(messages.ClientMessageHello, parameters);
-                if (!cmHello) return;
+            case 'login':
+                const cmLogin = validateObject<messages.ClientMessageLogin>(messages.ClientMessageLogin, parameters);
+                if (!cmLogin) return;
 
                 try {
                     let auth: Auth | undefined;
-                    if (cmHello.authToken)
-                        auth = this.loginHandler.getAuthByToken(cmHello.authToken);
-                    if (!auth && !this.loginHandler.isAnonymousMode())
-                        throw new Error('Login error');
+                    if (cmLogin.authToken)
+                        auth = this.loginHandler.getAuthByToken(cmLogin.authToken);
+                    if (!this.loginHandler.isAnonymousMode() && !auth)
+                        throw new Error('Authentication error');
+
+                    const diff = semverDiff(cmLogin.version, brokerVersion);
+                    if (diff && (['major', 'premajor'] as ReleaseType[]).includes(diff)) {
+                        const requiredVersion = String(semverMajor(brokerVersion));
+                        throw new Error(`Incompatible client version, required v${requiredVersion}.x.x`);
+                    }
 
                     this.clientInfo = {
                         uniqueId: socketUniqueId++,
-                        clientId: cmHello.clientId,
+                        clientId: cmLogin.clientId,
                         auth: auth,
-                        version: cmHello.version,
-                        maxWorkers: Math.max(Math.min(cmHello.maxWorkers, config.maxClientWorkers), config.minWorkers),
+                        version: cmLogin.version,
+                        maxWorkers: Math.max(Math.min(cmLogin.maxWorkers, config.maxClientWorkers), config.minWorkers),
                     };
-                    const bmWelcome: messages.BrokerMessageWelcome = {
-                        version: version,
+                    const bmLoginAck: messages.BrokerMessageLoginAck = {
                         heartbeatSec: config.heartbeatSec,
                     };
-                    this.sendMessage('welcome', bmWelcome);
+                    this.sendMessage('loginAck', bmLoginAck);
                 }
                 catch (error) {
-                    const bmWelcome: messages.BrokerMessageWelcome = {
-                        version: version,
+                    const bmLoginAck: messages.BrokerMessageLoginAck = {
                         heartbeatSec: 0,
                         errorMessage: error instanceof Error ? error.message : 'Unknown error',
                     };
-                    this.sendMessage('welcome', bmWelcome);
+                    this.sendMessage('loginAck', bmLoginAck);
                 }
                 break;
             case 'heartbeat':
@@ -190,7 +195,7 @@ export class BrokerSocket extends MsgpackSocket {
                     publishTime: Date.now(),
                 };
                 try {
-                    this.messageHandler.addMessage(mhItem)
+                    this.messageHandler.addMessage(mhItem, { allowRouter: true, auth: this.clientInfo.auth })
 
                     const bmPublishAck: messages.BrokerMessagePublishAck = { messageId: cmPublish.options.messageId };
                     this.sendMessage('publishAck', bmPublishAck);
@@ -217,10 +222,26 @@ export class BrokerSocket extends MsgpackSocket {
 
     private updateSubscriptions(subscriptions: string[]) {
         this.getLog().debug({ subscriptions }, 'Update subscriptions');
+
+        const subscriptionResult = [];
         this.subscriptions = [];
-        for (const sub of subscriptions)
-            if (messages.TOPIC_WILDCARD_MASK.test(sub) && sub.length <= messages.TOPIC_LENGTH_MAX)
-                this.subscriptions.push(topicStringToRegExpOrString(sub));
+
+        for (const sub of subscriptions) {
+            if (messages.TOPIC_WILDCARD_MASK.test(sub) && sub.length <= messages.TOPIC_LENGTH_MAX) {
+                if (!this.clientInfo.auth || this.clientInfo.auth.isValidSubscribeTopic(sub)) {
+                    this.subscriptions.push(topicStringToRegExpOrString(sub));
+                    subscriptionResult.push({ topic: sub, errorMessage: undefined });
+                }
+                else
+                    subscriptionResult.push({ topic: sub, errorMessage: 'Do not have permission to subscribe' });
+            }
+            else
+                subscriptionResult.push({ topic: sub, errorMessage: 'Invalid topic format' });
+        }
+
         this.emit('subscriptions', this.subscriptions);
+
+        const bmSubscribeAck: messages.BrokerMessageSubscribeAck = { errors: subscriptionResult };
+        this.sendMessage('subscribeAck', bmSubscribeAck);
     }
 }

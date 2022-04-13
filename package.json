@@ -2,7 +2,7 @@
     "author": "BCsabaEngine",
     "license": "MIT",
     "name": "enginemq-broker",
-    "version": "1.0.1",
+    "version": "1.7.0",
     "description": "EngineMQ Message queue broker server",
     "main": "./dist/src/index.js",
     "engines": {
@@ -33,6 +33,7 @@
     "dependencies": {
         "@mgcrea/fastify-session": "^0.15.2",
         "@sinclair/typebox": "^0.23.4",
+        "@types/semver": "^7.3.9",
         "ajv": "^8.11.0",
         "better-sqlite3": "^7.5.1",
         "dotenv": "16.0.0",
@@ -54,6 +55,7 @@
         "point-of-view": "^5.2.0",
         "pretty-ms": "^7.0.1",
         "pug": "^3.0.2",
+        "semver": "^7.3.7",
         "timsort": "^0.3.0"
     },
     "devDependencies": {

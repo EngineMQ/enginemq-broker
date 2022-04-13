@@ -8,6 +8,7 @@ import * as types from '../common/messageTypes';
 import * as utility from './utility';
 import { AckFunction, BrokerSocket } from './BrokerSocket';
 import { ResourceHandler } from './ResourceHandler';
+import { Auth } from './resources/auth/Auth';
 
 const log = logger.child({ module: 'Messages' });
 
@@ -109,7 +110,7 @@ export class MessageHandler {
 
     public get length() { return [...this.topicIndexerList.keys()].length; }
 
-    public addMessage(item: MessageStorageItem, allowRouter = true) {
+    public addMessage(item: MessageStorageItem, options: { allowRouter: boolean, auth?: Auth }) {
         try {
             if (!item.options.messageId)
                 item.options.messageId = nanoid();
@@ -136,12 +137,15 @@ export class MessageHandler {
                 this.storage.addOrUpdateMessage(_msgitem.options.messageId, _msgitem);
             };
 
-            if (!allowRouter)
+            if (!options.allowRouter)
                 addMessageFunction(item);
             else {
                 const routerResult = this.resourceHandler.runRouterChain(item);
-                for (const newTopic of routerResult)
+                for (const newTopic of routerResult) {
                     this.resourceHandler.checkValidation(item, newTopic);
+                    if (options.auth && !options.auth.isValidPublishTopic(newTopic))
+                        throw new Error(`'Do not have permission to publish to ${newTopic}'`);
+                }
 
                 if (routerResult.includes(item.topic))
                     addMessageFunction(item);
@@ -215,7 +219,7 @@ export class MessageHandler {
             if (message) {
                 message.publishTime = Date.now();
                 message.options.delayMs = delayMs;
-                this.addMessage(message, false);
+                this.addMessage(message, { allowRouter: false });
             }
             else
                 throw new MessageError(`Message not found: ${messageId}`);
@@ -344,7 +348,7 @@ export class MessageHandler {
             for (const topic of this.topics.getActiveTopicsRandomized()) {
                 let clientTarget: BrokerSocket | undefined;
                 for (const client of this.clientList.getRandomized())
-                    if (client.matchSubscription(topic) && client.hasEnoughWorker()) {
+                    if (client.matchSubscription(topic) && client.hasIdleWorker()) {
                         clientTarget = client;
                         break;
                     }
