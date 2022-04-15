@@ -10,6 +10,7 @@ const TOPIC_MASK_STR = '^[a-z0-9.]+$';
 const MESSAGE_ID_MASK_EX_STR = '^[a-z0-9-.]+$';
 
 export default (server: FastifyInstance) => {
+    server.protectRoute('/topic');
     server
 
         .get('/topics', async (_request, reply) => {

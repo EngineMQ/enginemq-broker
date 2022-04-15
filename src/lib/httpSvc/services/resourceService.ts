@@ -1,4 +1,4 @@
-import { ResourceType } from '../../ResourceHandler';
+import { ILoginHandler, ResourceType } from '../../ResourceHandler';
 import { yamlJoin } from '../../utility';
 import resourceServiceAuth from './resourceServiceAuth';
 import resourceServiceRouter from './resourceServiceRouter';
@@ -90,5 +90,13 @@ export default {
     deleteAll() {
         Context.ResourceHandler.deleteAllResource();
     },
+
+    getAuthInfo() {
+        const auths = Context.ResourceHandler as ILoginHandler;
+        return {
+            isAnonymousMode: auths.isAnonymousMode(),
+            isAnonymousWebUiMode: auths.isAnonymousWebUiMode(),
+        }
+    }
 
 }

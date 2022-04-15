@@ -1,0 +1,34 @@
+doctype html
+html(lang="en")
+    include include/head.pug
+    body.hold-transition.dark-mode
+        .wrapper
+            .row
+                .col-md-4.offset-md-4
+                    br
+                    .login-logo
+                        a(href='/')
+                            b Admin
+                            | LTE
+                    .login-box-body.ml-2.mr-2
+                        p.login-box-msg Sign in to EngineMQ broker web ui
+                        .form-group.has-feedback
+                            input.form-control#token(type='password' placeholder='Token')
+                        .row
+                            .col-md-4.offset-md-4
+                                button.btn.btn-primary.btn-block.btn-flat(onclick="doLogin()") Log In
+        include include/scripts.pug
+
+script(type='text/javascript').
+    function doLogin()
+    {
+        const token = $('#token').val();
+        if (token)
+            $.post("/login", { token })
+            .done(function() {
+                window.location.reload();
+            })
+            .fail(function(jqXHR, textStatus, errorThrown) {
+                toastr.error(errorThrown, 'Error');
+            });        
+    }

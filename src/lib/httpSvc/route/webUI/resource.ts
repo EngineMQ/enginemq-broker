@@ -5,14 +5,17 @@ import resourceService from '../../services/resourceService';
 export const BREADCRUMB_TO_LIST = [{ url: '/resources', title: 'Resources' }];
 
 export default (server: FastifyInstance) => {
+    server.protectRoute('/resources');
     server
 
         .get('/resources', async (_request, reply) => {
             const resourceGroups = resourceService.getAllResourcesByGroup();
+            const authInfo = resourceService.getAuthInfo();
             return reply.view('resources/resourceGroupList', {
                 title: 'Resources',
                 breadcrumb: [],
                 resources: resourceGroups,
+                authInfo: authInfo,
             });
         })
 

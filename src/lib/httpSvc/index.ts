@@ -15,6 +15,7 @@ import favicon from './favicon'
 import * as routes from './route';
 
 const HTTP_ERROR_MIN = 400;
+const HTTP_302 = 302;
 
 const log = logger.child({ module: 'Http' });
 const logPlugins = logger.child({ module: 'Http' });
@@ -43,7 +44,8 @@ export default async (): Promise<FastifyInstance | undefined> => {
     server.addHook('onRequest', (request, _reply, done) => {
         request.log.debug({ method: request.method, url: request.raw.url, session: request.session, }, 'Incoming request');
         request.log = logPlugins;
-        done();
+
+        return done();
     });
     server.addHook('onResponse', async (request, reply) => {
         await reply.headers({
@@ -56,6 +58,22 @@ export default async (): Promise<FastifyInstance | undefined> => {
             request.log.error({ url: request.raw.url, statusMessage: reply.raw.statusMessage, statusCode: reply.raw.statusCode, }, 'Request error');
         else
             request.log.debug({ url: request.raw.url, statusCode: reply.raw.statusCode, }, 'Request completed');
+    })
+
+    const protectedRoutes: string[] = [];
+    server.decorate('protectRoute', (...pRoutes: string[]) => {
+        protectedRoutes.push(...pRoutes);
+    })
+    server.addHook('preHandler', (request, reply, next) => {
+        if (
+            !Context.ResourceHandler.isAnonymousWebUiMode() &&
+            !request.session.data['auth'] &&
+            ['GET', 'POST'].includes(request.method)
+        )
+            for (const pRoute of protectedRoutes)
+                if (request.raw.url?.startsWith(pRoute))
+                    return reply.redirect(HTTP_302, '/');
+        return next();
     })
 
     if (config.webUIEnabled) {

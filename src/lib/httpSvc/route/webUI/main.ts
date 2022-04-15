@@ -1,22 +1,35 @@
 import { FastifyInstance } from 'fastify'
 
-let index = 0;
+const HTTP_302 = 302;
+
 export default (server: FastifyInstance) => {
 
     server
-        .get<{
-            Querystring: {
-                username: string;
-                password: string;
-            },
-        }>
-        ('/', async (request, reply) => {
-            const { username, password } = request.query
+        .get('/', async (request, reply) => {
+            if (!Context.ResourceHandler.isAnonymousWebUiMode() && !request.session.data['auth'])
+                return reply.view('login', {
+                    title: 'Login',
+                });
             return reply.view('main', {
                 title: 'Dashboard',
-                u: username + (index++).toString(),
-                password
             });
-            // await reply.send({ data: username + password });
         })
+
+        .post<{ Body: { token: string } }>('/login', async (request, reply) => {
+            const { token } = request.body;
+
+            const auth = Context.ResourceHandler.getAuthByToken(token);
+            if (!auth)
+                throw new Error('Invalid token');
+
+            request.session.data['auth'] = { token: token };
+
+            return reply.send('OK');
+        })
+
+        .get('/logout', async (request, reply) => {
+            delete request.session.data['auth'];
+            return reply.redirect(HTTP_302, '/');
+        })
+
 }

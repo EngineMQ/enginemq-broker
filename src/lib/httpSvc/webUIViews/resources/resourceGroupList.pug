@@ -1,10 +1,16 @@
 extends ../_base
 block content
-    if (!resources.auths.length)
+    if (authInfo.isAnonymousMode)
         center
             span.badge.badge-warning
                 i.fa.fa-fw.fa-exclamation-triangle
-                | No authorization resource is defined, so anyone can log in and send or receive messages on any topic!
+                | No authorization resource is defined, so anyone can log in to webUI and send or receive messages on any topic!
+        br
+    else if (authInfo.isAnonymousWebUiMode)
+        center
+            span.badge.badge-warning
+                i.fa.fa-fw.fa-exclamation-triangle
+                | No authorization with webadmin resource is defined, so anyone can log in to webUI!
         br
     .row
         .col-md-6

@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import clientService from '../../services/clientService';
 
 export default (server: FastifyInstance) => {
+    server.protectRoute('/client');
     server
 
         .get('/clients', async (_request, reply) => {

@@ -28,6 +28,7 @@ export type ResourceType = 'router' | 'validator' | 'auth';
 
 export interface ILoginHandler {
     isAnonymousMode(): boolean;
+    isAnonymousWebUiMode(): boolean;
     getAuthByToken(token: string): Auth | undefined;
 }
 
@@ -249,6 +250,7 @@ export class ResourceHandler implements ILoginHandler {
     }
 
     public isAnonymousMode(): boolean { return this.auths.size === 0; }
+    public isAnonymousWebUiMode(): boolean { return ![...this.auths.values()].some(a => a.webAccess); }
 
     public getAuthByToken(token: string): Auth | undefined {
         for (const auth of this.auths.values())

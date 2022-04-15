@@ -3,6 +3,7 @@ import { MEMORYLOG_MAX_ITEMS } from '../../../logger';
 import logService from '../../services/logService';
 
 export default (server: FastifyInstance) => {
+    server.protectRoute('/logs');
     server
 
         .get('/logs', async (_request, reply) => {

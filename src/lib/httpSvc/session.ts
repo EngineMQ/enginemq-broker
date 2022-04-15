@@ -12,5 +12,6 @@ export default async (server: FastifyInstance) => {
     await server.register(fastifySession, {
         secret: SESSION_SECRET,
         cookie: { maxAge: SESSION_TTL },
+        //store: null,
     });
 }
