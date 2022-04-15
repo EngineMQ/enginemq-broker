@@ -23,12 +23,15 @@ export default (server: FastifyInstance) => {
                 throw new Error('Invalid token');
 
             request.session.data['auth'] = { token: token };
+            await request.session.save();
 
             return reply.send('OK');
         })
 
         .get('/logout', async (request, reply) => {
             delete request.session.data['auth'];
+            await request.session.save();
+
             return reply.redirect(HTTP_302, '/');
         })
 
