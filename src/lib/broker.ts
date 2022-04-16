@@ -9,6 +9,7 @@ import { MessageHandler } from './MessageHandler';
 import { BrokerSocket } from './BrokerSocket';
 import { TopicHandler } from './TopicHandler';
 import { ResourceHandler } from './ResourceHandler';
+import { ResourceOriginHandler } from './ResourceOriginHandler';
 
 const log = logger.child({ module: 'Main' });
 
@@ -19,6 +20,7 @@ let topics: TopicHandler;
 let server: net.Server;
 let storage: IStorage;
 let resourceHandler: ResourceHandler;
+let resourceOriginHandler: ResourceOriginHandler | null;
 
 export const createBroker = async (storageOverride?: string): Promise<{
     server: net.Server,
@@ -27,12 +29,15 @@ export const createBroker = async (storageOverride?: string): Promise<{
     topics: TopicHandler,
     storage: IStorage
     resourceHandler: ResourceHandler,
+    resourceOriginHandler: ResourceOriginHandler | null,
 }> => {
     log.info('Init broker');
 
     topics = new TopicHandler();
     storage = storageConfig(storageOverride || config.storage);
     resourceHandler = new ResourceHandler(storage);
+    if (config.resourceOrigin)
+        resourceOriginHandler = new ResourceOriginHandler(resourceHandler, config.resourceOrigin);
     messageHandler = new MessageHandler(clientList, storage, topics, resourceHandler);
     await messageHandler.loadMessages()
         .then(() => {
@@ -54,6 +59,7 @@ export const createBroker = async (storageOverride?: string): Promise<{
         topics: topics,
         storage: storage,
         resourceHandler: resourceHandler,
+        resourceOriginHandler: resourceOriginHandler,
     };
 }
 
@@ -62,6 +68,11 @@ export const closeBroker = async () => {
     return new Promise((resolve, reject) => {
         log.info('Stop messageloop');
         messageHandler.close();
+
+        if (resourceOriginHandler) {
+            log.info('Stop resource origin');
+            resourceOriginHandler.stop();
+        }
 
         log.info('Stop storage');
         storage.close();

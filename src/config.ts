@@ -28,6 +28,7 @@ export const heartbeatSec = get('HEARTBEAT_SEC').default(0).asInt();
 export const minWorkers = 1;
 export const maxClientWorkers = get('MAX_CLIENT_WORKERS').default(DEFAULT_MAXCLIENTWORKERS).asInt();
 export const maxPacketSizeBytes = get('MAX_PACKET_SIZE_KB').default(DEFAULT_MAXPACKETSIZEKB).asInt() * 1024;
+export const resourceOrigin = get('RESOURCE_ORIGIN').default('').asString();
 
 //--WebUI+API--
 export const uiPort = get('HTTP_PORT').default(DEFAULT_HTTP_PORT).asPortNumber();

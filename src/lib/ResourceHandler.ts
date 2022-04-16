@@ -48,6 +48,27 @@ export class ResourceHandler implements ILoginHandler {
 
     // Public
 
+    public checkYamlForAdapt(yamlData: Buffer) {
+        if (yamlData.length === 0)
+            throw new Error('Empty YAML data');
+
+        let objs: object[] = [];
+        try { objs = yaml.loadAll(yamlData.toString()) as object[]; }
+        catch { throw new Error('Invalid YAML format'); }
+
+        for (const routerData of tryParseRouterYaml(objs))
+            try { Router.checkOptions(routerData.options); }
+            catch (error) { throw new Error(`Yaml error in router ${routerData.resourceId} ${error instanceof Error ? error.message : ''}`); }
+
+        for (const validatorData of tryParseValidatorYaml(objs))
+            try { Validator.checkOptions(validatorData.options); }
+            catch (error) { throw new Error(`Yaml error in validator ${validatorData.resourceId} ${error instanceof Error ? error.message : ''}`); }
+
+        for (const authData of tryParseAuthYaml(objs))
+            try { Auth.checkOptions(authData.options); }
+            catch (error) { throw new Error(`Yaml error in auth ${authData.resourceId} ${error instanceof Error ? error.message : ''}`); }
+    }
+
     public adaptFromYaml(yamlData: Buffer) {
         if (yamlData.length === 0)
             throw new Error('Empty YAML data');
