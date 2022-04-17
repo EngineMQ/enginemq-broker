@@ -19,38 +19,34 @@ export class MeasureTime {
     }
 }
 
-export const trimNewlines = (string: string) => {
+export const trimBoth = (string: string, chars: string) => {
     let start = 0;
     let end = string.length;
 
-    while (start < end && (string[start] === '\r' || string[start] === '\n')) {
+    while (start < end && chars.includes(string.charAt(start)))
         start++;
-    }
 
-    while (end > start && (string[end - 1] === '\r' || string[end - 1] === '\n')) {
+    while (end > start && chars.includes(string.charAt(end - 1)))
         end--;
-    }
 
     return start > 0 || end < string.length ? string.slice(start, end) : string;
 }
 
-export const trimNewlinesStart = (string: string) => {
+export const trimStart = (string: string, chars: string) => {
     const end = string.length;
     let start = 0;
 
-    while (start < end && (string[start] === '\r' || string[start] === '\n')) {
+    while (start < end && chars.includes(string.charAt(start)))
         start++;
-    }
 
     return start > 0 ? string.slice(start, end) : string;
 };
 
-export const trimNewlinesEnd = (string: string) => {
+export const trimEnd = (string: string, chars: string) => {
     let end = string.length;
 
-    while (end > 0 && (string[end - 1] === '\r' || string[end - 1] === '\n')) {
+    while (end > 0 && chars.includes(string.charAt(end - 1)))
         end--;
-    }
 
     return end < string.length ? string.slice(0, end) : string;
 };
@@ -66,7 +62,7 @@ export const prettyThousand = (value: number, maxlevel = Number.MAX_VALUE) => {
 }
 
 export const yamlJoin = (yamls: string[]): string => {
-    const yamlsTrimmed = yamls.map((y) => trimNewlines(y));
+    const yamlsTrimmed = yamls.map((y) => trimBoth(y, EOL));
     return yamlsTrimmed.join(EOL + EOL + '---' + EOL + EOL) + EOL;
 }
 

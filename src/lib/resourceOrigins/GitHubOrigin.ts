@@ -8,7 +8,7 @@ import * as http from 'isomorphic-git/http/node';
 import logger from '../logger';
 import * as config from '../../config';
 import { IResourceOrigin, IResourceOriginLastStatus, ResourceOriginNewDataCallback } from './IResourceOrigin';
-import { yamlJoin } from '../utility';
+import { trimBoth, yamlJoin } from '../utility';
 
 class ResourceGitHubOriginError extends Error { }
 
@@ -44,6 +44,7 @@ export class GitHubOrigin implements IResourceOrigin {
                 .find(s => s.startsWith('folder='))
                 ?.slice('folder='.length)
                 || '';
+            result.folder = trimBoth(result.folder, '/');
 
             log.info({ repo: result.repository, branch: result.branch, folder: result.folder }, 'GitHUb resource origin initialized');
             return result;
