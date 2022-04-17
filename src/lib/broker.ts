@@ -20,7 +20,7 @@ let topics: TopicHandler;
 let server: net.Server;
 let storage: IStorage;
 let resourceHandler: ResourceHandler;
-let resourceOriginHandler: ResourceOriginHandler | null;
+let resourceOriginHandler: ResourceOriginHandler | undefined;
 
 export const createBroker = async (storageOverride?: string): Promise<{
     server: net.Server,
@@ -29,15 +29,17 @@ export const createBroker = async (storageOverride?: string): Promise<{
     topics: TopicHandler,
     storage: IStorage
     resourceHandler: ResourceHandler,
-    resourceOriginHandler: ResourceOriginHandler | null,
+    resourceOriginHandler: ResourceOriginHandler | undefined,
 }> => {
     log.info('Init broker');
 
     topics = new TopicHandler();
     storage = storageConfig(storageOverride || config.storage);
     resourceHandler = new ResourceHandler(storage);
-    if (config.resourceOrigin)
+    if (config.resourceOrigin) {
         resourceOriginHandler = new ResourceOriginHandler(resourceHandler, config.resourceOrigin);
+        await resourceOriginHandler.start();
+    }
     messageHandler = new MessageHandler(clientList, storage, topics, resourceHandler);
     await messageHandler.loadMessages()
         .then(() => {

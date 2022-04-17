@@ -1,6 +1,6 @@
 import logger from './logger';
 import { ResourceHandler } from './ResourceHandler';
-import { IResourceOrigin } from './resourceOrigins/IResourceOrigin';
+import { IResourceOrigin, IResourceOriginLastStatus } from './resourceOrigins/IResourceOrigin';
 import { GitHubOrigin } from './resourceOrigins/GitHubOrigin';
 
 const UPDATE_FREQUENCY_MIN = 1;
@@ -12,7 +12,7 @@ const log = logger.child({ module: 'ResourceOrigin' });
 export class ResourceOriginHandler {
     private resourceHandler: ResourceHandler;
     private origin: IResourceOrigin;
-    private timer: NodeJS.Timer;
+    private timer: NodeJS.Timer | undefined;
 
     private tryParseConnectionString(originString: string): IResourceOrigin | undefined {
         return GitHubOrigin.tryParseConnectionString(originString) ||
@@ -25,27 +25,32 @@ export class ResourceOriginHandler {
         const origin = this.tryParseConnectionString(originString);
         if (!origin)
             throw new ResourceOriginError('Cannot parse resourceorigin string');
+        this.origin = origin;
 
-        try {
-            this.origin = origin;
-            void this.origin
-                .start()
-                .then(() => { this.onTimer() })
+    }
 
-            this.timer = setInterval(() => { this.onTimer(); }, UPDATE_FREQUENCY_MIN * 60 * 1000);
-        }
-        catch (error) {
-            throw new ResourceOriginError(`Cannot start resourceorigin: ${error instanceof Error ? error.message : 'unknown error'}`);
-        }
+    public getLastStatus(): IResourceOriginLastStatus { return this.origin.getLastStatus(); }
+
+    public async start(): Promise<void> {
+        return this.origin
+            .start()
+            .then(async () => {
+                await this.checkOriginForChanges();
+                this.timer = setInterval(async () => { await this.checkOriginForChanges(); }, UPDATE_FREQUENCY_MIN * 60 * 1000);
+            })
+            .catch(error => {
+                log.error(`Cannot start resourceorigin: ${error instanceof Error ? error.message : 'unknown error'}`);
+            })
     }
 
     public stop(): void {
-        clearInterval(this.timer);
+        if (this.timer)
+            clearInterval(this.timer);
     }
 
-    private onTimer() {
+    private async checkOriginForChanges(): Promise<void> {
         log.debug('Check origin change');
-        void this.origin.checkNewData((data: string) => {
+        await this.origin.checkNewData((data: string) => {
             try {
                 const dataBuffer = Buffer.from(data);
 
@@ -56,6 +61,8 @@ export class ResourceOriginHandler {
             catch (error) {
                 throw new ResourceOriginError(`Cannot download and adapt resourceorigin: ${error instanceof Error ? error.message : 'unknown error'}`);
             }
+        }).catch(error => {
+            log.error(`Cannot check resourceorigin: ${error instanceof Error ? error.message : 'unknown error'}`);
         });
     }
 }

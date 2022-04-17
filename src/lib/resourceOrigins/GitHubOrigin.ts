@@ -7,7 +7,7 @@ import * as http from 'isomorphic-git/http/node';
 
 import logger from '../logger';
 import * as config from '../../config';
-import { IResourceOrigin, ResourceOriginNewDataCallback } from './IResourceOrigin';
+import { IResourceOrigin, IResourceOriginLastStatus, ResourceOriginNewDataCallback } from './IResourceOrigin';
 import { yamlJoin } from '../utility';
 
 class ResourceGitHubOriginError extends Error { }
@@ -25,6 +25,9 @@ export class GitHubOrigin implements IResourceOrigin {
     private folder = '';
 
     private lastHead = '';
+    private lastCommitStr = '';
+    private lastStatusTime = 0;
+    private lastErrorStr = '';
 
     private repoUrl() { return `https://github.com/${this.repository}`; }
 
@@ -48,6 +51,29 @@ export class GitHubOrigin implements IResourceOrigin {
         return;
     }
 
+    public getLastStatus(): IResourceOriginLastStatus {
+        const descriptions = [];
+        descriptions.push(`github://${this.repository}`);
+        if (this.branch)
+            descriptions.push(`:${this.branch}`);
+        if (this.folder)
+            descriptions.push(`/${this.folder}`);
+
+        if (this.lastErrorStr.length > 0)
+            return {
+                description: descriptions.join(''),
+                isError: true,
+                status: this.lastErrorStr,
+                date: 'occured at ' + new Date(this.lastStatusTime).toISOString(),
+            }
+        return {
+            description: descriptions.join(''),
+            isError: false,
+            status: 'commit: ' + this.lastCommitStr,
+            date: 'fetched at ' + new Date(this.lastStatusTime).toISOString(),
+        }
+    }
+
     public async start(): Promise<void> {
         return git.clone({
             fs,
@@ -55,40 +81,56 @@ export class GitHubOrigin implements IResourceOrigin {
             dir: memfsDirectory,
             url: this.repoUrl(),
             ref: this.branch,
-        });
+        })
+            .then(() => { this.lastErrorStr = '' })
+            .catch(error => {
+                this.lastStatusTime = Date.now();
+                this.lastErrorStr = `${error instanceof Error ? error.message : 'unknown error'} `;
+                throw error;
+            })
     }
 
     public async checkNewData(callback: ResourceOriginNewDataCallback): Promise<void> {
         log.debug('Fetch origin');
-        const fetchResponse = await git.fetch({
-            fs,
-            http,
-            dir: memfsDirectory,
-            url: this.repoUrl(),
-            ref: this.branch,
-        })
-        if (fetchResponse.fetchHead && this.lastHead != fetchResponse.fetchHead) {
-            this.lastHead = fetchResponse.fetchHead;
-
-            const lastCommit = await git.readCommit({
-                fs,
-                dir: memfsDirectory,
-                oid: this.lastHead,
-            });
-            log.info({ head: this.lastHead, commit: lastCommit.commit.message.trim(), author: { name: lastCommit.commit.author.name, email: lastCommit.commit.author.email } }, 'New commit detected');
-
-            log.debug('Pull origin');
-            await git.pull({
+        try {
+            const fetchResponse = await git.fetch({
                 fs,
                 http,
                 dir: memfsDirectory,
                 url: this.repoUrl(),
                 ref: this.branch,
-                author: { name: config.serviceName },
-            });
+            })
+            if (fetchResponse.fetchHead && this.lastHead != fetchResponse.fetchHead) {
+                this.lastHead = fetchResponse.fetchHead;
 
-            const filesdata = await this.checkNewDataProcessFiles();
-            callback(filesdata);
+                const lastCommit = await git.readCommit({
+                    fs,
+                    dir: memfsDirectory,
+                    oid: this.lastHead,
+                });
+                log.info({ head: this.lastHead, commit: lastCommit.commit.message.trim(), author: { name: lastCommit.commit.author.name, email: lastCommit.commit.author.email } }, 'New commit detected');
+
+                this.lastCommitStr = `${lastCommit.commit.message.trim()} at ${new Date(lastCommit.commit.author.timestamp * 1000).toISOString()} by[${lastCommit.commit.author.name} /${lastCommit.commit.author.email}]`;
+                this.lastStatusTime = Date.now();
+
+                log.debug('Pull origin');
+                await git.pull({
+                    fs,
+                    http,
+                    dir: memfsDirectory,
+                    url: this.repoUrl(),
+                    ref: this.branch,
+                    author: { name: config.serviceName },
+                });
+
+                const filesdata = await this.checkNewDataProcessFiles();
+                callback(filesdata);
+            }
+            this.lastErrorStr = '';
+        }
+        catch (error) {
+            this.lastErrorStr = `${error instanceof Error ? error.message : 'unknown error'}`;
+            throw error;
         }
     }
     private async checkNewDataProcessFiles(): Promise<string> {

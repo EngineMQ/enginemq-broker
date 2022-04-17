@@ -16,13 +16,14 @@ describe('client-server connection', () => {
 
         beforeAll(async () => {
             await createBroker(storageEngine)
-                .then(async ({ clientList, messageHandler, topics, storage, resourceHandler }) => {
+                .then(async ({ clientList, messageHandler, topics, storage, resourceHandler, resourceOriginHandler }) => {
                     global.Context = {
                         ClientList: clientList,
                         MessageHandler: messageHandler,
                         Topics: topics,
                         Storage: storage,
                         ResourceHandler: resourceHandler,
+                        ResourceOriginHandler: resourceOriginHandler,
                     };
                     messageHandler.deleteAllMessage();
                     resourceHandler.deleteAllRouter();

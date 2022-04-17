@@ -1,4 +1,5 @@
 import { ILoginHandler, ResourceType } from '../../ResourceHandler';
+import { IResourceOriginLastStatus } from '../../resourceOrigins/IResourceOrigin';
 import { yamlJoin } from '../../utility';
 import resourceServiceAuth from './resourceServiceAuth';
 import resourceServiceRouter from './resourceServiceRouter';
@@ -97,6 +98,12 @@ export default {
             isAnonymousMode: auths.isAnonymousMode(),
             isAnonymousWebUiMode: auths.isAnonymousWebUiMode(),
         }
+    },
+
+    getResourceOriginLastStatus(): IResourceOriginLastStatus | undefined {
+        if (Context.ResourceOriginHandler)
+            return Context.ResourceOriginHandler.getLastStatus();
+        return;
     }
 
 }

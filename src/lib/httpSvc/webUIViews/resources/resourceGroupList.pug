@@ -12,6 +12,16 @@ block content
                 i.fa.fa-fw.fa-exclamation-triangle
                 | No authorization with webadmin resource is defined, so anyone can log in to webUI!
         br
+
+    if (resourceOriginLastStatus)
+        center 
+            span.badge(class=resourceOriginLastStatus.isError ? 'badge-danger' : 'badge-success')
+                = resourceOriginLastStatus.description
+                br
+                = resourceOriginLastStatus.status
+                br
+                = resourceOriginLastStatus.date
+
     .row
         .col-md-6
             .btn-group(role='group')
