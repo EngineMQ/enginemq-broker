@@ -11,11 +11,13 @@ export default (server: FastifyInstance) => {
         .get('/resources', async (_request, reply) => {
             const resourceGroups = resourceService.getAllResourcesByGroup();
             const authInfo = resourceService.getAuthInfo();
+            const resourceOriginLastStatus = resourceService.getResourceOriginLastStatus();
             return reply.view('resources/resourceGroupList', {
                 title: 'Resources',
                 breadcrumb: [],
                 resources: resourceGroups,
                 authInfo: authInfo,
+                resourceOriginLastStatus: resourceOriginLastStatus,
             });
         })
 
