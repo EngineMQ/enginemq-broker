@@ -15,14 +15,24 @@ class ResourceGitHubOriginError extends Error { }
 const log = logger.child({ module: 'ResourceOrigin' });
 const memfsDirectory = '/';
 
-let originStringMask = '^ github \\( repo = ([a-z0-9.\\-_/\\\\]*) (branch = ([a-z0-9.\\-_/]*))? (folder = ([a-z0-9.\\-_/]*))? \\) $';
+let originStringMask = '^ github \\( repo = ([a-z0-9.\\-_/\\\\]*) (token = ([a-z0-9_]*))? (branch = ([a-z0-9.\\-_/]*))? (folder = ([a-z0-9.\\-_/]*))? \\) $';
 while (originStringMask.includes(' '))
     originStringMask = originStringMask.replace(' ', '\\s*');
 
 export class GitHubOrigin implements IResourceOrigin {
     private repository = '';
+    private token = '';
     private branch = '';
     private folder = '';
+    get maskedToken(): string {
+        if (!this.token)
+            return '';
+        // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+        return `${this.token.slice(0, 3)}...${this.token.slice(-3)}`;
+    }
+    private onAuth() {
+        return { username: this.token }
+    }
 
     private lastHead = '';
     private lastCommitStr = '';
@@ -40,13 +50,17 @@ export class GitHubOrigin implements IResourceOrigin {
                 .find(s => s && s.startsWith('branch='))
                 ?.slice('branch='.length)
                 || '';
+            result.token = originStringParsed
+                .find(s => s && s.startsWith('token='))
+                ?.slice('token='.length)
+                || '';
             result.folder = originStringParsed
-                .find(s => s.startsWith('folder='))
+                .find(s => s && s.startsWith('folder='))
                 ?.slice('folder='.length)
                 || '';
             result.folder = trimBoth(result.folder, '/');
 
-            log.info({ repo: result.repository, branch: result.branch, folder: result.folder }, 'GitHUb resource origin initialized');
+            log.info({ repo: result.repository, token: result.maskedToken, branch: result.branch, folder: result.folder }, 'GitHUb resource origin initialized');
             return result;
         }
         return;
@@ -81,6 +95,7 @@ export class GitHubOrigin implements IResourceOrigin {
             http,
             dir: memfsDirectory,
             url: this.repoUrl(),
+            onAuth: () => { return { username: this.token } },
             ref: this.branch,
         })
             .then(() => { this.lastErrorStr = '' })
@@ -99,6 +114,7 @@ export class GitHubOrigin implements IResourceOrigin {
                 http,
                 dir: memfsDirectory,
                 url: this.repoUrl(),
+                onAuth: () => { return { username: this.token } },
                 ref: this.branch,
             })
             if (fetchResponse.fetchHead && this.lastHead != fetchResponse.fetchHead) {
@@ -120,6 +136,7 @@ export class GitHubOrigin implements IResourceOrigin {
                     http,
                     dir: memfsDirectory,
                     url: this.repoUrl(),
+                    onAuth: () => { return { username: this.token } },
                     ref: this.branch,
                     author: { name: config.serviceName },
                 });
